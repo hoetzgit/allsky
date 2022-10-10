@@ -336,3 +336,4 @@ void delayBetweenImages(config, long, std::string);
 bool getCommandLineArguments(config *, int, char *[]);
 int displayNotificationImage(char const *);
 bool validateLatitudeLongitude(config *);
+void overlayImage(const cv::Mat &, const cv::Mat &, cv::Mat &, cv::Point2i, double);
