@@ -7,7 +7,7 @@ ALLSKY_IMAGES_COMPASS="${ALLSKY_IMAGES}/compass"
 # Location of optional allsky-website package.
 ALLSKY_WEBSITE="/var/www/html/allsky-website"
 
-# Praefix saveImage.sh
+# Prefix saveImage.sh
 # Example: saveImage.sh with task-spooler
-# SAVEIMAGE_PRAEFIX="ts -n "
-export SAVEIMAGE_PRAEFIX=""
+# SAVEIMAGE_PREFIX="ts -n "
+export SAVEIMAGE_PREFIX=""

@@ -813,11 +813,11 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 				else
 				{
 					char cmd[1100+sizeof(CG.allskyHome)];
-					const char* praefix = std::getenv("SAVEIMAGE_PRAEFIX");
-					if (praefix == NULL)
-						praefix = "";
+					const char* prefix = std::getenv("SAVEIMAGE_PREFIX");
+					if (prefix == NULL)
+						prefix = "";
 					//Log(1, "  > Saving %s image '%s' '%s' '%s'\n", CG.takeDarkFrames ? "dark" : dayOrNight.c_str(), CG.finalFileName, CG.fullCleanFilename, CG.fullCompassFilename);
-					snprintf(cmd, sizeof(cmd), "%s%sscripts/saveImage.sh %s '%s' '%s' '%s'", praefix, CG.allskyHome, dayOrNight.c_str(), CG.fullFilename, CG.fullCleanFilename, CG.fullCompassFilename);
+					snprintf(cmd, sizeof(cmd), "%s%sscripts/saveImage.sh %s '%s' '%s' '%s'", prefix, CG.allskyHome, dayOrNight.c_str(), CG.fullFilename, CG.fullCleanFilename, CG.fullCompassFilename);
 
 					// TODO: in the future the calculation of mean should independent from modeMean. -1 means don't display.
 					add_variables_to_command(CG, cmd, exposureStartDateTime);
