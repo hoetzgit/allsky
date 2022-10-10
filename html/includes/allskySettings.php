@@ -53,15 +53,23 @@ function DisplayCameraConfig(){
 							$somethingChanged = true;	// want to know about other changes
 						// echo "<br>$key: old [$oldValue] !== new [$newValue], originalName=$originalName";
 						$checkchanges = false;
+						$default = NULL;
+						$type = NULL;
 						foreach ($options_array as $option){
 							if ($option['name'] === $originalName) {
 								$checkchanges = getVariableOrDefault($option, 'checkchanges', false);
 								$label = getVariableOrDefault($option, 'label', "");
+								$default = getVariableOrDefault($option, 'default', NULL);
+								$type = getVariableOrDefault($option, 'type', NULL);
 								break;
 							}
 						}
-						if ($checkchanges)
+						if ($checkchanges) {
+							if (!is_null($default) and !is_null($type) and strpos(strtolower($type), 'text') !== false and trim($newValue) === '' and trim($default) !== '') {
+								$settings[$originalName] = $newValue = $default;
+							}
 							$changes .= "  '$originalName' '$label' '$newValue'";
+						}
 					}
 				}
 			}

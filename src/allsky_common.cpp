@@ -32,6 +32,40 @@ static char const *fontnames[]		= {		// Character representation of names for cl
 
 //xxxxxxxxxxxxxx TODO: isDayOrNight dayOrNight;
 
+// quick & dirty temporary test
+long getRPiSensorTemperature()
+{
+	// Input stream
+	ifstream InpStream("/home/pi/allsky/tmp/metadata.txt");
+
+	// We want to get parsed num_1 and num_2
+	double temp = -9999.0;
+
+	// Define strings to hold the key and corresponding value
+	string key, value;
+
+	// Read the input file using getline ('=' is the delimiter)
+	while (getline(InpStream, key, '=')) {
+
+		// Create an istringstream instance to parse the key
+		// (string to sring conversion)
+		istringstream ss_key(key);
+		ss_key >> key;
+
+		// Now read the value and print what is read (value is a string)
+		getline(InpStream, value);
+
+		// Create another istringstream instance to parse the value
+		istringstream ss_value(value);
+
+		if ( key == "SensorTemperature") {
+			// string to double conversion
+			ss_value >> temp;
+			return std::round(temp);
+		}
+	}
+	return temp;
+}
 
 /**
  * Helper function to display debug info.
@@ -349,7 +383,7 @@ std::string calculateDayOrNight(const char *latitude, const char *longitude, flo
 	int d;
 
 	sprintf(sunwaitCommand, "sunwait poll exit angle %s %s %s > /dev/null", convertCommaToPeriod(angle, "%.4f"), latitude, longitude);
-	Log(4, "Executing %s\n", sunwaitCommand);
+	Log(4, "Executing sunwait %s\n", sunwaitCommand);
 	d = system(sunwaitCommand);	// returns exit code 2 for DAY, 3 for night
 
 	if (WIFEXITED(d))
@@ -517,7 +551,39 @@ bool checkForValidExtension(config *cg)
 	return(true);
 }
 
+void overlayImage(const cv::Mat &background, const cv::Mat &foreground, cv::Mat &output, cv::Point2i location, double opacity = 1.0)
+{
+    background.copyTo(output);
+    // start at the row indicated by location, or at row 0 if location.y is negative.
+    for (int y = std::max(location.y , 0); y < background.rows; ++y) {
+        int fY = y - location.y; // because of the translation
 
+        // we are done of we have processed all rows of the foreground image.
+        if (fY >= foreground.rows)
+            break;
+
+        // start at the column indicated by location, or at column 0 if location.x is negative.
+        for (int x = std::max(location.x, 0); x < background.cols; ++x) {
+            int fX = x - location.x; // because of the translation.
+
+            // we are done with this row if the column is outside of the foreground image.
+            if (fX >= foreground.cols)
+                break;
+
+            // determine the opacity of the foregrond pixel, using its fourth (alpha) channel.
+            double opacity_level = ((double)foreground.data[fY * foreground.step + fX * foreground.channels() + 3]) / 255.;
+            if (opacity >= 0.0 && opacity < 1.0)
+                opacity_level *= opacity;
+
+            // and now combine the background and foreground pixel, using the opacity, but only if opacity > 0.
+            for (int c = 0; opacity_level > 0 && c < output.channels(); ++c) {
+                unsigned char foregroundPx = foreground.data[fY * foreground.step + fX * foreground.channels() + c];
+                unsigned char backgroundPx = background.data[y * background.step + x * background.channels() + c];
+                output.data[y*output.step + output.channels()*x + c] = backgroundPx * (1.-opacity_level) + foregroundPx * opacity_level;
+            }
+        }
+    }
+}
 
 int fontname[] = {
 	cv::FONT_HERSHEY_SIMPLEX,			cv::FONT_HERSHEY_PLAIN,		cv::FONT_HERSHEY_DUPLEX,
@@ -547,23 +613,42 @@ int doOverlay(cv::Mat image, config cg, char *startTime, int gainChange)
 			lineType, font, cg.overlay.fontcolor, cg.imageType, cg.overlay.outlinefont, cg.width);
 		iYOffset+=cg.overlay.iTextLineHeight;
 	}
-
+	
+	// quick & dirty temporary test
 	if (cg.overlay.showTemp)
 	{
 		char C[20] = { 0 }, F[20] = { 0 };
-		if (strcmp(cg.tempType, "C") == 0 || strcmp(cg.tempType, "B") == 0)
-		{
-			sprintf(C, "  %.0fC", (float)cg.lastSensorTemp / 10);
+		bool valid = true;
+		if (cg.isLibcamera) {
+			cg.lastSensorTemp = getRPiSensorTemperature();
+			valid = (cg.lastSensorTemp > -9999);
+			if (valid) {
+				if (strcmp(cg.tempType, "C") == 0 || strcmp(cg.tempType, "B") == 0)
+				{
+					sprintf(C, "%.0fC", (float)cg.lastSensorTemp);
+				}
+				if (strcmp(cg.tempType, "F") == 0 || strcmp(cg.tempType, "B") == 0)
+				{
+					sprintf(F, "%.0fF", (((float)cg.lastSensorTemp * 1.8) + 32));
+				}
+			}
+		} else {
+			if (strcmp(cg.tempType, "C") == 0 || strcmp(cg.tempType, "B") == 0)
+			{
+				sprintf(C, "  %.0fC", (float)cg.lastSensorTemp / 10);
+			}
+			if (strcmp(cg.tempType, "F") == 0 || strcmp(cg.tempType, "B") == 0)
+			{
+				sprintf(F, "  %.0fF", (((float)cg.lastSensorTemp / 10 * 1.8) + 32));
+			}
 		}
-		if (strcmp(cg.tempType, "F") == 0 || strcmp(cg.tempType, "B") == 0)
-		{
-			sprintf(F, "  %.0fF", (((float)cg.lastSensorTemp / 10 * 1.8) + 32));
+		if (valid) {
+			sprintf(tmp, "Sensor: %s %s", C, F);
+			cvText(image, tmp, cg.overlay.iTextX, cg.overlay.iTextY + (iYOffset / cg.currentBin),
+				cg.overlay.fontsize * SMALLFONTSIZE_MULTIPLIER, cg.overlay.linewidth,
+				lineType, font, cg.overlay.smallFontcolor, cg.imageType, cg.overlay.outlinefont, cg.width);
+			iYOffset += cg.overlay.iTextLineHeight;
 		}
-		sprintf(tmp, "Sensor: %s %s", C, F);
-		cvText(image, tmp, cg.overlay.iTextX, cg.overlay.iTextY + (iYOffset / cg.currentBin),
-			cg.overlay.fontsize * SMALLFONTSIZE_MULTIPLIER, cg.overlay.linewidth,
-			lineType, font, cg.overlay.smallFontcolor, cg.imageType, cg.overlay.outlinefont, cg.width);
-		iYOffset += cg.overlay.iTextLineHeight;
 	}
 
 	if (cg.overlay.showExposure)
@@ -632,6 +717,17 @@ int doOverlay(cv::Mat image, config cg, char *startTime, int gainChange)
 		iYOffset += cg.overlay.iTextLineHeight;
 	}
 
+	if (cg.overlay.showMode)
+	{
+		std::transform(CG.currentDayOrNight.begin(), CG.currentDayOrNight.end(), CG.currentDayOrNight.begin(),
+			[](unsigned char c) { return std::tolower(c); });
+		sprintf(tmp, "Mode: %s", CG.currentDayOrNight.c_str());
+		cvText(image, tmp, cg.overlay.iTextX, cg.overlay.iTextY + (iYOffset / cg.currentBin),
+			cg.overlay.fontsize * SMALLFONTSIZE_MULTIPLIER, cg.overlay.linewidth,
+			lineType, font, cg.overlay.smallFontcolor, cg.imageType, cg.overlay.outlinefont, cg.width);
+		iYOffset += cg.overlay.iTextLineHeight;
+	}
+
 	/**
 	 * Optionally display extra text which is read from the provided file. If the
 	 * age of the file exceeds the specified limit then ignore the file.
@@ -694,6 +790,13 @@ int doOverlay(cv::Mat image, config cg, char *startTime, int gainChange)
 			}
 		}
 	}
+
+	// quick & dirty test compass overlay
+	cv::Mat compass = cv::imread("/home/pi/allsky/compass.png", -1);
+	cv::Point location(3500, 25);
+	cv::Mat output;
+	overlayImage(image, compass, output, location, 1.0);
+	output.copyTo(image);
 
 	return(iYOffset);
 }
@@ -1030,7 +1133,8 @@ void displayHelp(config cg)
 	printf(" -%-*s - 1 displays the gain [%s].\n", n, "showGain b", yesNo(cg.overlay.showGain));
 	printf(" -%-*s - 1 displays the brightness [%s].\n", n, "showBrightness b", yesNo(cg.overlay.showBrightness));
 	printf(" -%-*s - 1 displays the mean brightness used in auto-exposure [%s].\n", n, "showMean b", yesNo(cg.overlay.showMean));
-	printf(" -%-*s - 1 displays a focus metric - the higher the number the better focus [%s].\n", n, "showFOcus b", yesNo(cg.overlay.showFocus));
+	printf(" -%-*s - 1 displays a focus metric - the higher the number the better focus [%s].\n", n, "showFocus b", yesNo(cg.overlay.showFocus));
+	printf(" -%-*s - 1 displays day or night mode [%s].\n", n, "showMode b", yesNo(cg.overlay.showMode));
 	if (cg.ct == ctZWO) {
 		printf(" -%-*s - 1 displays an outline of the histogram box.\n", n, "showhistogrambox b");
 		printf("  %-*s   Useful to determine what parameters to use with -histogrambox.\n", n, "");
@@ -1211,6 +1315,7 @@ void displaySettings(config cg)
 	printf("      Show Brightness: %s\n", yesNo(cg.overlay.showBrightness));
 	printf("      Show Target Mean Brightness: %s\n", yesNo(cg.overlay.showMean));
 	printf("      Show Focus Metric: %s\n", yesNo(cg.overlay.showFocus));
+	printf("      Show Mode: %s\n", yesNo(cg.overlay.showMode));
 	if (cg.ct == ctZWO) {
 		printf("      Show Histogram Box: %s\n", yesNo(cg.overlay.showHistogramBox));
 	}
@@ -1832,6 +1937,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		else if (strcmp(a, "showfocus") == 0)
 		{
 			cg->overlay.showFocus = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "showmode") == 0)
+		{
+			cg->overlay.showMode = getBoolean(argv[++i]);
 		}
 		else if (strcmp(a, "text") == 0)
 		{

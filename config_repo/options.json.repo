@@ -851,6 +851,15 @@
 "advanced" : 1
 },
 {
+"name" : "showMode",
+"default" : 0,
+"description" : "Activate to display the current mode day or night.",
+"label" : "Show Mode",
+"type" : "checkbox",
+"display" : 1,
+"advanced" : 1
+},
+{
 "name" : "text",
 "default" : "",
 "description" : "Text that appears below the optional time with the same color and size.",

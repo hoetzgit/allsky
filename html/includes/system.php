@@ -408,6 +408,12 @@ function DisplaySystem()
 					if (isset($_POST['service_stop'])) {
 						runCommand("sudo /bin/systemctl stop allsky", "allsky service stopped", "success");
 					}
+					if (isset($_POST['service_maintenance'])) {
+						$CMD = "sudo --user=" . ALLSKY_OWNER;
+						$CMD .= " " . ALLSKY_SCRIPTS . "/maintenance.sh";
+						echo '<script>console.log("Running: ' . $CMD . '");</script>';
+						runCommand($CMD, "", "success");
+					}
 					// Optional user-specified data.
 					for ($i=0; $i < $user_data_files_count; $i++) {
 						displayUserData($user_data_files[$i], "button-action");
@@ -468,6 +474,7 @@ function DisplaySystem()
 					<div style="margin-bottom: 15px">
 						<button type="submit" class="btn btn-success" name="service_start"/><i class="fa fa-play"></i> Start allsky</button>
 						<button type="submit" class="btn btn-danger" name="service_stop"/><i class="fa fa-stop"></i> Stop allsky</button>
+						<button type="submit" class="btn btn-warning" name="service_maintenance"/><i class="fa fa-stop"></i> Maintenance</button>
 					</div>
 					<div style="margin-bottom: 15px">
 						<button type="submit" class="btn btn-warning" name="system_reboot"/><i class="fa fa-power-off"></i> Reboot Raspberry Pi</button>

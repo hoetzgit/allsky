@@ -79,6 +79,9 @@ int RPicapture(config cg, cv::Mat *image)
 	command += " --output '" + ss.str() + "'";
 	if (cg.isLibcamera)
 	{
+		// Meta Data File
+		command += " --metadata '/home/pi/allsky/tmp/metadata.txt'";
+		
 		// libcamera tuning file
 		if (cg.currentTuningFile != NULL && strcmp(cg.currentTuningFile, "") != 0) {
 			ss.str("");
@@ -147,8 +150,17 @@ int RPicapture(config cg, cv::Mat *image)
 		//	'SRGGB10_CSI2P' : 1332x990 
 		//	'SRGGB12_CSI2P' : 2028x1080 2028x1520 4056x3040 
 		//								bin 2x2   bin 1x1
-		if (cg.currentBin == 1)
-			command += " --width 4056 --height 3040";
+		if (cg.currentBin == 1) {
+			if (cg.width > 0 && cg.height > 0) {
+				ss.str("");
+				ss << cg.width;
+				command += " --width " + ss.str();
+				ss.str("");
+				ss << cg.height;
+				command += " --height " + ss.str();
+			} else
+				command += " --width 4056 --height 3040"; // xxxx TODO depending on sensor see above
+		}
 		else if (cg.currentBin == 2)
 			command += " --width 2028 --height 1520";
 	}
@@ -502,7 +514,7 @@ int main(int argc, char *argv[])
 	{
 		// Find out if it is currently DAY or NIGHT
 		dayOrNight = calculateDayOrNight(CG.latitude, CG.longitude, CG.angle);
-		std::string lastDayOrNight = dayOrNight;
+		std::string lastDayOrNight = CG.currentDayOrNight = dayOrNight;
 
 		if (CG.takeDarkFrames)
 		{
@@ -750,6 +762,27 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 						myRaspistillSetting.analoggain = CG.currentGain;
 					}
 
+					if (CG.currentSkipFrames == 0) {
+						snprintf(CG.fullCleanFilename, sizeof(CG.fullCleanFilename), "%s/%s-%s",
+							CG.saveDir, "clean", CG.finalFileName);
+						//Log(4, "  > Write Image without overlay '%s'\n", CG.fullCleanFilename);
+						bool result = cv::imwrite(CG.fullCleanFilename, pRgb, compressionParameters);
+						if (! result) fprintf(stderr, "*** ERROR: Unable to write to '%s'\n", CG.fullCleanFilename);
+					}
+
+					if (CG.currentSkipFrames == 0 && ! CG.overlay.externalOverlay) {
+						snprintf(CG.fullCompassFilename, sizeof(CG.fullCompassFilename), "%s/%s-%s",
+							CG.saveDir, "compass", CG.finalFileName);
+						// quick & dirty test compass overlay
+						cv::Mat compass = cv::imread("/home/pi/allsky/compass.png", -1);
+						cv::Point location(30, 25);
+						cv::Mat output;
+						overlayImage(pRgb, compass, output, location, 1.0);
+						//Log(4, "  > Write image with compass overlay '%s'\n", CG.fullCompassFilename);
+						bool result = cv::imwrite(CG.fullCompassFilename, output, compressionParameters);
+						if (! result) fprintf(stderr, "*** ERROR: Unable to write to '%s'\n", CG.fullCompassFilename);
+					}
+
 					if (CG.currentSkipFrames == 0 && ! CG.overlay.externalOverlay && \
 						doOverlay(pRgb, CG, bufTime, 0) > 0)
 					{
@@ -780,12 +813,16 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 				else
 				{
 					char cmd[1100+sizeof(CG.allskyHome)];
-					Log(1, "  > Saving %s image '%s'\n", CG.takeDarkFrames ? "dark" : dayOrNight.c_str(), CG.finalFileName);
-					snprintf(cmd, sizeof(cmd), "%sscripts/saveImage.sh %s '%s'", CG.allskyHome, dayOrNight.c_str(), CG.fullFilename);
+					const char* praefix = std::getenv("SAVEIMAGE_PRAEFIX");
+					if (praefix == NULL)
+						praefix = "";
+					//Log(1, "  > Saving %s image '%s' '%s' '%s'\n", CG.takeDarkFrames ? "dark" : dayOrNight.c_str(), CG.finalFileName, CG.fullCleanFilename, CG.fullCompassFilename);
+					snprintf(cmd, sizeof(cmd), "%s%sscripts/saveImage.sh %s '%s' '%s' '%s'", praefix, CG.allskyHome, dayOrNight.c_str(), CG.fullFilename, CG.fullCleanFilename, CG.fullCompassFilename);
 
 					// TODO: in the future the calculation of mean should independent from modeMean. -1 means don't display.
 					add_variables_to_command(CG, cmd, exposureStartDateTime);
 					strcat(cmd, " &");
+					Log(4, "  > Saving image cmd: %s\n", cmd);
 					system(cmd);
 				}
 

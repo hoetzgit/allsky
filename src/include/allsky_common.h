@@ -93,6 +93,7 @@ struct overlay {
 	bool showHistogramBox				= false;
 	bool showUSB						= false;
 	bool externalOverlay				= false;
+	bool showMode						= false;
 };
 
 // Histogram Box, ZWO only
@@ -236,6 +237,10 @@ struct config {			// for configuration variables
 		char finalFileName[200]			= { 0 };
 		// full name of file written to disk
 		char fullFilename[1000]			= { 0 };
+		// full name of file without overlay written to disk
+		char fullCleanFilename[1000]	= { 0 };
+		// full name of file with compass overlay written to disk
+		char fullCompassFilename[1000]	= { 0 };
 	long rotation						= 0;
 	long flip							= 0;
 	bool notificationImages				= true;
@@ -274,6 +279,7 @@ struct config {			// for configuration variables
 	long currentTargetTemp;
 	int currentBitDepth;
 	char const *currentTuningFile;
+	std::string currentDayOrNight;
 
 	// Last values - from image just taken.  Only for settings that can change image to image.
 	long lastExposure_us				= NOT_SET;

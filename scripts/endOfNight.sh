@@ -84,6 +84,12 @@ if [ -n "${DAYS_TO_KEEP}" ]; then
 	for i in $(find "${ALLSKY_IMAGES}/" -type d -name "2*"); do	# "2*" for years >= 2000
 		((${del} > $(basename ${i}))) && echo "${ME}: Deleting old directory ${i}" && rm -rf ${i}
 	done
+	for i in $(find "${ALLSKY_IMAGES_CLEAN}/" -type d -name "2*"); do	# "2*" for years >= 2000
+		((${del} > $(basename ${i}))) && echo "${ME}: Deleting old directory ${i}" && rm -rf ${i}
+	done
+	for i in $(find "${ALLSKY_IMAGES_COMPASS}/" -type d -name "2*"); do	# "2*" for years >= 2000
+		((${del} > $(basename ${i}))) && echo "${ME}: Deleting old directory ${i}" && rm -rf ${i}
+	done
 fi
 
 # Automatically delete old website images and videos

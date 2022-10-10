@@ -131,6 +131,9 @@ ASI_CAMERA_INFO ASICameraInfoArray[] =
 		{ASI_IMG_RGB24, ASI_IMG_END}, 1.55, ASI_FALSE, 12, ASI_FALSE},
 
 	// FUTURE CAMERAS GO HERE...
+	{ "ov5647", "RPi V1", 0, 1944, 2592, ASI_TRUE, BAYER_RG, {1, 0},
+		// Need ASI_IMG_END so we know where the end of the list is.
+		{ASI_IMG_RGB24, ASI_IMG_END}, 1.4, ASI_FALSE, 12, ASI_FALSE},
 };
 
 
@@ -285,7 +288,8 @@ ASI_ERROR_CODE ASIGetCameraProperty(ASI_CAMERA_INFO *pASICameraInfo, int iCamera
 			// Found the camera; double check that the sensor is the same.
 			// Unfortunately we don't have anything else to check, like serial number.
 			// I suppose we could also check the Modes are the same, but it's not worth it.
-			for (int i=0; i<numCameras; i++)
+			// for (int i=0; i<numCameras; i++)
+			for (unsigned int i=0; i<sizeof(ASICameraInfoArray); i++)
 			{
 				if (strcmp(sensor, ASICameraInfoArray[i].Module) == 0)
 				{
