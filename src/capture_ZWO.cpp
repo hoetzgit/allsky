@@ -972,7 +972,7 @@ int main(int argc, char *argv[])
 			CG.currentBrightness = CG.nightBrightness;
 			if (CG.isColorCamera)
 			{
-				CG.currentAutoAWB = false;
+				CG.currentAWB = false;
 				CG.currentWBR = CG.nightWBR;
 				CG.currentWBB = CG.nightWBB;
 			}
@@ -1066,7 +1066,7 @@ int main(int argc, char *argv[])
 				CG.currentBrightness = CG.dayBrightness;
 				if (CG.isColorCamera)
 				{
-					CG.currentAutoAWB = CG.dayAutoAWB;
+					CG.currentAWB = CG.dayAWB;
 					CG.currentWBR = CG.dayWBR;
 					CG.currentWBB = CG.dayWBB;
 				}
@@ -1112,7 +1112,7 @@ int main(int argc, char *argv[])
 			CG.currentBrightness = CG.nightBrightness;
 			if (CG.isColorCamera)
 			{
-				CG.currentAutoAWB = CG.nightAutoAWB;
+				CG.currentAWB = CG.nightAWB;
 				CG.currentWBR = CG.nightWBR;
 				CG.currentWBB = CG.nightWBB;
 			}
@@ -1161,10 +1161,10 @@ int main(int argc, char *argv[])
 
 		if (CG.isColorCamera)
 		{
-			setControl(CG.cameraNumber, ASI_WB_R, CG.currentWBR, CG.currentAutoAWB ? ASI_TRUE : ASI_FALSE);
-			setControl(CG.cameraNumber, ASI_WB_B, CG.currentWBB, CG.currentAutoAWB ? ASI_TRUE : ASI_FALSE);
+			setControl(CG.cameraNumber, ASI_WB_R, CG.currentWBR, CG.currentAWB ? ASI_TRUE : ASI_FALSE);
+			setControl(CG.cameraNumber, ASI_WB_B, CG.currentWBB, CG.currentAWB ? ASI_TRUE : ASI_FALSE);
 		}
-		else if (! CG.currentAutoAWB && ! CG.takeDarkFrames)
+		else if (! CG.currentAWB && ! CG.takeDarkFrames)
 		{
 			// We only read the actual values if in auto white balance; since we're not, get them now.
 			CG.lastWBR = CG.currentWBR;

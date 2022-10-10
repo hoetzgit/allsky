@@ -241,9 +241,9 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 		strcat(cmd, tmp);
 	}
 
-	snprintf(tmp, s, " AUTOWB=%d", cg.currentAutoAWB ? 1 : 0);
+	snprintf(tmp, s, " AWB=%d", cg.currentAWB ? 1 : 0);
 	strcat(cmd, tmp);
-	snprintf(tmp, s, " sAUTOAWB='%s'", cg.currentAutoAWB ? "(auto)" : "");
+	snprintf(tmp, s, " sAWB='%s'", cg.currentAWB ? cg.currentAWBmode : "");
 	strcat(cmd, tmp);
 	if (cg.lastWBR >= 0.0) {
 		snprintf(tmp, s, " WBR=%s", LorF(cg.lastWBR, "%d", "%f"));
@@ -1038,7 +1038,8 @@ void displayHelp(config cg)
 	printf(" -%-*s - Daytime maximum auto gain.\n", n, "daymaxautogain n");
 	printf(" -%-*s - Daytime gain.\n", n, "daygain n");
 	printf(" -%-*s - 1 = binning OFF (1x1), 2 = 2x2 binning, etc. [%ld]\n", n, "daybin n", cg.dayBin);
-	printf(" -%-*s - 1 enables auto White Balance [%s].\n", n, "dayautowhitebalance b", yesNo(cg.dayAutoAWB));
+	printf(" -%-*s - 1 enables auto White Balance [%s].\n", n, "dayawb b", yesNo(cg.dayAWB));
+	printf(" -%-*s - Auto White Balance Mode [%s].\n", n, "dayawbmode s", cg.dayAWBmode);
 	printf(" -%-*s - Manual White Balance Red.\n", n, "daywbr n");
 	printf(" -%-*s - Manual White Balance Blue.\n", n, "daywbb n");
 	printf(" -%-*s - Number of auto-exposure frames to skip when starting software during daytime [%ld].\n", n, "dayskipframes n", cg.daySkipFrames);
@@ -1062,7 +1063,8 @@ void displayHelp(config cg)
 	printf(" -%-*s - Nighttime maximum auto gain.\n", n, "nightmaxautogain n");
 	printf(" -%-*s - Nighttime gain.\n", n, "nightgain n");
 	printf(" -%-*s - Same as daybin but for night [%ld].\n", n, "nightbin n", cg.nightBin);
-	printf(" -%-*s - 1 enables auto White Balance [%s].\n", n, "nightautowhitebalance n", yesNo(cg.nightAutoAWB));
+	printf(" -%-*s - 1 enables auto White Balance [%s].\n", n, "nightawb n", yesNo(cg.nightAWB));
+	printf(" -%-*s - Auto White Balance Mode [%s].\n", n, "nightawbmode s", cg.nightAWBmode);
 	printf(" -%-*s - Manual White Balance Red.\n", n, "nightwbr n");
 	printf(" -%-*s - Manual White Balance Blue.\n", n, "nightwbb n");
 	printf(" -%-*s - Number of auto-exposure frames to skip when starting software during nighttime [%ld].\n", n, "nightskipframes n", cg.nightSkipFrames);
@@ -1159,6 +1161,9 @@ void displayHelp(config cg)
 	printf(" -%-*s - Outputs the camera's capabilities to the specified file and exists.\n", n, "cc_file s");
 	printf(" -%-*s - Set mean-value and activates exposure control [%.2f].\n", n, "mean-threshold n", cg.myModeMeanSetting.mean_threshold);
 	if (cg.ct == ctRPi) {
+		if (cg.isLibcamera) {
+			printf(" -%-*s - 1 enables flush output files immediately. [%s]\n", n, "flushimmediately b", yesNo(cg.flushImmediately));
+		}
 		printf(" -%-*s - Command being used to take pictures (Buster: raspistill, Bullseye: libcamera-still\n", n, "cmd s");
 	}
 /* These are too advanced for anyone other than developers.
@@ -1239,8 +1244,8 @@ void displaySettings(config cg)
 	printf("   Binning (day):   %ld\n", cg.dayBin);
 	printf("   Binning (night): %ld\n", cg.nightBin);
 	if (cg.isColorCamera) {
-		printf("   White Balance (day)   Red: %s, Blue: %s, Auto: %s\n", LorF(cg.dayWBR, "%ld", "%.2f"), LorF(cg.dayWBB, "%ld", "%.2f"), yesNo(cg.dayAutoAWB));
-		printf("   White Balance (night) Red: %s, Blue: %s, Auto: %s\n", LorF(cg.nightWBR, "%ld", "%.2f"), LorF(cg.nightWBB, "%ld", "%.2f"), yesNo(cg.nightAutoAWB));
+		printf("   White Balance (day)   Red: %s, Blue: %s, Auto: %s, AutoMode: %s\n", LorF(cg.dayWBR, "%ld", "%.2f"), LorF(cg.dayWBB, "%ld", "%.2f"), yesNo(cg.dayAWB), cg.dayAWBmode);
+		printf("   White Balance (night) Red: %s, Blue: %s, Auto: %s, AutoMode: %s\n", LorF(cg.nightWBR, "%ld", "%.2f"), LorF(cg.nightWBB, "%ld", "%.2f"), yesNo(cg.nightAWB), cg.nightAWBmode);
 	}
 	printf("   Delay (day):   %s\n", length_in_units(cg.dayDelay_ms * US_IN_MS, true));
 	printf("   Delay (night): %s\n", length_in_units(cg.nightDelay_ms * US_IN_MS, true));
@@ -1270,6 +1275,9 @@ void displaySettings(config cg)
 	}
 	if (cg.flip != NOT_CHANGED) printf("   Flip Image: %s (%ld)\n", getFlip(cg.flip), cg.flip);
 	printf("   Filename: %s  saved to %s\n", cg.fileName, cg.saveDir);
+	if (cg.ct == ctRPi && cg.isLibcamera) {
+		printf("      Flush image immediately: %s\n", yesNo(cg.flushImmediately));
+	}
 	printf("   Latitude: %s, Longitude: %s\n", cg.latitude, cg.longitude);
 	printf("   Sun Elevation: %.2f\n", cg.angle);
 	printf("   Locale: %s\n", cg.locale);
@@ -1663,7 +1671,11 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		}
 		else if (strcmp(a, "dayawb") == 0)
 		{
-			cg->dayAutoAWB = getBoolean(argv[++i]);
+			cg->dayAWB = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "dayawbmode") == 0)
+		{
+			cg->dayAWBmode = argv[++i];
 		}
 		else if (strcmp(a, "daywbr") == 0)
 		{
@@ -1742,7 +1754,11 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		}
 		else if (strcmp(a, "nightawb") == 0)
 		{
-			cg->nightAutoAWB = getBoolean(argv[++i]);
+			cg->nightAWB = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "nightawbmode") == 0)
+		{
+			cg->nightAWBmode = argv[++i];
 		}
 		else if (strcmp(a, "nightwbr") == 0)
 		{
@@ -1844,6 +1860,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		{
 			cg->fileName = argv[++i];
 		}
+		else if (strcmp(a, "flushimmediately") == 0)
+		{
+			cg->flushImmediately = getBoolean(argv[++i]);
+		}
 		else if (strcmp(a, "rotation") == 0)
 		{
 			cg->rotation = atol(argv[++i]);
@@ -1858,7 +1878,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		}
 		else if (strcmp(a, "consistentdelays") == 0)
 		{
-        		cg->consistentDelays = getBoolean(argv[++i]);
+			cg->consistentDelays = getBoolean(argv[++i]);
 		}
 		else if (strcmp(a, "latitude") == 0)
 		{
@@ -2010,7 +2030,8 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 			strcmp(a, "cameratype") == 0 ||
 			strcmp(a, "cameramodel") == 0 ||
 			strcmp(a, "showusb") == 0 ||
-			strcmp(a, "alwaysshowadvanced") == 0
+			strcmp(a, "alwaysshowadvanced") == 0 ||
+			strcmp(a, "displaysettings") == 0
 			)
 		{
 			i++;

@@ -1,5 +1,35 @@
 [
 {
+"name" : "CameraHeading",
+"description" : "Camera Type",
+"type" : "header",
+"display" : 1,
+"advanced" : 1
+},
+{
+"name" : "cameraType",
+"default" : "",
+"description" : "The type of camera you are using.  'RPi' includes the HD and compatible cameras.<br>You <b>must</b> set and change the camera here, not in config.sh.",
+"label" : "Camera Type",
+"type" : "select",
+"options" : [
+	{"value" : "RPi", "label" : "RPi"},
+	{"value" : "ZWO", "label" : "ZWO ASI"}
+],
+"display" : 1,
+"checkchanges" : 1,
+"advanced" : 1
+},
+{
+"name" : "cameraModel",
+"default" : "",
+"description" : "The model of camera you are using.  Cannot be changed here.",
+"label" : "Camera Model",
+"type" : "readonly",
+"display" : 1,
+"advanced" : 1
+},
+{
 "name" : "daytimeSettingsHeader",
 "description" : "Daytime settings",
 "type" : "header",
@@ -138,6 +168,18 @@
 "description" : "Sets Auto White Balance.",
 "label" : "Auto White Balance",
 "type" : "checkbox",
+"display" : "awb_display",
+"advanced" : 0
+},
+{
+"name" : "dayawbmode",
+"default" : "auto",
+"description" : "This option sets the AWB algorithm into the named AWB mode.",
+"label" : "Auto White Balance Mode",
+"type" : "select",
+"options" : [
+	"awbmode_values"
+],
 "display" : "awb_display",
 "advanced" : 0
 },
@@ -324,6 +366,18 @@
 "description" : "Activate to enable Auto White Balance (camera adjusts color).",
 "label" : "Auto White Balance",
 "type" : "checkbox",
+"display" : "awb_display",
+"advanced" : 0
+},
+{
+"name" : "nightawbmode",
+"default" : "auto",
+"description" : "This option sets the AWB algorithm into the named AWB mode.",
+"label" : "Auto White Balance Mode",
+"type" : "select",
+"options" : [
+	"awbmode_values"
+],
 "display" : "awb_display",
 "advanced" : 0
 },
@@ -572,6 +626,15 @@
 "advanced" : 1
 },
 {
+"name" : "flushImmediately",
+"default" : 0,
+"description" : "If activated then output files to be flushed to disk as soon as every frame is written, rather than waiting for the system to do it.",
+"label" : "Flush output files immediately",
+"type" : "checkbox",
+"display" : 1,
+"advanced" : 1
+},
+{
 "name" : "rotation",
 "default" : 0,
 "description" : "Set image rotation to enable proper orientation.",
@@ -759,7 +822,7 @@
 "default" : "%Y%m%d %H:%M:%S",
 "description" : "Determines the format of the displayed time. Run 'man 3 strftime' to see the options.",
 "label" : "Time Format",
-"type" : "text",
+"type" : "widetext",
 "display" : 1,
 "nullOK" : 0,
 "advanced" : 0
@@ -1089,7 +1152,7 @@
 "default" : "",
 "description" : "The lens you're using on your camera, for example: Arecont 1.55.",
 "label" : "Lens",
-"type" : "text",
+"type" : "widetext",
 "display" : 1,
 "checkchanges" : 1,
 "advanced" : 0
@@ -1103,36 +1166,6 @@
 "display" : 1,
 "checkchanges" : 1,
 "advanced" : 0
-},
-{
-"name" : "CameraHeading",
-"description" : "Camera Type",
-"type" : "header",
-"display" : 1,
-"advanced" : 1
-},
-{
-"name" : "cameraType",
-"default" : "",
-"description" : "The type of camera you are using.  'RPi' includes the HD and compatible cameras.<br>You <b>must</b> set and change the camera here, not in config.sh.",
-"label" : "Camera Type",
-"type" : "select",
-"options" : [
-	{"value" : "RPi", "label" : "RPi"},
-	{"value" : "ZWO", "label" : "ZWO ASI"}
-],
-"display" : 1,
-"checkchanges" : 1,
-"advanced" : 1
-},
-{
-"name" : "cameraModel",
-"default" : "",
-"description" : "The model of camera you are using.  Cannot be changed here.",
-"label" : "Camera Model",
-"type" : "readonly",
-"display" : 1,
-"advanced" : 1
 },
 {
 "name" : "XX_END_XX"

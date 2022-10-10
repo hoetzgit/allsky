@@ -94,7 +94,7 @@
 "description" : "The target mean brightness level when <b>Auto-Exposure</b> is on. 1.0 is pure white.<br>Best used when <b>Auto-Exposure</b> and <b>Auto-Gain</b> are on.<br>0 disables this auto-exposure mode.",
 "label" : "Mean Target",
 "type" : "number",
-"display" : 1,
+"display" : "mean_display",
 "advanced" : 1
 },
 {
@@ -105,7 +105,7 @@
 "description" : "Changes the amount of light in the image.<br>Higher values are brighter.",
 "label" : "Brightness",
 "type" : "number",
-"display" : 1,
+"display" : "brightness_display",
 "advanced" : 0
 },
 {
@@ -169,7 +169,25 @@
 "description" : "Sets Auto White Balance.",
 "label" : "Auto White Balance",
 "type" : "checkbox",
-"display" : 1,
+"display" : "awb_display",
+"advanced" : 0
+},
+{
+"name" : "dayawbmode",
+"default" : "auto",
+"description" : "This option sets the AWB algorithm into the named AWB mode.",
+"label" : "Auto White Balance Mode",
+"type" : "select",
+"options" : [
+	{"value" : "auto", "label" : "auto"},
+	{"value" : "incandescent", "label" : "incandescent"},
+	{"value" : "tungsten", "label" : "tungsten"},
+	{"value" : "fluorescent", "label" : "fluorescent"},
+	{"value" : "indoor", "label" : "indoor"},
+	{"value" : "daylight", "label" : "daylight"},
+	{"value" : "cloudy", "label" : "cloudy"}
+],
+"display" : "awb_display",
 "advanced" : 0
 },
 {
@@ -180,7 +198,7 @@
 "description" : "Red component for the white balance.<br>When using <b>Auto White Balance</b>, this number is a starting point.",
 "label" : "Red Balance",
 "type" : "number",
-"display" : 1,
+"display" : "wbr_display",
 "advanced" : 0
 },
 {
@@ -191,7 +209,7 @@
 "description" : "Blue component for the white balance.<br>When using <b>Auto White Balance</b>, this number is a starting point.",
 "label" : "Blue Balance",
 "type" : "number",
-"display" : 1,
+"display" : "wbb_display",
 "advanced" : 0
 },
 {
@@ -211,7 +229,7 @@
 "description" : "Name of the day camera tuning file to use. Omit this option to preserve the default behavior of libcamera.<br>Please read this <b><a href='https://www.raspberrypi.com/documentation/accessories/camera.html' target='_blank' rel='noreferrer'>documentation</a></b> or this <b><a href='https://datasheets.raspberrypi.com/camera/raspberry-pi-camera-guide.pdf' target='_blank' rel='noreferrer'>document</a></b> if using a Raspberry camera with libcamera. For other Raspberry cameras read the camera manual for more information.",
 "label" : "Tuning File",
 "type" : "widetext",
-"display" : 1,
+"display" : "TuningFile_display",
 "checkchanges" : 1,
 "advanced" : 1
 },
@@ -261,7 +279,7 @@
 "description" : "The target mean brightness level when <b>Auto-Exposure</b> is on. 1.0 is pure white.<br>Best used when <b>Auto-Exposure</b> and <b>Auto-Gain</b> are on.<br>0 disables this auto-exposure mode.",
 "label" : "Mean Target",
 "type" : "number",
-"display" : 1,
+"display" : "mean_display",
 "advanced" : 1
 },
 {
@@ -272,7 +290,7 @@
 "description" : "Changes the amount of light in the image.<br>Higher values are brighter.",
 "label" : "Brightness",
 "type" : "number",
-"display" : 1,
+"display" : "brightness_display",
 "advanced" : 0
 },
 {
@@ -336,7 +354,25 @@
 "description" : "Activate to enable Auto White Balance (camera adjusts color).",
 "label" : "Auto White Balance",
 "type" : "checkbox",
-"display" : 1,
+"display" : "awb_display",
+"advanced" : 0
+},
+{
+"name" : "nightawbmode",
+"default" : "auto",
+"description" : "This option sets the AWB algorithm into the named AWB mode.",
+"label" : "Auto White Balance Mode",
+"type" : "select",
+"options" : [
+	{"value" : "auto", "label" : "auto"},
+	{"value" : "incandescent", "label" : "incandescent"},
+	{"value" : "tungsten", "label" : "tungsten"},
+	{"value" : "fluorescent", "label" : "fluorescent"},
+	{"value" : "indoor", "label" : "indoor"},
+	{"value" : "daylight", "label" : "daylight"},
+	{"value" : "cloudy", "label" : "cloudy"}
+],
+"display" : "awb_display",
 "advanced" : 0
 },
 {
@@ -347,7 +383,7 @@
 "description" : "Red component for the white balance.<br>When using <b>Auto White Balance</b>, this number is a starting point.",
 "label" : "Red Balance",
 "type" : "number",
-"display" : 1,
+"display" : "wbr_display",
 "advanced" : 0
 },
 {
@@ -358,7 +394,7 @@
 "description" : "Blue component for the white balance.<br>When using <b>Auto White Balance</b>, this number is a starting point.",
 "label" : "Blue Balance",
 "type" : "number",
-"display" : 1,
+"display" : "wbb_display",
 "advanced" : 0
 },
 {
@@ -378,7 +414,7 @@
 "description" : "Name of the night camera tuning file to use. Omit this option to preserve the default behavior of libcamera.<br>Please read this <b><a href='https://www.raspberrypi.com/documentation/accessories/camera.html' target='_blank' rel='noreferrer'>documentation</a></b> or this <b><a href='https://datasheets.raspberrypi.com/camera/raspberry-pi-camera-guide.pdf' target='_blank' rel='noreferrer'>document</a></b> if using a Raspberry camera with libcamera. For other Raspberry cameras read the camera manual for more information.",
 "label" : "Tuning File",
 "type" : "widetext",
-"display" : 1,
+"display" : "TuningFile_display",
 "checkchanges" : 1,
 "advanced" : 1
 },
@@ -407,7 +443,7 @@
 "description" : "Changes the saturation level of the image.<br>The lowest level produces a black and white image.",
 "label" : "Saturation",
 "type" : "number",
-"display" : 1,
+"display" : "saturation_display",
 "advanced" : 1
 },
 {
@@ -418,7 +454,7 @@
 "description" : "Changes the contrast of an image.",
 "label" : "Contrast",
 "type" : "number",
-"display" : 1,
+"display" : "contrast_display",
 "advanced" : 1
 },
 {
@@ -429,7 +465,7 @@
 "description" : "Changes the sharpness of an image.<br>Too sharp and images look unnatural.",
 "label" : "Sharpness",
 "type" : "number",
-"display" : 1,
+"display" : "sharpness_display",
 "advanced" : 1
 },
 {
@@ -460,11 +496,11 @@
 "description" : "'auto' uses color if possible, otherwise the best mono mode supported.<br>RAW16 only works with PNG extension.",
 "label" : "Image Type",
 "type" : "select",
+"display" : 1,
 "options" : [
 	{"value" : 99, "label" : "auto"},
 	{"value" : 1, "label" : "RGB24"}
 ],
-"display" : 1,
 "advanced" : 1
 },
 {
@@ -486,7 +522,7 @@
 "description" : "When using <b>Mean Target</b> this specifies how close to the target the brightness should be.",
 "label" : "Mean Threshold",
 "type" : "number",
-"display" : 1,
+"display" : "meanthreshold_display",
 "advanced" : 1
 },
 {
@@ -499,6 +535,28 @@
 "checkchanges" : 1,
 "nullOK" : 0,
 "advanced" : 1
+},
+{
+"name" : "flushImmediately",
+"default" : 0,
+"description" : "If activated then output files to be flushed to disk as soon as every frame is written, rather than waiting for the system to do it.",
+"label" : "Flush output files immediately",
+"type" : "checkbox",
+"display" : 1,
+"advanced" : 1
+},
+{
+"name" : "rotation",
+"default" : 0,
+"description" : "Set image rotation to enable proper orientation.",
+"label" : "Rotation",
+"type" : "select",
+"options" : [
+	{"value" : 0, "label" : "0"},
+	{"value" : 180, "label" : "180"}
+],
+"display" : "rotation_display",
+"advanced" : 0
 },
 {
 "name" : "flip",

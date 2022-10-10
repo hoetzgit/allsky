@@ -239,7 +239,7 @@ int RPicapture(config cg, cv::Mat *image)
 
 	// libcamera: if the red and blue numbers are given it turns off AWB.
 	// Check if R and B component are given
-	if (! cg.currentAutoAWB) {
+	if (! cg.currentAWB) {
 		ss.str("");
 		ss << cg.currentWBR << "," << cg.currentWBB;
 		if (! cg.isLibcamera)
@@ -248,7 +248,9 @@ int RPicapture(config cg, cv::Mat *image)
 			command += " --awbgains " + ss.str();
 	}
 	else {		// Use automatic white balance
-		command += " --awb auto";
+		ss.str("");
+		ss << cg.currentAWBmode;
+		command += " --awb " + ss.str();
 	}
 
 	if (cg.rotation != 0) {
@@ -297,6 +299,10 @@ int RPicapture(config cg, cv::Mat *image)
 
 	if (cg.isLibcamera)
 	{
+		if (cg.flushImmediately) {
+			command += " --flush";
+		}
+		
 		if (cg.debugLevel >= 4)
 		{
 			command += " > /tmp/capture_RPi_debug.txt 2>&1";
@@ -528,7 +534,7 @@ int main(int argc, char *argv[])
 			CG.currentBrightness = CG.nightBrightness;
 			if (CG.isColorCamera)
 			{
-				CG.currentAutoAWB = false;
+				CG.currentAWB = false;
 				CG.currentWBR = CG.nightWBR;
 				CG.currentWBB = CG.nightWBB;
 			}
@@ -584,7 +590,8 @@ int main(int argc, char *argv[])
 				CG.currentBrightness = CG.dayBrightness;
 				if (CG.isColorCamera)
 				{
-					CG.currentAutoAWB = CG.dayAutoAWB;
+					CG.currentAWB = CG.dayAWB;
+					CG.currentAWBmode = CG.dayAWBmode;
 					CG.currentWBR = CG.dayWBR;
 					CG.currentWBB = CG.dayWBB;
 				}
@@ -617,7 +624,8 @@ int main(int argc, char *argv[])
 			CG.currentBrightness = CG.nightBrightness;
 			if (CG.isColorCamera)
 			{
-				CG.currentAutoAWB = CG.nightAutoAWB;
+				CG.currentAWB = CG.nightAWB;
+				CG.currentAWBmode = CG.nightAWBmode;
 				CG.currentWBR = CG.nightWBR;
 				CG.currentWBB = CG.nightWBB;
 			}

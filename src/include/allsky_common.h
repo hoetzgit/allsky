@@ -213,8 +213,10 @@ struct config {			// for configuration variables
 	double nightGain					= NOT_CHANGED;
 	long dayBin							= 1;				// Bin requested by user
 	long nightBin						= 1;
-	bool dayAutoAWB						= false;			// Use auto AWB?
-	bool nightAutoAWB					= false;
+	bool dayAWB							= false;			// Use auto AWB?
+	bool nightAWB						= false;
+	const char *dayAWBmode				= "auto";			// AWB Mode if auto AWB is true
+	const char *nightAWBmode			= "auto";
 	double dayWBR						= NOT_CHANGED;		// Red balance requested by user
 	double nightWBR						= NOT_CHANGED;
 	double dayWBB						= NOT_CHANGED;		// Blue balance requested by user
@@ -254,6 +256,7 @@ struct config {			// for configuration variables
 	bool consistentDelays				= true;
 	bool videoOffBetweenImages			= true;
 	char const *ASIversion				= "UNKNOWN";		// calculated value
+	bool flushImmediately				= false;			// Flush output files immediately
 
 	struct overlay overlay;
 	struct myModeMeanSetting myModeMeanSetting;
@@ -272,7 +275,7 @@ struct config {			// for configuration variables
 	double currentMaxAutoGain;
 	double currentGain;
 	long currentBin;
-	bool currentAutoAWB;
+	bool currentAWB;
 	double currentWBR, currentWBB;
 	long currentSkipFrames;
 	bool currentEnableCooler;
@@ -280,6 +283,7 @@ struct config {			// for configuration variables
 	int currentBitDepth;
 	char const *currentTuningFile;
 	std::string currentDayOrNight;
+	const char *currentAWBmode;
 
 	// Last values - from image just taken.  Only for settings that can change image to image.
 	long lastExposure_us				= NOT_SET;
