@@ -30,7 +30,6 @@ export DAY_OR_NIGHT="${1}"
 
 # Export so other scripts can use it.
 export CURRENT_IMAGE="${2}"
-shift 2
 if [[ ! -f ${CURRENT_IMAGE} ]] ; then
 	echo -e "${RED}*** ${ME}: ERROR: File '${CURRENT_IMAGE}' not found; ignoring${NC}"
 	exit 2
