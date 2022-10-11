@@ -3,10 +3,7 @@ tmp/*
 images/*
 gibbons*
 liveview*
-image.jpg
-image-resize.jpg
-image-processed.jpg
-temperature.txt
+image*.jpg
 data.json
 log.txt
 
