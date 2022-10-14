@@ -798,6 +798,15 @@
 "advanced" : 1
 },
 {
+"name" : "showCompass",
+"default" : 0,
+"description" : "Activate to display a compass image on the overlay.",
+"label" : "Show Compass",
+"type" : "checkbox",
+"display" : 1,
+"advanced" : 1
+},
+{
 "name" : "text",
 "default" : "",
 "description" : "Text that appears below the optional time with the same color and size.",

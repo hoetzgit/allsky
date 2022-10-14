@@ -791,12 +791,15 @@ int doOverlay(cv::Mat image, config cg, char *startTime, int gainChange)
 		}
 	}
 
-	// quick & dirty test compass overlay
-	cv::Mat compass = cv::imread("/home/pi/allsky/compass.png", -1);
-	cv::Point location(3500, 25);
-	cv::Mat output;
-	overlayImage(image, compass, output, location, 1.0);
-	output.copyTo(image);
+	if (cg.overlay.showCompass)
+	{
+		// quick & dirty test compass overlay
+		cv::Mat compass = cv::imread("/home/pi/allsky/compass.png", -1);
+		cv::Point location(3500, 25);
+		cv::Mat output;
+		overlayImage(image, compass, output, location, 1.0);
+		output.copyTo(image);
+	}
 
 	return(iYOffset);
 }
@@ -1137,6 +1140,7 @@ void displayHelp(config cg)
 	printf(" -%-*s - 1 displays the mean brightness used in auto-exposure [%s].\n", n, "showMean b", yesNo(cg.overlay.showMean));
 	printf(" -%-*s - 1 displays a focus metric - the higher the number the better focus [%s].\n", n, "showFocus b", yesNo(cg.overlay.showFocus));
 	printf(" -%-*s - 1 displays day or night mode [%s].\n", n, "showMode b", yesNo(cg.overlay.showMode));
+	printf(" -%-*s - 1 displayd a compass image on the overlay. [%s].\n", n, "showCompass b", yesNo(cg.overlay.showCompass));
 	if (cg.ct == ctZWO) {
 		printf(" -%-*s - 1 displays an outline of the histogram box.\n", n, "showhistogrambox b");
 		printf("  %-*s   Useful to determine what parameters to use with -histogrambox.\n", n, "");
@@ -1324,6 +1328,7 @@ void displaySettings(config cg)
 	printf("      Show Target Mean Brightness: %s\n", yesNo(cg.overlay.showMean));
 	printf("      Show Focus Metric: %s\n", yesNo(cg.overlay.showFocus));
 	printf("      Show Mode: %s\n", yesNo(cg.overlay.showMode));
+	printf("      Show Compass: %s\n", yesNo(cg.overlay.showCompass));
 	if (cg.ct == ctZWO) {
 		printf("      Show Histogram Box: %s\n", yesNo(cg.overlay.showHistogramBox));
 	}
@@ -1961,6 +1966,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		else if (strcmp(a, "showmode") == 0)
 		{
 			cg->overlay.showMode = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "showcompass") == 0)
+		{
+			cg->overlay.showCompass = getBoolean(argv[++i]);
 		}
 		else if (strcmp(a, "text") == 0)
 		{

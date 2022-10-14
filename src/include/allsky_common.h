@@ -94,6 +94,7 @@ struct overlay {
 	bool showUSB						= false;
 	bool externalOverlay				= false;
 	bool showMode						= false;
+	bool showCompass					= false;
 };
 
 // Histogram Box, ZWO only

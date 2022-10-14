@@ -791,12 +791,16 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 					if (CG.currentSkipFrames == 0 && ! CG.overlay.externalOverlay) {
 						snprintf(CG.fullCompassFilename, sizeof(CG.fullCompassFilename), "%s/%s-%s",
 							CG.saveDir, "compass", CG.finalFileName);
-						// quick & dirty test compass overlay
-						cv::Mat compass = cv::imread("/home/pi/allsky/compass.png", -1);
-						cv::Point location(30, 25);
 						cv::Mat output;
-						overlayImage(pRgb, compass, output, location, 1.0);
-						//Log(4, "  > Write image with compass overlay '%s'\n", CG.fullCompassFilename);
+						if (CG.overlay.showCompass) {
+							// quick & dirty test compass overlay
+							cv::Mat compass = cv::imread("/home/pi/allsky/compass.png", -1);
+							cv::Point location(30, 25);
+							overlayImage(pRgb, compass, output, location, 1.0);
+							//Log(4, "  > Write image with compass overlay '%s'\n", CG.fullCompassFilename);
+						} else {
+							output = pRgb;
+						}
 						bool result = cv::imwrite(CG.fullCompassFilename, output, compressionParameters);
 						if (! result) fprintf(stderr, "*** ERROR: Unable to write to '%s'\n", CG.fullCompassFilename);
 					}
@@ -888,4 +892,3 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 
 	closeUp(EXIT_OK);
 }
-
