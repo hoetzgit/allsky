@@ -255,7 +255,7 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 	}
 
 	if (cg.currentBrightness >= 0) {
-		snprintf(tmp, s, " BRIGHTNESS=%ld", cg.currentBrightness);
+		snprintf(tmp, s, " BRIGHTNESS=%.1f", cg.currentBrightness);
 		strcat(cmd, tmp);
 	}
 
@@ -683,7 +683,7 @@ int doOverlay(cv::Mat image, config cg, char *startTime, int gainChange)
 
 	if (cg.overlay.showBrightness)
 	{
-		sprintf(tmp, "Brightness: %ld", cg.currentBrightness);
+		sprintf(tmp, "Brightness: %.1f", cg.currentBrightness);
 		cvText(image, tmp, cg.overlay.iTextX, cg.overlay.iTextY + (iYOffset / cg.currentBin),
 			cg.overlay.fontsize * SMALLFONTSIZE_MULTIPLIER, cg.overlay.linewidth,
 			lineType, font, cg.overlay.smallFontcolor, cg.imageType, cg.overlay.outlinefont, cg.width);
@@ -1035,7 +1035,11 @@ void displayHelp(config cg)
 	printf(" -%-*s - Daytime exposure in us [%'ld].\n", n, "dayexposure n", cg.dayExposure_us);
 	printf(" -%-*s - Daytime mean target brightness [%.2f].\n", n, "daymean", cg.myModeMeanSetting.dayMean);
 	printf("  %-*s   NOTE: Daytime auto-gain and auto-exposure should be on for best results.\n", n, "");
-	printf(" -%-*s - Daytime brightness change [%'ld].\n", n, "daybrightness n", cg.dayBrightness);
+	printf(" -%-*s - Daytime brightness change [%.1f].\n", n, "daybrightness n", cg.dayBrightness);
+	if (cg.ct == ctRPi) {
+		printf(" -%-*s - Daytime saturation change [%f].\n", n, "nightsaturation n", cg.daySaturation);
+		printf(" -%-*s - Daytime contrast change [%f].\n", n, "nightcontrast n", cg.dayContrast);
+	}
 	printf(" -%-*s - Delay between daytime images in ms [%'ld].\n", n, "dayDelay n", cg.dayDelay_ms);
 	printf(" -%-*s - 1 enables daytime auto gain [%s].\n", n, "dayautogain b", yesNo(cg.dayAutoGain));
 	printf(" -%-*s - Daytime maximum auto gain.\n", n, "daymaxautogain n");
@@ -1060,7 +1064,11 @@ void displayHelp(config cg)
 	printf(" -%-*s - Nighttime exposure in us [%'ld].\n", n, "nightexposure n", cg.nightExposure_us * US_IN_MS);
 	printf(" -%-*s - Nighttime mean target brightness [%.2f].\n", n, "nightmean n", cg.myModeMeanSetting.nightMean);
 	printf("  %-*s   NOTE: Nighttime auto-gain and auto-exposure should be on for best results.\n", n, "");
-	printf(" -%-*s - Nighttime brightness change [%ld].\n", n, "nightbrightness n n", cg.nightBrightness);
+	printf(" -%-*s - Nighttime brightness change [%.1f].\n", n, "nightbrightness n", cg.nightBrightness);
+	if (cg.ct == ctRPi) {
+		printf(" -%-*s - Nighttime saturation change [%f].\n", n, "nightsaturation n", cg.nightSaturation);
+		printf(" -%-*s - Nighttime contrast change [%f].\n", n, "nightcontrast n", cg.nightContrast);
+	}
 	printf(" -%-*s - Delay between nighttime images in ms [%'ld].\n", n, "nightDelay n", cg.nightDelay_ms);
 	printf(" -%-*s - 1 enables nighttime auto gain [%s].\n", n, "nightautogain b", yesNo(cg.nightAutoGain));
 	printf(" -%-*s - Nighttime maximum auto gain.\n", n, "nightmaxautogain n");
@@ -1081,8 +1089,6 @@ void displayHelp(config cg)
 
 	printf("\nDay and nighttime settings:\n");
 	if (cg.ct == ctRPi) {
-		printf(" -%-*s - Image saturation.\n", n, "saturation n");
-		printf(" -%-*s - Image contrast..\n", n, "contrast n");
 		printf(" -%-*s - Image sharpness.\n", n, "sharpness n");
 	}
 	if (cg.ct == ctZWO) {
@@ -1243,8 +1249,8 @@ void displaySettings(config cg)
 
 	if (cg.gainTransitionTimeImplemented)
 		printf("   Gain Transition Time: %.1f minutes\n", (float) cg.gainTransitionTime/60);
-	printf("   Brightness (day):   %ld\n", cg.dayBrightness);
-	printf("   Brightness (night): %ld\n", cg.nightBrightness);
+	printf("   Brightness (day):   %.1f\n", cg.dayBrightness);
+	printf("   Brightness (night): %.1f\n", cg.nightBrightness);
 	printf("   Binning (day):   %ld\n", cg.dayBin);
 	printf("   Binning (night): %ld\n", cg.nightBin);
 	if (cg.isColorCamera) {
@@ -1272,9 +1278,11 @@ void displaySettings(config cg)
 		if (cg.asiBandwidth != NOT_CHANGED) printf("   USB Speed: %ld, auto: %s\n", cg.asiBandwidth, yesNo(cg.asiAutoBandwidth));
 	}
 	if (cg.ct == ctRPi) {
-		printf("   Saturation: %.1f\n", cg.saturation);
-		printf("   Contrast: %.1f\n", cg.contrast);
-		printf("   Sharpness: %.1f\n", cg.sharpness);
+		printf("   Saturation (day): %f\n", cg.daySaturation);
+		printf("   Saturation (night): %f\n", cg.nightSaturation);
+		printf("   Contrast (day): %f\n", cg.dayContrast);
+		printf("   Contrast (night): %f\n", cg.nightContrast);
+		printf("   Sharpness: %f\n", cg.sharpness);
 		printf("   Rotation: %ld\n", cg.rotation);
 	}
 	if (cg.flip != NOT_CHANGED) printf("   Flip Image: %s (%ld)\n", getFlip(cg.flip), cg.flip);
@@ -1652,7 +1660,15 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		}
 		else if (strcmp(a, "daybrightness") == 0)
 		{
-			cg->dayBrightness = atol(argv[++i]);
+			cg->dayBrightness = atof(argv[++i]);
+		}
+		else if (strcmp(a, "daysaturation") == 0)
+		{
+			cg->daySaturation = atof(argv[++i]);
+		}
+		else if (strcmp(a, "daycontrast") == 0)
+		{
+			cg->dayContrast = atof(argv[++i]);
 		}
 		else if (strcmp(a, "daydelay") == 0)
 		{
@@ -1735,7 +1751,15 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		}
 		else if (strcmp(a, "nightbrightness") == 0)
 		{
-			cg->nightBrightness = atol(argv[++i]);
+			cg->nightBrightness = atof(argv[++i]);
+		}
+		else if (strcmp(a, "nightsaturation") == 0)
+		{
+			cg->nightSaturation = atof(argv[++i]);
+		}
+		else if (strcmp(a, "nightcontrast") == 0)
+		{
+			cg->nightContrast = atof(argv[++i]);
 		}
 		else if (strcmp(a, "nightdelay") == 0)
 		{
@@ -1791,14 +1815,6 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		}
 
 		// daytime and nighttime settings
-		else if (strcmp(a, "saturation") == 0)
-		{
-			cg->saturation = atof(argv[++i]);
-		}
-		else if (strcmp(a, "contrast") == 0)
-		{
-			cg->contrast = atof(argv[++i]);
-		}
 		else if (strcmp(a, "sharpness") == 0)
 		{
 			cg->sharpness = atof(argv[++i]);

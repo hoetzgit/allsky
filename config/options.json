@@ -109,6 +109,28 @@
 "advanced" : 0
 },
 {
+"name" : "daysaturation",
+"minimum" : "0",
+"maximum" : "none",
+"default" : "1",
+"description" : "Changes the saturation level of the image.<br>The lowest level produces a black and white image.",
+"label" : "Saturation",
+"type" : "number",
+"display" : 1,
+"advanced" : 1
+},
+{
+"name" : "daycontrast",
+"minimum" : "0",
+"maximum" : "none",
+"default" : "1",
+"description" : "Changes the contrast of an image.",
+"label" : "Contrast",
+"type" : "number",
+"display" : 1,
+"advanced" : 1
+},
+{
 "name" : "daydelay",
 "minimum" : "0",
 "maximum" : "none",
@@ -284,14 +306,36 @@
 },
 {
 "name" : "nightbrightness",
-"minimum" : "-1",
-"maximum" : "1",
-"default" : "0",
+"minimum" : "-1.0",
+"maximum" : "1.0",
+"default" : "0.0",
 "description" : "Changes the amount of light in the image.<br>Higher values are brighter.",
 "label" : "Brightness",
 "type" : "number",
 "display" : 1,
 "advanced" : 0
+},
+{
+"name" : "nightsaturation",
+"minimum" : "0.0",
+"maximum" : "none",
+"default" : "1.0",
+"description" : "Changes the saturation level of the image.<br>The lowest level produces a black and white image.",
+"label" : "Saturation",
+"type" : "number",
+"display" : 1,
+"advanced" : 1
+},
+{
+"name" : "nightcontrast",
+"minimum" : "0.0",
+"maximum" : "none",
+"default" : "1.0",
+"description" : "Changes the contrast of an image.",
+"label" : "Contrast",
+"type" : "number",
+"display" : 1,
+"advanced" : 1
 },
 {
 "name" : "nightdelay",
@@ -436,32 +480,10 @@
 "advanced" : 1
 },
 {
-"name" : "saturation",
-"minimum" : "0",
-"maximum" : "99",
-"default" : "1",
-"description" : "Changes the saturation level of the image.<br>The lowest level produces a black and white image.",
-"label" : "Saturation",
-"type" : "number",
-"display" : 1,
-"advanced" : 1
-},
-{
-"name" : "contrast",
-"minimum" : "0",
-"maximum" : "99",
-"default" : "1",
-"description" : "Changes the contrast of an image.",
-"label" : "Contrast",
-"type" : "number",
-"display" : 1,
-"advanced" : 1
-},
-{
 "name" : "sharpness",
-"minimum" : "0",
-"maximum" : "99",
-"default" : "1",
+"minimum" : "0.0",
+"maximum" : "none",
+"default" : "1.0",
 "description" : "Changes the sharpness of an image.<br>Too sharp and images look unnatural.",
 "label" : "Sharpness",
 "type" : "number",

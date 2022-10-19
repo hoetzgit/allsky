@@ -109,6 +109,28 @@
 "advanced" : 0
 },
 {
+"name" : "daysaturation",
+"minimum" : "daysaturation_min",
+"maximum" : "daysaturation_max",
+"default" : "daysaturation_default",
+"description" : "Changes the saturation level of the image.<br>The lowest level produces a black and white image.",
+"label" : "Saturation",
+"type" : "number",
+"display" : "saturation_display",
+"advanced" : 1
+},
+{
+"name" : "daycontrast",
+"minimum" : "daycontrast_min",
+"maximum" : "daycontrast_max",
+"default" : "daycontrast_default",
+"description" : "Changes the contrast of an image.",
+"label" : "Contrast",
+"type" : "number",
+"display" : "contrast_display",
+"advanced" : 1
+},
+{
 "name" : "daydelay",
 "minimum" : "delay_min",
 "maximum" : "none",
@@ -307,6 +329,28 @@
 "advanced" : 0
 },
 {
+"name" : "nightsaturation",
+"minimum" : "nightsaturation_min",
+"maximum" : "nightsaturation_max",
+"default" : "nightsaturation_default",
+"description" : "Changes the saturation level of the image.<br>The lowest level produces a black and white image.",
+"label" : "Saturation",
+"type" : "number",
+"display" : "saturation_display",
+"advanced" : 1
+},
+{
+"name" : "nightcontrast",
+"minimum" : "nightcontrast_min",
+"maximum" : "nightcontrast_max",
+"default" : "nightcontrast_default",
+"description" : "Changes the contrast of an image.",
+"label" : "Contrast",
+"type" : "number",
+"display" : "contrast_display",
+"advanced" : 1
+},
+{
 "name" : "nightdelay",
 "minimum" : "delay_min",
 "maximum" : "none",
@@ -459,28 +503,6 @@
 "type" : "widetext",
 "display" : 1,
 "checkchanges" : 1,
-"advanced" : 1
-},
-{
-"name" : "saturation",
-"minimum" : "saturation_min",
-"maximum" : "saturation_max",
-"default" : "saturation_default",
-"description" : "Changes the saturation level of the image.<br>The lowest level produces a black and white image.",
-"label" : "Saturation",
-"type" : "number",
-"display" : "saturation_display",
-"advanced" : 1
-},
-{
-"name" : "contrast",
-"minimum" : "contrast_min",
-"maximum" : "contrast_max",
-"default" : "contrast_default",
-"description" : "Changes the contrast of an image.",
-"label" : "Contrast",
-"type" : "number",
-"display" : "contrast_display",
 "advanced" : 1
 },
 {

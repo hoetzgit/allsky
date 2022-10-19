@@ -264,27 +264,42 @@ int RPicapture(config cg, cv::Mat *image)
 	if (cg.flip == 2 || cg.flip == 3)
 		command += " --vflip";		// vertical flip
 
-	if (cg.saturation != IS_DEFAULT) {
+	if (cg.currentSaturation != IS_DEFAULT) {
 		ss.str("");
-		ss << cg.saturation;
+		if (cg.isLibcamera) {
+			// User enters -100 to 100.  Convert < 0 to 0
+			if (cg.currentSaturation < 0.0)
+				cg.currentSaturation = 0.0;
+		}
+		ss << cg.currentSaturation;
 		command += " --saturation "+ ss.str();
 	}
 
-	if (cg.contrast != IS_DEFAULT) {
+	if (cg.currentContrast != IS_DEFAULT) {
 		ss.str("");
-		ss << cg.contrast;
+		if (cg.isLibcamera) {
+			// User enters -100 to 100.  Convert < 0 to 0
+			if (cg.currentContrast < 0.0)
+				cg.currentContrast = 0.0;
+		}
+		ss << cg.currentContrast;
 		command += " --contrast "+ ss.str();
 	}
 
 	if (cg.sharpness != IS_DEFAULT) {
 		ss.str("");
+		if (cg.isLibcamera) {
+			// User enters -100 to 100.  Convert < 0 to 0
+			if (cg.sharpness < 0.0)
+				cg.sharpness = 0.0;
+		}
 		ss << cg.sharpness;
 		command += " --sharpness "+ ss.str();
 	}
 
 	if (cg.currentBrightness != IS_DEFAULT) {
 		ss.str("");
-		if (cg.isLibcamera)
+		if (cg.isLibcamera and (cg.currentBrightness < -1.0 or cg.currentBrightness > 1.0))
 			ss << (float) cg.currentBrightness / 100;	// User enters -100 to 100.  Convert to -1.0 to 1.0.
 		else
 			ss << cg.currentBrightness;
@@ -532,6 +547,8 @@ int main(int argc, char *argv[])
 			CG.currentExposure_us = CG.nightMaxAutoExposure_us;
 			CG.currentMaxAutoExposure_us = CG.nightMaxAutoExposure_us;
 			CG.currentBrightness = CG.nightBrightness;
+			CG.currentSaturation = CG.nightSaturation;
+			CG.currentContrast = CG.nightContrast;
 			if (CG.isColorCamera)
 			{
 				CG.currentAWB = false;
@@ -589,6 +606,8 @@ int main(int argc, char *argv[])
 				CG.currentExposure_us = CG.dayExposure_us;
 				CG.currentMaxAutoExposure_us = CG.dayMaxAutoExposure_us;
 				CG.currentBrightness = CG.dayBrightness;
+				CG.currentSaturation = CG.daySaturation;
+				CG.currentContrast = CG.dayContrast;
 				if (CG.isColorCamera)
 				{
 					CG.currentAWB = CG.dayAWB;
@@ -632,6 +651,8 @@ int main(int argc, char *argv[])
 			CG.currentExposure_us = CG.nightExposure_us;
 			CG.currentMaxAutoExposure_us = CG.nightMaxAutoExposure_us;
 			CG.currentBrightness = CG.nightBrightness;
+			CG.currentSaturation = CG.nightSaturation;
+			CG.currentContrast = CG.nightContrast;
 			if (CG.isColorCamera)
 			{
 				CG.currentAWB = CG.nightAWB;

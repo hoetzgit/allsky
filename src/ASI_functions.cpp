@@ -181,9 +181,9 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 230 * MS_IN_SEC, 1, 230 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
 		{ "ExposureCompensation", "Exposure Compensation", 10.0, -10.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
 		{ "Brightness", "Brightness", 1.0, -1.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_TARGET_BRIGHTNESS },
-		{ "Saturation", "Saturation", 99.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
-		{ "Contrast", "Contrast", 99.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
-		{ "Sharpness", "Sharpness", 99.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
+		{ "Saturation", "Saturation", NO_MAX_VALUE, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
+		{ "Contrast", "Contrast", NO_MAX_VALUE, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
+		{ "Sharpness", "Sharpness", NO_MAX_VALUE, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },	// Signals end of list
 	},
@@ -1238,12 +1238,12 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 		if (cg->dayBrightness == NOT_CHANGED)
 			cg->dayBrightness = cc.DefaultValue;
 		else
-			validateLong(&cg->dayBrightness, cc.MinValue, cc.MaxValue, "Daytime Brightness", true);
+			validateFloat(&cg->dayBrightness, cc.MinValue, cc.MaxValue, "Daytime Brightness", true);
 
 		if (cg->nightBrightness == NOT_CHANGED)
 			cg->nightBrightness = cc.DefaultValue;
 		else
-			validateLong(&cg->nightBrightness, cc.MinValue, cc.MaxValue, "Nighttime Brightness", true);
+			validateFloat(&cg->nightBrightness, cc.MinValue, cc.MaxValue, "Nighttime Brightness", true);
 	} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
 		Log(0, "ASI_AUTO_TARGET_BRIGHTNESS failed with %s\n", getRetCode(ret));
 		ok = false;
@@ -1321,10 +1321,15 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 		ret = getControlCapForControlType(cg->cameraNumber, SATURATION, &cc);
 		if (ret == ASI_SUCCESS)
 		{
-			if (cg->saturation == NOT_CHANGED)
-				cg->saturation = cc.DefaultValue;
+			if (cg->daySaturation == NOT_CHANGED)
+				cg->daySaturation = cc.DefaultValue;
 			else
-				validateFloat(&cg->saturation, cc.MinValue, cc.MaxValue, "Saturation", true);
+				validateFloat(&cg->daySaturation, cc.MinValue, cc.MaxValue, "Saturation", true);
+	
+			if (cg->nightSaturation == NOT_CHANGED)
+				cg->nightSaturation = cc.DefaultValue;
+			else
+				validateFloat(&cg->nightSaturation, cc.MinValue, cc.MaxValue, "Saturation", true);
 		} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
 			Log(0, "SATURATION failed with %s\n", getRetCode(ret));
 			ok = false;
@@ -1333,10 +1338,15 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 		ret = getControlCapForControlType(cg->cameraNumber, CONTRAST, &cc);
 		if (ret == ASI_SUCCESS)
 		{
-			if (cg->contrast == NOT_CHANGED)
-				cg->contrast = cc.DefaultValue;
+			if (cg->dayContrast == NOT_CHANGED)
+				cg->dayContrast = cc.DefaultValue;
 			else
-				validateFloat(&cg->contrast, cc.MinValue, cc.MaxValue, "Contrast", true);
+				validateFloat(&cg->dayContrast, cc.MinValue, cc.MaxValue, "Contrast", true);
+	
+			if (cg->nightContrast == NOT_CHANGED)
+				cg->nightContrast = cc.DefaultValue;
+			else
+				validateFloat(&cg->nightContrast, cc.MinValue, cc.MaxValue, "Contrast", true);
 		} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
 			Log(0, "CONTRAST failed with %s\n", getRetCode(ret));
 			ok = false;

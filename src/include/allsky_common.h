@@ -204,8 +204,8 @@ struct config {			// for configuration variables
 	long nightExposure_us				= 20 * US_IN_SEC;
 	double temp_nightExposure_ms		= nightExposure_us / US_IN_MS;
 
-	long dayBrightness					= NOT_CHANGED;		// Brightness requested by user
-	long nightBrightness				= NOT_CHANGED;
+	double dayBrightness				= NOT_CHANGED;		// Brightness requested by user
+	double nightBrightness				= NOT_CHANGED;
 	bool dayAutoGain					= true;				// Use auto-gain?
 	bool nightAutoGain					= true;
 	double dayMaxAutoGain				= NOT_CHANGED;		// Max gain in auto-gain mode
@@ -226,8 +226,10 @@ struct config {			// for configuration variables
 	long nightTargetTemp				= NOT_CHANGED;
 	char const *dayTuningFile			= NULL;				// Camera tuning file, libcamera only
 	char const *nightTuningFile			= NULL;
-	double saturation					= NOT_CHANGED;
-	double contrast						= NOT_CHANGED;
+	double daySaturation				= NOT_CHANGED;		// Saturation requested by user
+	double nightSaturation				= NOT_CHANGED;
+	double dayContrast					= NOT_CHANGED;		// Contrast requested by user
+	double nightContrast				= NOT_CHANGED;
 	double sharpness					= NOT_CHANGED;
 	long gamma							= NOT_CHANGED;
 	long offset							= NOT_CHANGED;
@@ -264,13 +266,15 @@ struct config {			// for configuration variables
 	struct HB HB;							// Histogram Box, ZWO only
 
 	// Default values used in multiple places, so get just once.
-	long defaultBrightness				= NOT_SET;
+	double defaultBrightness			= NOT_SET;
 
 	// Current values - may vary between day and night
 	bool currentAutoExposure;
 	long currentMaxAutoExposure_us;
 	long currentExposure_us;
-	long currentBrightness;
+	double currentBrightness;
+	double currentSaturation;
+	double currentContrast;
 	int currentDelay_ms;
 	bool currentAutoGain;
 	double currentMaxAutoGain;
