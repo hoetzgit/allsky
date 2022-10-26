@@ -33,12 +33,12 @@ static char const *fontnames[]		= {		// Character representation of names for cl
 //xxxxxxxxxxxxxx TODO: isDayOrNight dayOrNight;
 
 // quick & dirty temporary test
+// TODO: file age for valid check
 long getRPiSensorTemperature()
 {
 	// Input stream
 	ifstream InpStream("/home/pi/allsky/tmp/metadata.txt");
 
-	// We want to get parsed num_1 and num_2
 	double temp = -9999.0;
 
 	// Define strings to hold the key and corresponding value
@@ -57,7 +57,6 @@ long getRPiSensorTemperature()
 
 		// Create another istringstream instance to parse the value
 		istringstream ss_value(value);
-
 		if ( key == "SensorTemperature") {
 			// string to double conversion
 			ss_value >> temp;

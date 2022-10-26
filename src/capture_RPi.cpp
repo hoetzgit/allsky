@@ -83,7 +83,7 @@ int RPicapture(config cg, cv::Mat *image)
 		if (cg.overlay.showTemp) {
 			ss.str("");
 			ss << CG.saveDir;
-			command += " --metadata '" + ss.str() + "/metadata.txt'";
+			command += " --metadata '" + ss.str() + "/metadata.txt' --metadata-format txt";
 		}
 		
 		// libcamera tuning file
