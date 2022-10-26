@@ -80,7 +80,11 @@ int RPicapture(config cg, cv::Mat *image)
 	if (cg.isLibcamera)
 	{
 		// Meta Data File
-		command += " --metadata '/home/pi/allsky/tmp/metadata.txt'";
+		if (cg.overlay.showTemp) {
+			ss.str("");
+			ss << CG.saveDir;
+			command += " --metadata '" + ss.str() + "/metadata.txt'";
+		}
 		
 		// libcamera tuning file
 		if (cg.currentTuningFile != NULL && strcmp(cg.currentTuningFile, "") != 0) {
