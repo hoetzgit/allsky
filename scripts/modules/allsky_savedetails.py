@@ -49,14 +49,14 @@ def addImageRecord(connection, cursor):
 
     exposure = int(s.getEnvironmentVariable("AS_EXPOSURE_US"))
 
-    wbb = float(s.getEnvironmentVariable("AS_WBB"))
-    wbr = float(s.getEnvironmentVariable("AS_WBR"))
+    wbb = float(s.getEnvironmentVariable("AS_WBB").replace(',', '.'))
+    wbr = float(s.getEnvironmentVariable("AS_WBR").replace(',', '.'))
 
     time = float(s.getEnvironmentVariable("AS_TIME"))
     tod = s.getEnvironmentVariable("DAY_OR_NIGHT")
 
-    mean = float(s.getEnvironmentVariable("AS_MEAN"))
-    brightness = float(s.getEnvironmentVariable("AS_BRIGHTNESS"))
+    mean = float(s.getEnvironmentVariable("AS_MEAN").replace(',', '.'))
+    brightness = float(s.getEnvironmentVariable("AS_BRIGHTNESS").replace(',', '.'))
     gain = float(s.getEnvironmentVariable("AS_GAIN"))
 
     skyState = s.getEnvironmentVariable("AS_SKYSTATE")
