@@ -196,7 +196,7 @@
 {
 "name" : "dayawbmode",
 "default" : "auto",
-"description" : "This option sets the AWB algorithm into the named AWB mode.",
+"description" : "When using <b>Auto White Balance</b>, this option sets the AWB algorithm into the named AWB mode.",
 "label" : "Auto White Balance Mode",
 "type" : "select",
 "options" : [
@@ -416,7 +416,7 @@
 {
 "name" : "nightawbmode",
 "default" : "auto",
-"description" : "This option sets the AWB algorithm into the named AWB mode.",
+"description" : "When using <b>Auto White Balance</b>, this option sets the AWB algorithm into the named AWB mode.",
 "label" : "Auto White Balance Mode",
 "type" : "select",
 "options" : [
