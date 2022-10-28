@@ -1,0 +1,191 @@
+{
+	"cameraType" : "RPi",
+	"cameraName" : "RPi HQ",
+	"cameraModel" : "HQ",
+	"serialNumber" : "",
+	"sensorWidth" : 4056,
+	"sensorHeight" : 3040,
+	"pixelSize" : 1.55,
+	"supportedBins" : [
+		{ "value" : 1, "label" : "1x1" },
+		{ "value" : 2, "label" : "2x2" }
+	],
+	"colorCamera" : true,
+	"bayerPattern" : "RG",
+	"bitDepth" : 12,
+	"acquisitionCommand" : "libcamera-still",
+	"supportedRotations": [
+		{ "value" : 0, "label" : "None" },
+		{ "value" : 180, "label" : "180 degrees" }
+	],
+	"supportedImageFormats": [
+		{ "value" : 99, "label" : "auto" },
+		{ "value" : 1, "label" : "RGB24" }
+	],
+	"controls": [
+		{
+			"Name" : "sensorWidth",
+			"argumentName" : "width",
+			"MinValue" : 0,
+			"MaxValue" : 4056,
+			"DefaultValue" : 0
+		},
+		{
+			"Name" : "sensorHeight",
+			"argumentName" : "height",
+			"MinValue" : 0,
+			"MaxValue" : 3040,
+			"DefaultValue" : 0
+		},
+		{
+			"Name" : "delayBetweenImages_ms",
+			"argumentName" : "delay",
+			"MinValue" : 0,
+			"MaxValue" : "none"
+		},
+		{
+			"Name" : "AutoWhiteBalance",
+			"argumentName" : "awb",
+			"DefaultValue" : 0
+		},
+		{
+			"Name" : "ModeMean",
+			"argumentName" : "mean",
+			"MinValue" : 0.0,
+			"MaxValue" : 1.0,
+			"DefaultValue" : "day: 0.50, night: 0.20"
+		},
+		{
+			"Name" : "MeanThreshold",
+			"argumentName" : "meanthreshold",
+			"MinValue" : 0.01,
+			"MaxValue" : "none",
+			"DefaultValue" : 0.100000
+		},
+		{
+			"Name" : "TuningFile",
+			"argumentName" : "TuningFile",
+			"DefaultValue" : ""
+		},
+		{
+			"Name" : "Gain",
+			"argumentName" : "gain",
+			"MinValue" : 1,
+			"MaxValue" : 16,
+			"DefaultValue" : 1,
+			"IsAutoSupported" : true,
+			"IsWritable" : true,
+			"ControlType" : 0
+		},
+		{
+			"Name" : "Exposure",
+			"argumentName" : "exposure",
+			"MinValue" : 1,
+			"MaxValue" : 230000000,
+			"DefaultValue" : 32,
+			"IsAutoSupported" : true,
+			"IsWritable" : true,
+			"ControlType" : 1
+		},
+		{
+			"Name" : "WB_R",
+			"argumentName" : "wbr",
+			"MinValue" : 0.100,
+			"MaxValue" : 10,
+			"DefaultValue" : 2.500,
+			"IsAutoSupported" : true,
+			"IsWritable" : true,
+			"ControlType" : 2
+		},
+		{
+			"Name" : "WB_B",
+			"argumentName" : "wbb",
+			"MinValue" : 0.100,
+			"MaxValue" : 10,
+			"DefaultValue" : 2,
+			"IsAutoSupported" : true,
+			"IsWritable" : true,
+			"ControlType" : 3
+		},
+		{
+			"Name" : "Flip",
+			"argumentName" : "flip",
+			"MinValue" : 0,
+			"MaxValue" : 3,
+			"DefaultValue" : 0,
+			"IsAutoSupported" : false,
+			"IsWritable" : true,
+			"ControlType" : 5
+		},
+		{
+			"Name" : "AutoExpMaxGain",
+			"argumentName" : "maxautogain",
+			"MinValue" : 1,
+			"MaxValue" : 16,
+			"DefaultValue" : 16,
+			"IsAutoSupported" : false,
+			"IsWritable" : true,
+			"ControlType" : 6
+		},
+		{
+			"Name" : "AutoExpMaxExpMS",
+			"argumentName" : "maxautoexposure",
+			"MinValue" : 1,
+			"MaxValue" : 230000,
+			"DefaultValue" : 230000,
+			"IsAutoSupported" : false,
+			"IsWritable" : true,
+			"ControlType" : 7
+		},
+		{
+			"Name" : "ExposureCompensation",
+			"argumentName" : "ev",
+			"MinValue" : -10,
+			"MaxValue" : 10,
+			"DefaultValue" : 0,
+			"IsAutoSupported" : false,
+			"IsWritable" : true,
+			"ControlType" : 12
+		},
+		{
+			"Name" : "Brightness",
+			"argumentName" : "brightness",
+			"MinValue" : -1.0,
+			"MaxValue" : 1.0,
+			"DefaultValue" : 0.0,
+			"IsAutoSupported" : false,
+			"IsWritable" : true,
+			"ControlType" : 8
+		},
+		{
+			"Name" : "Saturation",
+			"argumentName" : "saturation",
+			"MinValue" : 0.0,
+			"MaxValue" : "none",
+			"DefaultValue" : 1.0,
+			"IsAutoSupported" : false,
+			"IsWritable" : true,
+			"ControlType" : 9
+		},
+		{
+			"Name" : "Contrast",
+			"argumentName" : "contrast",
+			"MinValue" : 0.0,
+			"MaxValue" : "none",
+			"DefaultValue" : 1.0,
+			"IsAutoSupported" : false,
+			"IsWritable" : true,
+			"ControlType" : 10
+		},
+		{
+			"Name" : "Sharpness",
+			"argumentName" : "sharpness",
+			"MinValue" : 0.0,
+			"MaxValue" : "none",
+			"DefaultValue" : 1.0,
+			"IsAutoSupported" : false,
+			"IsWritable" : true,
+			"ControlType" : 11
+		}
+	]
+}

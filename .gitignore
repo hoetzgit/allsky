@@ -1,4 +1,3 @@
-config/*
 tmp/*
 images/*
 gibbons*
@@ -6,6 +5,9 @@ liveview*
 image*.jpg
 data.json
 log.txt
+*.log
+*.tmp
+*.*202*
 
 # development artifacts
 src/*.a
