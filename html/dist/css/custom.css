@@ -428,17 +428,32 @@ select {
 /* @media rules                           */
 /******************************************/
 
-@media (max-width: 400px) {
-	.version-title {
-		font-size: 65%;
-	}
+@media screen and (max-width: 795px) {
+	/* was 767 */
+/*
+    .dark .table-responsive {
+        border-color: transparent;
+    }
+    .navbar {
+        height: 52px;
+    }
+    .navbar-brand img {
+        height: 29px;
+    }
+    .switch-field {
+        display: block;
+*/
+        /* height: 40px; /* was 50 */
+/*
+    }
+    form thead {
+        display: none;
+    }
+*/
 }
-@media (max-width: 450px) {
-	.version-title {
-		font-size: 75%;
-	}
-}
+
 @media (max-width: 795px) {
+/*
 	.navbar-header {
 		float: none;
 	}
@@ -454,28 +469,12 @@ select {
 	.navbar-collapse {
 		display: none;
 	}
+*/
 }
-@media screen and (max-width: 795px) {
-	/* was 767 */
-    .dark .table-responsive {
-        border-color: transparent;
-    }
-    .navbar {
-        height: 52px;
-    }
-    .navbar-brand img {
-        height: 29px;
-    }
-    .switch-field {
-        display: block;
-        /* height: 40px; /* was 50 */
-    }
-    form thead {
-        display: none;
-    }
-}
+
 @media (min-width: 796px) {
 	/* was 768px */
+/*
 	.sidebar {
 		width: 210px;
 	}
@@ -490,29 +489,71 @@ select {
 		display: block;
 		visibility: visible;
 	}
+*/
 }
-@media only screen and (max-width: 796px) {
+
+
+@media only screen and (max-width: 400px) {
+	.version-title {
+		font-size: 60%;
+	}
+}
+
+@media only screen and (max-width: 450px) {
+	.version-title {
+		font-size: 75%;
+	}
+}
+
+@media only screen and (max-width: 600px) {
     .navbar-brand img { 
         height: 30px;
         display:inline-block;
+        margin-top: 8px;
         margin-left: 5px;
         margin-right: 5px;
     }
     .navbar-brand {
+        float: none;
         padding: 10px 0px 0px 0px;
     }
     .version-title {
         margin-left: 0px;
         display: inline-block;
-        font-size: 70%;
+        font-size: 60%;
+        opacity: 0.7;
+    }
+}
+
+@media only screen and (max-width: 800px) {
+    .navbar-brand img { 
+        height: 30px;
+        display:inline-block;
+        margin-top: 8px;
+        margin-left: 5px;
+        margin-right: 5px;
+    }
+    .navbar-brand {
+        float: none;
+        padding: 10px 0px 0px 0px;
+    }
+    .version-title {
+        margin-left: 0px;
+        display: inline-block;
+        font-size: 60%;
         opacity: 0.7;
     }
     .navbar {
         height: 50px;
     }
 }
+
 @media (max-width: 815px) {
 	#page-wrapper {
 		padding: 0px 20px;
 	}
 }
+
+
+
+
