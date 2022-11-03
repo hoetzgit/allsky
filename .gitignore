@@ -1,13 +1,18 @@
-tmp/*
 images/*
-gibbons*
+config.sh
+darks/*
 liveview*
-image*.jpg
+image.jpg
+image-resize.jpg
+image-processed.jpg
+temperature.txt
 data.json
 log.txt
-*.log
-*.tmp
-*.*202*
+settings.json
+scripts/ftp-settings.sh
+scripts/endOfNight_additionalSteps.sh
+settings_RPiHQ.json
+settings_ZWO.json
 
 # development artifacts
 src/*.a
