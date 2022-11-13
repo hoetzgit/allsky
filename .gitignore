@@ -30,3 +30,4 @@ sunwait
 .vscode/configurationCache.log
 .vscode/targets.log
 .vscode/dryrun.log
+*.bak
