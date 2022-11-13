@@ -194,7 +194,7 @@ if ($useLogin) {
 					</li>
                     <li>
                         <a href="index.php?page=image_data"><i class="fa fa-tachometer-alt fa-fw"></i> Image Data</a>
-                    </li>
+                    </li>					
 					<li>
 						<a href="index.php?page=camera_conf"><i class="fa fa-camera fa-fw"></i> Allsky Settings</a>
 					</li>
@@ -206,7 +206,7 @@ if ($useLogin) {
                     </li>
                     <li>
                         <a href="index.php?page=module"><i class="fa fa-bars fa-fw"></i> Module Editor</a>
-                    </li>
+                    </li>					
 					<li>
 						<a href="index.php?page=LAN_info"><i class="fa fa-network-wired fa-fw"></i> <b>LAN</b> Dashboard</a>
 					</li>
@@ -328,10 +328,10 @@ if ($useLogin) {
                         break;
                     case "module":
                         DisplayModule();
-                        break;
+                        break;						
                     case "image_data":
                         DisplayImageData();
-                        break;
+                        break;						
 					default:
 						DisplayLiveView("$image_name", $delay, $daydelay, $nightdelay, $darkframe);
 				}

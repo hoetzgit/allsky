@@ -117,11 +117,6 @@ function DisplayOverlay($image_name)
                                                 <div class="btn btn-lg navbar-btn glyphicon glyphicon-cog" id="oe-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Layout and App Options">
                                                 </div>
                                             </li>
-                                            <li>
-                                                <div class="btn btn-lg navbar-btn glyphicon glyphicon-question-sign" id="oe-help" data-toggle="tooltip" data-container="body" data-placement="top" title="Help">
-                                                </div>
-                                            </li>
-
                                         </ul>
                                     </div>
                                 </div>
@@ -185,14 +180,6 @@ function DisplayOverlay($image_name)
                 <div id="imagepropgrid"></div>
             </div>
 
-            <div id="helpdialog" title="Help">
-                <div id="helptext"></div>
-            </div>
-
-            <div id="oe-app-helpdialog" title="Overlay Editor Help">
-                <div id="oeapphelptext"></div>
-            </div>
-
             <div class="modal" role="dialog" id="oe-item-list-dialog">
                 <div class="modal-dialog modal-lg" role="document">
                     <div class="modal-content">
@@ -216,7 +203,6 @@ function DisplayOverlay($image_name)
                                                 <th>Description</th>
                                                 <th>Format</th>
                                                 <th>Type</th>
-                                                <th>Source</th>
                                                 <th>&nbsp;</th>
                                             </tr>
                                         </thead>
@@ -455,7 +441,7 @@ function DisplayOverlay($image_name)
                                                 Rotation</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">
-                                                    <input id="defaultimagerotation" name="defaultimagerotation" type="text" class="form-control">
+                                                    <input id="defaultimagerotation" name="defaultimagerotation" type="number" min="0" max="359" step="1" class="form-control">
                                                 </div>
                                             </div>
                                         </div>

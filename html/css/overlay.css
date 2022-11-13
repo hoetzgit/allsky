@@ -158,3 +158,20 @@
   .datatable td {
     overflow: hidden;
   }
+
+  div.dataTables_wrapper div.dataTables_paginate {
+    padding-top: 10px;
+  }
+
+  table.dataTable td {
+    padding-top: 2px;
+  }
+
+  .sp-replacer {
+    height: 2.5rem !important;
+    width: 4rem !important;
+  }
+
+  .sp-dd {
+    padding: 3px 2px !important;
+  }
