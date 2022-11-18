@@ -1,5 +1,4 @@
 images/*
-config.sh
 darks/*
 liveview*
 image.jpg
@@ -8,11 +7,9 @@ image-processed.jpg
 temperature.txt
 data.json
 log.txt
-settings.json
-scripts/ftp-settings.sh
-scripts/endOfNight_additionalSteps.sh
-settings_RPiHQ.json
-settings_ZWO.json
+*.log
+*.tmp
+*.*202*
 
 # development artifacts
 src/*.a
@@ -33,3 +30,4 @@ sunwait
 .vscode/configurationCache.log
 .vscode/targets.log
 .vscode/dryrun.log
+*.bak
