@@ -98,6 +98,12 @@ calc_wt_size() {
 }
 
 
+# Stop Allsky.  If it's not running, nothing happens.
+stop_allsky() {
+	sudo systemctl stop allsky 2> /dev/null
+}
+
+
 # Prompt the user to select their camera type, if we can't determine it automatically.
 # If they have a prior installation of Allsky that uses CAMERA_TYPE in config.sh,
 # we can use its value and not prompt.
@@ -594,6 +600,7 @@ create_allsky_log() {
 	sudo chgrp ${ALLSKY_GROUP} "${ALLSKY_LOG}"
 }
 
+
 # If the user wanted to restore files from a prior version of Allsky, do that.
 restore_prior_files() {
 	if [[ -z ${PRIOR_ALLSKY} ]]; then
@@ -682,6 +689,7 @@ restore_prior_files() {
 			cp "${PRIOR_CONFIG_DIR}/settings.json" "${ALLSKY_CONFIG}"
 			RESTORED_PRIOR_SETTINGS_FILE=true
 		fi
+		# else, what the heck?  Their prior version is "new" but they don't have a settings file?
 	else
 		# settings file is old style in ${OLD_RASPAP_DIR}.
 		if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
@@ -692,6 +700,13 @@ restore_prior_files() {
 		SETTINGS="${OLD_RASPAP_DIR}/settings_${CT}.json"
 		if [[ -f ${SETTINGS} ]]; then
 			SETTINGS_MSG="\n\nYou also need to transfer your old settings to the WebUI.\nUse ${SETTINGS} as a guide.\n"
+			# Restore the latitude and longitude so Allsky can start after reboot.
+			LAT="$(settings .latitude "${SETTINGS}")"
+			LONG="$(settings .longitude "${SETTINGS}")"
+			"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" ${DEBUG_ARG} \
+				"config.latitude" "Latitude" "${LAT}" \
+				"config.longitude" "Longitude" "${LONG}"
+			display_msg --log progress "Prior latitude and longitude saved."
 		fi
 
 		# If we ever automate migrating settings, this next statement should be deleted.
@@ -828,6 +843,9 @@ display_header "${H}"
 ##### Calculate whiptail sizes
 calc_wt_size
 
+##### Stop Allsky
+stop_allsky
+
 ##### Handle updates
 [[ ${UPDATE} == "true" ]] && do_update
 
@@ -962,3 +980,4 @@ fi
 ask_reboot
 
 exit 0
+
