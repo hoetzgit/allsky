@@ -52,6 +52,7 @@ include_once('includes/images.php');
 include_once('includes/editor.php');
 include_once('includes/overlay.php');
 include_once('includes/module.php');
+include_once('includes/data.php');
 
 $output = $return = 0;
 if (isset($_GET['page']))
@@ -217,6 +218,9 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 					<li>
 						<a href="index.php?page=list_days"><i class="fa fa-image fa-fw"></i> Images</a>
 					</li>
+                    <li>
+                        <a href="index.php?page=image_data"><i class="fa fa-tachometer-alt fa-fw"></i> Image Data</a>
+                    </li>					
 					<li>
 						<a href="index.php?page=allsky_conf"><i class="fa fa-camera fa-fw"></i> Allsky Settings</a>
 					</li>
@@ -306,6 +310,9 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 				}
 
 				switch ($page) {
+					case "live_view":
+						DisplayLiveView("$image_name", $delay, $daydelay, $nightdelay, $darkframe);
+						break;
 					case "WLAN_info":
 						DisplayDashboard_WLAN("wlan0");
 						break;
@@ -345,13 +352,15 @@ if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 					case "editor":
 						DisplayEditor();
 						break;
-                    			case "overlay":
-                        			DisplayOverlay("$image_name");
-                        			break;
-                    			case "module":
-                        			DisplayModule();
-                        			break;						
-					case "live_view":
+					case "overlay":
+						DisplayOverlay("$image_name");
+						break;
+					case "module":
+						DisplayModule();
+						break;
+					case "image_data":
+						DisplayImageData();
+						break;
 					default:
 						DisplayLiveView("$image_name", $delay, $daydelay, $nightdelay, $darkframe);
 				}
