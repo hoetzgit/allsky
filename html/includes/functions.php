@@ -9,17 +9,17 @@
 
 // Sets all the define() variables.
 $defs = 'allskyDefines.inc';
-if (! file_exists("includes/" . $defs) && ! file_exists($defs)) {
+if ((include $defs) == false) {
 	echo "<div style='font-size: 200%;'>";
 	echo "<p style='color: red'>";
 	echo "The installation of the WebUI is incomplete.<br>";
+	echo "File '$defs' not found.<br>";
 	echo "Please run the following from the 'allsky' directory:";
 	echo "</p>";
 	echo "<code>   ./install.sh --function create_webui_defines</code>";
 	echo "</div>";
 	exit;
 }
-require $defs;
 
 $status = null;		// Global pointer to status messages
 $image_name=null; $delay=null; $daydelay=null; $nightdelay=null; $darkframe=null; $useLogin=null;
@@ -899,19 +899,6 @@ function getVariableOrDefault($a, $v, $d) {
 		if (is_string($value) and trim($value) === '' and trim($d) !== '') return $d;
 		return $value;
 	}
-}
-
-
-// Display the Allsky and Allsky Website version (if it's installed).
-function displayVersions() {
-	echo "&nbsp; Version: " . ALLSKY_VERSION;
-	$websiteFile = ALLSKY_WEBSITE . "/version";
-	if (file_exists($websiteFile)) {
-		$websiteVersion = file_get_contents($websiteFile);
-		echo ", &nbsp; Website: $websiteVersion";
-	}
-
-	return($d);
 }
 
 ?>
