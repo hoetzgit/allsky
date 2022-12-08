@@ -890,7 +890,7 @@ function getOptionsFile() {
 // This is used to make the code easier to read.
 function getVariableOrDefault($a, $v, $d) {
 	if (!isset($a[$v])) {
-    	if (strtolower(gettype($d)) === "boolean" && $d == "") return 0;
+		if (strtolower(gettype($d)) === "boolean" && $d == "") return 0;
 		return $d;
 	} else {
 		$value = $a[$v];
@@ -898,7 +898,7 @@ function getVariableOrDefault($a, $v, $d) {
 		if (is_null($value) and !is_null($d)) return $d;
 		if (is_string($value) and trim($value) === '' and trim($d) !== '') return $d;
 		return $value;
-    }
+	}
 }
 
 
