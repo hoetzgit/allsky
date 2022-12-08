@@ -25,15 +25,11 @@ class OEUIMANAGER {
     #fieldTable = null;
     #allFieldTable = null;
 
-    constructor() {
+    constructor(imageObj) {
         this.#configManager = window.oedi.get('config');
         this.#fieldManager = window.oedi.get('fieldmanager');
 
         Konva.pixelRatio = 1;
-
-        var imageObj = new Image();
-        imageObj.src = $('#oe-background-image').attr('src');
-
 
         this.#backgroundImage = new Konva.Image({
             x: 0,
@@ -186,6 +182,7 @@ class OEUIMANAGER {
             }
 
             this.#transformer.resizeEnabled(false);
+            this.setTransformerState(shape);
 
             if (event.target.getClassName() === 'Image') {
                 this.#transformer.resizeEnabled(true);
@@ -241,18 +238,7 @@ class OEUIMANAGER {
         });
 
         this.#overlayLayer.on('dragmove ', (event) => {
-            let shape = event.target;
-
-            if (shape.getClassName() !== 'Transformer') {
-                if (this.#configManager.snapBackground) {
-                    let gridSizeX = this.#configManager.gridSize;
-                    let gridSizeY = this.#configManager.gridSize;
-                    this.#snapRectangle.position({
-                        x: (Math.round(shape.x() / gridSizeX) * gridSizeX) | 0,
-                        y: (Math.round(shape.y() / gridSizeY) * gridSizeY) | 0
-                    });
-                }
-            }
+            this.moveField(event);
         });
 
         this.#overlayLayer.on('dragend', (event) => {
@@ -281,6 +267,10 @@ class OEUIMANAGER {
                 this.#snapRectangle.visible(false);
             }
             this.#movingField = null;
+        });
+
+        this.#transformer.on('transform ', (event) => {
+            this.moveField(event);
         });
 
         this.#transformer.on('transformend', (event) => {
@@ -340,11 +330,11 @@ class OEUIMANAGER {
                         width: '100px',
                         render: function (item, type, row, meta) {
                             let buttons = '<div class="btn-group"> <button type="button" class="btn btn-primary btn-xs oe-list-add" data-id="' + item.id + '">';
-                            buttons += '<i class="glyphicon glyphicon-plus oe-list-add" data-id="' + item.id + '"></i></button>';
+                            buttons += '<i class="fa-solid fa-plus oe-list-add" data-id="' + item.id + '"></i></button>';
                             buttons += '<button style="margin-left:5px;" type="button" class="btn btn-warning btn-xs oe-list-edit" data-id="' + item.id + '">';
-                            buttons += '<i class="glyphicon glyphicon-pencil oe-list-edit" data-id="' + item.id + '"></i></button>';
+                            buttons += '<i class="fa-solid fa-pen-to-square oe-list-edit" data-id="' + item.id + '"></i></button>';
                             if (item.source == 'User') {
-                                buttons += '<button style="margin-left:5px;" type="button" class="btn btn-danger btn-xs oe-list-delete" data-id="' + item.id + '"><i class="glyphicon glyphicon-remove oe-list-delete" data-id="' + item.id + '"></i></button>';
+                                buttons += '<button style="margin-left:5px;" type="button" class="btn btn-danger btn-xs oe-list-delete" data-id="' + item.id + '"><i class="fa-solid fa-trash oe-list-delete" data-id="' + item.id + '"></i></button>';
                             }
                             buttons += '</div>';
                             return buttons;
@@ -443,7 +433,7 @@ class OEUIMANAGER {
                                     dataId = '';
                                 }
                                 let buttons = '<div class="btn-group"> <button ' + disabled + ' type="button" class="btn btn-primary btn-xs oe-all-list-add" ' + dataId + '>';
-                                buttons += '<i class="glyphicon glyphicon-plus oe-all-list-add" ' + dataId + '></i></button>';
+                                buttons += '<i class="fa-solid fa-plus oe-all-list-add" ' + dataId + '></i></button>';
                                 buttons += '</div>';
                                 
                                 return buttons;
@@ -485,7 +475,7 @@ class OEUIMANAGER {
 
             event.preventDefault();
             event.stopPropagation();
-            let fieldId = $(event.target).data('id');
+            let fieldId = $(event.currentTarget).data('id');
 
             let field = this.#configManager.findFieldById(fieldId);
 
@@ -509,7 +499,7 @@ class OEUIMANAGER {
         $(document).on('click', '.oe-all-list-add', (event) => {
             event.preventDefault();
             event.stopPropagation();
-            let fieldId = $(event.target).data('id');
+            let fieldId = $(event.currentTarget).data('id');
             let field = this.#configManager.findAllFieldsById(fieldId);
             let fieldName = '${' + field.name + '}';
             $('#oe-item-list-edit-dialog-id').val('');
@@ -539,7 +529,7 @@ class OEUIMANAGER {
 
             event.preventDefault();
             event.stopPropagation();
-            let fieldId = $(event.target).data('id');
+            let fieldId = $(event.currentTarget).data('id');
 
             let field = this.#configManager.findFieldById(fieldId);
 
@@ -596,7 +586,7 @@ class OEUIMANAGER {
             event.preventDefault();
             event.stopPropagation();
 
-            let fieldId = $(event.target).data('id');
+            let fieldId = $(event.currentTarget).data('id');
             let field = this.#configManager.findFieldById(fieldId);
 
             if (field !== 'undefined') {
@@ -752,7 +742,7 @@ class OEUIMANAGER {
             this.showPropertyEditor();
             this.updatePropertyEditor();
             this.updateToolbar();
-            this.#fieldManager.buildJSON();
+//            this.#fieldManager.buildJSON();
             if (this.testMode) {
                 this.enableTestMode();
             }
@@ -928,7 +918,7 @@ class OEUIMANAGER {
 
                             let buttons = '';
                             if (item.name !== 'moon_phases' && item.name !== defaultFont && !item.path.includes('msttcorefonts')) {
-                                buttons += '&nbsp; <button type="button" class="btn btn-danger btn-xs oe-list-font-delete" data-fontname="' + item.name + '"><i class="glyphicon glyphicon-remove" data-fontname="' + item.name + '"></i></button>';
+                                buttons += '&nbsp; <button type="button" class="btn btn-danger btn-xs oe-list-font-delete" data-fontname="' + item.name + '"><i class="fa-solid fa-trash"></i></button>';
                                 buttons += '</div>';
                             }
                             return buttons;
@@ -947,7 +937,7 @@ class OEUIMANAGER {
         $(document).on('click', '.oe-list-font-delete', (event) => {
             event.stopPropagation();
             if (window.confirm('Are you sure you wish to delete this font? If the font is in use then all fields will be set to the default font.')) {
-                let fontName = $(event.target).data('fontname');
+                let fontName = $(event.currentTarget).data('fontname');
                 if (fontName !== 'undefined') {
                     let uiManager = window.oedi.get('uimanager');
                     uiManager.deleteFont(fontName);
@@ -956,7 +946,7 @@ class OEUIMANAGER {
         });
 
         $(document).on('click', '.oe-zoom', (event) => {
-            this.setZoom(event.target.id);
+            this.setZoom(event.currentTarget.id);
         });
 
         $(document).on('click', '#oe-show-image-manager', (event) => {
@@ -1019,6 +1009,71 @@ class OEUIMANAGER {
         this.drawGrid();
         this.updateBackgroundImage();
         this.updateToolbar();
+    }
+
+    moveField(event) {
+        let shape = event.target;
+
+        if (shape.getClassName() !== 'Transformer') {
+            if (this.#configManager.snapBackground) {
+                let gridSizeX = this.#configManager.gridSize;
+                let gridSizeY = this.#configManager.gridSize;
+
+                if (event.evt.shiftKey) {
+                    this.#transformer.rotationSnaps([0, 90, 180, 270]);
+                } else {
+                    this.#transformer.rotationSnaps([]);
+                }
+
+                this.#snapRectangle.rotation(shape.rotation());
+                this.#snapRectangle.position({
+                    x: (Math.round(shape.x() / gridSizeX) * gridSizeX) | 0,
+                    y: (Math.round(shape.y() / gridSizeY) * gridSizeY) | 0
+                });
+            }
+
+            if (event.target.id() == this.#selected.id) {
+                this.setTransformerState(shape);
+            }
+        }
+    }
+
+    setTransformerState(shape) {
+        if (this.#transformer.borderStroke() !== '#00a1ff') {
+            this.#transformer.borderStroke('#00a1ff');
+            this.#transformer.borderStrokeWidth(1);
+        }
+
+        if (shape.getClassName() == 'Image') {
+            let stageWidth = this.#oeEditorStage.width();
+            let stageHeight = this.#oeEditorStage.height();
+
+            let rect = shape.getClientRect();
+            let x = rect.x  / this.#oeEditorStage.scaleX();
+            let y = rect.y  / this.#oeEditorStage.scaleY();
+            let width = rect.width / this.#oeEditorStage.scaleX();
+            let height = rect.height / this.#oeEditorStage.scaleY();
+
+            let outOfBounds = false;
+            if (x < 0) {
+                outOfBounds = true;
+            }
+            if (y < 0) {
+                outOfBounds = true;
+            }
+
+            if ((x + width) > stageWidth) {
+                outOfBounds = true;
+            }
+            if ((y + height) > stageHeight) {
+                outOfBounds = true;
+            }
+
+            if (outOfBounds) {
+                this.#transformer.borderStrokeWidth(3);
+                this.#transformer.borderStroke('red');    
+            }
+        }
     }
 
     #saveConfig() {

@@ -35,7 +35,7 @@ function doExit()
 				"${FILENAME:-"image"}" \
 				"${COLOR}" "" "85" "" "" \
 				"" "10" "${COLOR}" "${EXTENSION:-"jpg"}" "" "${CUSTOM_MESSAGE}"
-		else
+		elif [[ ${TYPE} != "no-image" ]]; then
 			"${ALLSKY_SCRIPTS}/copy_notification_image.sh" --expires 0 "${TYPE}" 2>&1
 		fi
 		# Don't let the service restart us because we'll likely get the same error again.
@@ -122,6 +122,7 @@ function display_msg()
 
 	local LOG_TYPE="${1}"
 	local MESSAGE="${2}"
+	local MESSAGE2="${3}"		# optional 2nd message that's not in color
 	local MSG=""
 	local STARS
 	if [[ ${LOG_TYPE} == "error" ]]; then
@@ -159,10 +160,11 @@ function display_msg()
 	# Log messages to a file if it was specified.
 	# ${DISPLAY_MSG_LOG} <should> be set if ${LOG_IT} is true, but just in case, check.
 	if [[ ${LOG_IT} == "true" && -n ${DISPLAY_MSG_LOG} ]]; then
-		echo -e "${MSG}" | tee -a "${DISPLAY_MSG_LOG}"
+		echo -en "${MSG}" | tee -a "${DISPLAY_MSG_LOG}"
 	else
-		echo -e "${MSG}"
+		echo -en "${MSG}"
 	fi
+	echo -e "${MESSAGE2}"
 }
 
 
@@ -234,4 +236,27 @@ function convertLatLong()
 		echo "${LATLONG}"
 		return 0
 	fi
+}
+
+# Get the sunrise and sunset times.
+# The angle can optionally be passed in.
+get_sunrise_sunset()
+{
+	ANGLE="${1}"
+	#shellcheck disable=SC1090
+	source "${ALLSKY_HOME}/variables.sh" || return 1
+	#shellcheck disable=SC1090
+	source "${ALLSKY_CONFIG}/config.sh" || return 1
+	[[ -z ${ANGLE} ]] && ANGLE="$(settings ".angle")"
+	LATITUDE="$(settings ".latitude")"
+		LATITUDE="$(convertLatLong "${LATITUDE}" "latitude")"
+	LONGITUDE="$(settings ".longitude")"
+		LONGITUDE="$(convertLatLong "${LONGITUDE}" "longitude")"
+
+	echo "Rise    Set     Angle"
+	X="$(sunwait list angle "0" "${LATITUDE}" "${LONGITUDE}")"
+	# Replace comma by a couple spaces so the output looks nicer.
+	echo "${X/,/  }    0"
+	X="$(sunwait list angle "${ANGLE}" "${LATITUDE}" "${LONGITUDE}")"
+	echo "${X/,/  }   ${ANGLE}"
 }

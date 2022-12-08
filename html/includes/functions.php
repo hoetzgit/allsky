@@ -87,8 +87,8 @@ function initialize_variables() {
 		$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
 		$daydelay = -1;		// signifies it's not being used
 	}
-	// Divide by 2 to lessen the delay between a new picture and when we check.
-	$delay /= 2;
+	// Lessen the delay between a new picture and when we check.
+	$delay /= 4;
 }
 
 /**
@@ -656,9 +656,14 @@ function handle_interface_POST_and_status($interface, $input, &$status) {
 
 /**
 *
-* Get a variable from a file and return its value; if not there, return the default.
-* NOTE: The variable's value is anything after the equal sign, so there shouldn't be a comment on the line.
-* NOTE: There may be something before $searchfor, e.g., "export X=1", where "X" is $searchfor.
+* Get the last occurence of a variable from a file and return its value; if not there,
+* return the default.
+* NOTE: The variable's value is anything after the equal sign,
+* so there shouldn't be a comment on the line,
+* however, there can be optional spaces or tabs before the string.
+*
+* This function will go away once the config.sh and ftp-settings.sh files are merged
+* into the settings.json file.
 */
 function get_variable($file, $searchfor, $default)
 {
@@ -669,7 +674,7 @@ function get_variable($file, $searchfor, $default)
 	// escape special characters in the query
 	$pattern = preg_quote($searchfor, '/');
 	// finalise the regular expression, matching the whole line
-	$pattern = "/^.*$pattern.*\$/m";
+	$pattern = "/^[ 	]*$pattern.*\$/m";
 
 	// search, and store all matching occurences in $matches
 	$num_matches = preg_match_all($pattern, $contents, $matches);
@@ -816,28 +821,52 @@ function runCommand($cmd, $message, $messageColor)
 // Update a file.
 // Files should be writable by the web server, but if they aren't, use a temporary file.
 // Return any error message.
-function updateFile($file, $contents, $fileName) {
+function updateFile($file, $contents, $fileName, $toConsole) {
 	if (@file_put_contents($file, $contents) == false) {
-		// Assumed it failed due to lack of permissions.
+		$e = error_get_last()['message'];
 
-		// Save a temporary copy of the file in a place the webserver can write to,
-		// then use sudo to "mv" the file to the final place.
-		$tempFile = "/tmp/$fileName-temp.txt";
-
-		if (file_put_contents($tempFile, $contents) == false) {
-			$err = "Failed to save settings: " . error_get_last()['message'];
+		// $toConsole tells us whether or not to use console.log() or just echo.
+		if ($toConsole) {
+			$cl1 = "<script>console.log('";
+			$cl2 = "');</script>";
 		} else {
-			// shell_exec() doesn't return anything unless there is an error.
-			$ret = shell_exec("x=\$(sudo mv '$tempFile' '$file' 2>&1) || echo 'Unable to mv [$tempFile] to [$file]': \${x}");
-			if ($ret == "") {
-				shell_exec("sudo chown " . ALLSKY_OWNER . ":" . ALLSKY_GROUP . " '$file'; sudo chmod 644 '$file'");
-				$err = "";
-			} else {
-				$err = "Failed to rename $fileName file: $ret.";
-			}
+			$cl1 = "";
+			$cl2 = "";
+		}
+		echo $cl1 . "Unable to update $file 1st time: $e$cl2\n";
+
+		// Assumed it failed due to lack of permissions,
+		// usually because the file isn't grouped to the web server group.
+		// Set the permissions and try again.
+
+		// shell_exec() doesn't return anything unless there is an error.
+		$err = str_replace("\n", "", shell_exec("x=\$(sudo chgrp " . WEBSERVER_GROUP . " '$file' 2>&1 && sudo chmod g+w '$file') || echo \${x}"));
+		if ($err != "") {
+			return "Unable to update settings: $err";
 		}
 
-		return $err;
+		if (@file_put_contents($file, $contents) == false) {
+			$e = error_get_last()['message'];
+			$err = "Failed to save settings: $e";
+			echo $cl1 . "Unable to update file for 2nd time: $e$cl2";
+			$x = str_replace("\n", "", shell_exec("ls -l '$file'"));
+			echo $cl1 . "ls -l returned: $x$cl2";
+
+			// Save a temporary copy of the file in a place the webserver can write to,
+			// then use sudo to "cp" the file to the final place.
+			// Use "cp" instead of "mv" because the destination file may be a hard link
+			// and we need to keep the link.
+			$tempFile = "/tmp/$fileName-temp.txt";
+
+			if (@file_put_contents($tempFile, $contents) == false) {
+				$err = "Failed to create temporary file: " . error_get_last()['message'];
+				return $err;
+			}
+
+			$err = str_replace("\n", "", shell_exec("x=\$(sudo cp '$tempFile' '$file' 2>&1) || echo 'Unable to copy [$tempFile] to [$file]': \${x}"));
+			echo $cl1 . "cp returned: [$err]$cl2";
+			return $err;
+		}
 	}
 	return "";
 }
@@ -860,10 +889,16 @@ function getOptionsFile() {
 // If so, return it; if not, return default value;
 // This is used to make the code easier to read.
 function getVariableOrDefault($a, $v, $d) {
-	if (!isset($a[$v])) return $d;
-	if (is_null($a[$v]) and !is_null($d)) return $d;
-	if (is_string($a[$v]) and trim($a[$v]) === '' and trim($d) !== '') return $d;
-	return $a[$v];
+	if (!isset($a[$v])) {
+    	if (strtolower(gettype($d)) === "boolean" && $d == "") return 0;
+		return $d;
+	} else {
+		$value = $a[$v];
+		if (strtolower(gettype($value)) === "boolean" && $value == "") return 0;
+		if (is_null($value) and !is_null($d)) return $d;
+		if (is_string($value) and trim($value) === '' and trim($d) !== '') return $d;
+		return $value;
+    }
 }
 
 
@@ -875,6 +910,8 @@ function displayVersions() {
 		$websiteVersion = file_get_contents($websiteFile);
 		echo ", &nbsp; Website: $websiteVersion";
 	}
+
+	return($d);
 }
 
 ?>

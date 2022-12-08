@@ -1,7 +1,7 @@
 <?php
 include_once( 'includes/status_messages.php' );
 
-function DisplayCameraConfig(){
+function DisplayAllskyConfig(){
 	$cameraTypeName = "cameraType";		// json setting name
 	$cameraModelName = "cameraModel";	// json setting name
 
@@ -86,7 +86,7 @@ function DisplayCameraConfig(){
 				} else {
 					$content = json_encode($settings, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
 					// updateFile() only returns error messages.
-					$msg = updateFile($settings_file, $content, "settings");
+					$msg = updateFile($settings_file, $content, "settings", true);
 					if ($msg === "")
 						$msg = "Settings saved";
 					else
@@ -149,7 +149,7 @@ function DisplayCameraConfig(){
 				if ($value !== null) $settings[$key] = $value;
 			}
 			$content = json_encode($settings, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK);
-			$msg = updateFile($settings_file, $content, "settings");
+			$msg = updateFile($settings_file, $content, "settings", true);
 			if ($msg === "")
 				$status->addMessage("Settings reset to default", 'info');
 			else
@@ -209,11 +209,11 @@ function toggle_advanced()
   <div class="row">
     <div class="col-lg-12">
       <div class="panel panel-primary">
-      <div class="panel-heading"><i class="fa fa-camera fa-fw"></i> Allsky Settings for <b><?php echo "$cameraType $cameraModel"; ?></b>&nbsp; &nbsp; - &nbsp; &nbsp; &nbsp; <?php echo $settings_file ?></div>
+      <div class="panel-heading"><i class="fa fa-camera fa-fw"></i> Allsky Settings for <b><?php echo "$cameraType $cameraModel"; ?></b></div>
         <div class="panel-body" style="padding: 5px;">
           <p id="messages"><?php $status->showMessages(); ?></p>
 
-          <form method="POST" action="?page=camera_conf" name="conf_form">
+          <form method="POST" action="?page=allsky_conf" name="conf_form">
 		<?php CSRFToken();
 
 		// Allow for "advanced" options that aren't displayed by default to avoid
@@ -297,7 +297,7 @@ function toggle_advanced()
 					if ($type == "widetext") $span="rowspan='2'";
 					else $span="";
 					echo "<td $span valign='middle' style='padding: 2px 0px'>";
-					echo "<label style='padding-right: 3px;'>$label</label>";
+					echo "<label class='WebUISetting' style='padding-right: 3px;'>$label</label>";
 					echo "</td>";
 
 					if ($type == "widetext") {
@@ -378,7 +378,9 @@ function toggle_advanced()
 		?>
 			<script>
 				var messages = document.getElementById("messages");
-				messages.innerHTML= messages.innerHTML + '<?php $status->showMessages(); ?>';
+				// Call showMessages() with the 2nd (escape) argument of true so it escapes single quotes.
+				// We then have to restore them so the html is correct.
+				messages.innerHTML += '<?php $status->showMessages(true, true); ?>'.replace(/&apos;/g, "'");
 			</script>
 		<?php
 		}

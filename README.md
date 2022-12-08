@@ -35,9 +35,10 @@ In order to get the camera working properly you will need the following hardware
 <details><summary>Click here</summary>
 
 &nbsp;  
-PatriotAstro has a [great video](https://www.youtube.com/watch?v=7TGpGz5SeVI) that describes the Allsky software including installation.  **We highly suggest viewing it before installing the software.**
+PatriotAstro created a great [video](https://www.youtube.com/watch?v=7TGpGz5SeVI) describing the installation steps below.
+**We highly suggest viewing it before installing the software.**
 
-You will need to install the Raspbian Operating System on your Raspberry Pi. Follow [this link](https://www.raspberrypi.org/documentation/installation/installing-images/) for information on how to do it.
+You will need to install the Raspberry Pi Operating System on your Raspberry Pi. Follow [this link](https://www.raspberrypi.org/documentation/installation/installing-images/) for information on how to do it.
 
 Make sure you have a working Internet connection by setting it through [the terminal window](https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md).
 
@@ -437,6 +438,7 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 			* 4: lots of gory details for developers only.
 		* Some error messages that appear in the `/var/log/allsky.log` file also appear in the WebUI so you don't miss them.
 		* Buttons in the "Dark" mode are now darker.
+		* The Allsky and Allsky Website versions are displayed at the top of the page.  A future version of Allsky will notify you if something needs updating.
 		* Many minor enhancements were made.
 
 	* Allsky Website:
@@ -446,6 +448,7 @@ If you want your allsky camera added to the [Allsky map](http://www.thomasjacqui
 			* You can specify the order, contents, look, and style of the icons on the left side.  You can also hide an icon or display a new one.
 			* You can specify the order, contents, and style of the popout that appears on the right side.  For example, you can add a link to pictures of your allsky camera.
 			* You can set a background image.
+			* You can easily change the maximum width of the image.
 			* You can add a link to a personal website.  This link appears at the top of the page.
 			* You can add a border around the image to have it stand out on the page.
 			* You can hide the "Make Your Own" link on the bottom right of the page.

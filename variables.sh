@@ -53,6 +53,9 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	# Holds all the scripts.
 	ALLSKY_SCRIPTS="${ALLSKY_HOME}/scripts"
 
+	# Holds all the binaries.
+	ALLSKY_BIN="${ALLSKY_HOME}/bin"
+
 	# Holds all the images on a per-day basis.
 	ALLSKY_IMAGES="${ALLSKY_HOME}/images"
 
@@ -64,14 +67,14 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	# Holds temporary messages to display in the WebUI.
 	ALLSKY_MESSAGES="${ALLSKY_TMP}/messages.txt"
 
+	# Holds information on what the user needs to do after an installation.
+	POST_INSTALLATION_ACTIONS="${ALLSKY_CONFIG}/post-installation_actions.txt"
+
 	# Holds temporary list of aborted uploads since another one was in progress
 	ALLSKY_ABORTEDUPLOADS="${ALLSKY_TMP}/aborted_uploads.txt"
 
 	# Holds all the dark frames.
 	ALLSKY_DARKS="${ALLSKY_HOME}/darks"
-
-	# Holds all the Allsky documentation.
-	ALLSKY_DOCUMENTATION="${ALLSKY_HOME}/documentation"
 
 	# Location of WebUI.
 	ALLSKY_WEBUI="${ALLSKY_HOME}/html"
@@ -82,6 +85,9 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 	ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME="remote_${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 	ALLSKY_WEBSITE_CONFIGURATION_FILE="${ALLSKY_WEBSITE}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 	ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE="${ALLSKY_CONFIG}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}"
+
+	# Holds all the Allsky documentation.
+	ALLSKY_DOCUMENTATION="${ALLSKY_WEBUI}/documentation"
 
 	# Log the capture_${CAMERA_TYPE} programs write to.
 	ALLSKY_LOG="/var/log/allsky.log"
@@ -115,8 +121,8 @@ if [ "${ALLSKY_VARIABLE_SET}" = "" ]; then
 
 	# If a user wants to define new variables or assign variables differently,
 	# then load their file if it exists.
-	# shellcheck disable=SC1090
-	[ -f "${ALLSKY_CONFIG}/uservariables.sh" ] && source "${ALLSKY_CONFIG}/uservariables.sh"
+	# shellcheck disable=SC1091
+	[[ -f ${ALLSKY_CONFIG}/uservariables.sh ]] && source "${ALLSKY_CONFIG}/uservariables.sh"
 fi
 
 return 0

@@ -289,6 +289,7 @@ if ($repo_array === null) {
 	// options			[array with 1 or more entries] (only if "type" == "select")
 	// display			[0/1]
 	// checkchanges		[0/1]
+	// optional			[0/1]
 	// nullOK			[0/1]
 	// advanced 		[0/1]	(last, so no comma after it)
 
@@ -355,6 +356,7 @@ foreach ($repo_array as $repo) {
 		add_non_null_field($repo, "options", $name);
 		add_non_null_field($repo, "display", $name);
 		add_non_null_field($repo, "checkchanges", $name);
+		add_non_null_field($repo, "optional", $name);
 		add_non_null_field($repo, "nullOK", $name);
 		add_non_null_field($repo, "advanced", $name);
 	$options_str .= "},\n";
@@ -362,7 +364,7 @@ foreach ($repo_array as $repo) {
 $options_str .= "]\n\n";
 
 // Save the options file.
-$results = updateFile($options_file, $options_str, "options");
+$results = updateFile($options_file, $options_str, "options", true);
 if ($results != "") {
 	echo "ERROR: Unable to create $options_file.\n";
 	exit;
@@ -414,7 +416,7 @@ if ($settings_file !== "") {
 		$contents .= "}\n";
 
 		if ($debug > 0) echo "Creating settings file: $fullName.\n";
-		$results = updateFile($fullName, $contents, $cameraSpecificSettingsFile);
+		$results = updateFile($fullName, $contents, $cameraSpecificSettingsFile, true);
 		if ($results != "") {
 			echo "ERROR: Unable to create $fullName.\n";
 			exit;

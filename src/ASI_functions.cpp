@@ -1053,6 +1053,7 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 	if (cg->ct == ctZWO) {
 		cg->supportsTemperature = true;
 		cg->supportsAggression = true;
+		cg->supportsMyModeMean = false;
 		cg->gainTransitionTimeImplemented = true;
 		cg->imagesSavedInBackground = true;
 	} else {	// RPi
@@ -1060,6 +1061,7 @@ bool setDefaults(config *cg, ASI_CAMERA_INFO ci)
 		cg->supportsTemperature = ci.SupportsTemperature;	// this field only exists in RPi structure
 #endif
 		cg->supportsAggression = false;
+		cg->supportsMyModeMean = true;
 		cg->gainTransitionTimeImplemented = false;
 		cg->imagesSavedInBackground = false;
 	}

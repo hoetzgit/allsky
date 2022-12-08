@@ -13,7 +13,7 @@ usage_and_exit()
 {
 	retcode=${1}
 	[ ${retcode} -ne 0 ] && echo -ne "${RED}"
-	echo -n "Usage: ${ME} DAY|NIGHT  full_path_to_filename full_path_to_filename_clean full_path_to_filename_compass [variable=value [...]]"
+	echo -n "Usage: ${ME} DAY|NIGHT  full_path_to_filename  [variable=value [...]]"
 	[ ${retcode} -ne 0 ] && echo -e "${NC}"
 	exit ${retcode}
 }
@@ -30,6 +30,7 @@ export DAY_OR_NIGHT="${1}"
 
 # Export so other scripts can use it.
 export CURRENT_IMAGE="${2}"
+shift 2
 if [[ ! -f ${CURRENT_IMAGE} ]] ; then
 	echo -e "${RED}*** ${ME}: ERROR: File '${CURRENT_IMAGE}' not found; ignoring${NC}"
 	exit 2
@@ -39,51 +40,15 @@ if [[ ! -s ${CURRENT_IMAGE} ]] ; then
 	exit 2
 fi
 
-# Export so other scripts can use it.
-export CURRENT_IMAGE_CLEAN="${3}"
-if [[ ! -f ${CURRENT_IMAGE_CLEAN} ]] ; then
-	echo -e "${RED}*** ${ME}: ERROR: File '${CURRENT_IMAGE_CLEAN}' not found; ignoring${NC}"
-	exit 2
-fi
-if [[ ! -s ${CURRENT_IMAGE_CLEAN} ]] ; then
-	echo -e "${RED}*** ${ME}: ERROR: File '${CURRENT_IMAGE_CLEAN}' is empty; ignoring${NC}"
-	exit 2
-fi
-
-export CURRENT_IMAGE_COMPASS="${4}"
-if [[ ! -f ${CURRENT_IMAGE_COMPASS} ]] ; then
-	echo -e "${RED}*** ${ME}: ERROR: File '${CURRENT_IMAGE_COMPASS}' not found; ignoring${NC}"
-	exit 2
-fi
-if [[ ! -s ${CURRENT_IMAGE_COMPASS} ]] ; then
-	echo -e "${RED}*** ${ME}: ERROR: File '${CURRENT_IMAGE_COMPASS}' is empty; ignoring${NC}"
-	exit 2
-fi
-shift 4
-
 # The image may be in a memory filesystem, so do all the processing there and
 # leave the image used by the website(s) in that directory.
 IMAGE_NAME=$(basename "${CURRENT_IMAGE}")	# just the file name
 WORKING_DIR=$(dirname "${CURRENT_IMAGE}")	# the directory the image is currently in
-IMAGE_NAME_CLEAN=$(basename "${CURRENT_IMAGE_CLEAN}")	# just the clean file name
-WORKING_DIR_CLEAN=$(dirname "${CURRENT_IMAGE_CLEAN}")	# the directory the clean image is currently in
-IMAGE_NAME_COMPASS=$(basename "${CURRENT_IMAGE_COMPASS}")	# just the compass file name
-WORKING_DIR_COMPASS=$(dirname "${CURRENT_IMAGE_COMPASS}")	# the directory the compass image is currently in
 
 # Optional full check for bad images.
 if [[ ${REMOVE_BAD_IMAGES} == "true" ]]; then
 	# If the return code is 99, the file was bad and deleted so don't continue.
 	"${ALLSKY_SCRIPTS}/removeBadImages.sh" "${WORKING_DIR}" "${IMAGE_NAME}"
-	# removeBadImages.sh displayed error message and deleted the file.
-	[ $? -eq 99 ] && exit 99
-
-	# If the return code is 99, the file was bad and deleted so don't continue.
-	"${ALLSKY_SCRIPTS}/removeBadImages.sh" "${WORKING_DIR_CLEAN}" "${IMAGE_NAME_CLEAN}"
-	# removeBadImages.sh displayed error message and deleted the file.
-	[ $? -eq 99 ] && exit 99
-
-	# If the return code is 99, the file was bad and deleted so don't continue.
-	"${ALLSKY_SCRIPTS}/removeBadImages.sh" "${WORKING_DIR_COMPASS}" "${IMAGE_NAME_COMPASS}"
 	# removeBadImages.sh displayed error message and deleted the file.
 	[ $? -eq 99 ] && exit 99
 fi
@@ -94,18 +59,6 @@ if [[ ${REMOVE_BAD_IMAGES} != "true" || ${CROP_IMAGE} == "true" ]]; then
 	x=$(identify "${CURRENT_IMAGE}" 2>/dev/null)
 	if [ $? -ne 0 ] ; then
 		echo -e "${RED}*** ${ME}: ERROR: '${CURRENT_IMAGE}' is corrupt; not saving.${NC}"
-		exit 3
-	fi
-
-	x=$(identify "${CURRENT_IMAGE_CLEAN}" 2>/dev/null)
-	if [ $? -ne 0 ] ; then
-		echo -e "${RED}*** ${ME}: ERROR: '${CURRENT_IMAGE_CLEAN}' is corrupt; not saving.${NC}"
-		exit 3
-	fi
-
-	x=$(identify "${CURRENT_IMAGE_COMPASS}" 2>/dev/null)
-	if [ $? -ne 0 ] ; then
-		echo -e "${RED}*** ${ME}: ERROR: '${CURRENT_IMAGE_COMPASS}' is corrupt; not saving.${NC}"
 		exit 3
 	fi
 
@@ -171,20 +124,6 @@ if [[ ${IMG_RESIZE} == "true" ]] ; then
 
 	[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && echo "${ME}: Resizing '${CURRENT_IMAGE}' to ${IMG_WIDTH}x${IMG_HEIGHT}"
 	convert "${CURRENT_IMAGE}" -resize "${IMG_WIDTH}x${IMG_HEIGHT}" "${CURRENT_IMAGE}"
-	if [ $? -ne 0 ] ; then
-		echo -e "${RED}*** ${ME}: ERROR: IMG_RESIZE failed; not saving${NC}"
-		exit 4
-	fi
-
-	[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && echo "${ME}: Resizing '${CURRENT_IMAGE_CLEAN}' to ${IMG_WIDTH}x${IMG_HEIGHT}"
-	convert "${CURRENT_IMAGE_CLEAN}" -resize "${IMG_WIDTH}x${IMG_HEIGHT}" "${CURRENT_IMAGE_CLEAN}"
-	if [ $? -ne 0 ] ; then
-		echo -e "${RED}*** ${ME}: ERROR: IMG_RESIZE failed; not saving${NC}"
-		exit 4
-	fi
-
-	[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && echo "${ME}: Resizing '${CURRENT_IMAGE_COMPASS}' to ${IMG_WIDTH}x${IMG_HEIGHT}"
-	convert "${CURRENT_IMAGE_COMPASS}" -resize "${IMG_WIDTH}x${IMG_HEIGHT}" "${CURRENT_IMAGE_COMPASS}"
 	if [ $? -ne 0 ] ; then
 		echo -e "${RED}*** ${ME}: ERROR: IMG_RESIZE failed; not saving${NC}"
 		exit 4
@@ -290,18 +229,6 @@ if [[ ${CROP_IMAGE} == "true" ]]; then
 			echo -e "${RED}*** ${ME}: ERROR: CROP_IMAGE failed; not saving${NC}"
 			exit 4
 		fi
-
-		convert "${CURRENT_IMAGE_CLEAN}" -gravity Center -crop "${CROP_WIDTH}x${CROP_HEIGHT}+${CROP_OFFSET_X}+${CROP_OFFSET_Y}" +repage "${CURRENT_IMAGE_CLEAN}"
-		if [ $? -ne 0 ] ; then
-			echo -e "${RED}*** ${ME}: ERROR: CROP_IMAGE failed; not saving${NC}"
-			exit 4
-		fi
-
-		convert "${CURRENT_IMAGE_COMPASS}" -gravity Center -crop "${CROP_WIDTH}x${CROP_HEIGHT}+${CROP_OFFSET_X}+${CROP_OFFSET_Y}" +repage "${CURRENT_IMAGE_COMPASS}"
-		if [ $? -ne 0 ] ; then
-			echo -e "${RED}*** ${ME}: ERROR: CROP_IMAGE failed; not saving${NC}"
-			exit 4
-		fi
 	else
 		echo -e "${RED}*** ${ME}: ERROR: Crop number(s) invalid.${NC}"
 		display_error_and_exit "${ERROR_MSG}" "CROP"
@@ -318,20 +245,6 @@ if [[ ${DAY_OR_NIGHT} == "NIGHT" && ${AUTO_STRETCH} == "true" ]]; then
 		echo -e "${RED}*** ${ME}: ERROR: AUTO_STRETCH failed; not saving${NC}"
 		exit 4
 	fi
-
-	#[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Stretching '${CURRENT_IMAGE_CLEAN}' by ${AUTO_STRETCH_AMOUNT}"
- 	# convert "${CURRENT_IMAGE_CLEAN}" -sigmoidal-contrast "${AUTO_STRETCH_AMOUNT},${AUTO_STRETCH_MID_POINT}" "${IMAGE_TO_USE}"
-	#if [ $? -ne 0 ] ; then
-	#	echo -e "${RED}*** ${ME}: ERROR: AUTO_STRETCH failed; not saving${NC}"
-	#	exit 4
-	#fi
-
-	#[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Stretching '${CURRENT_IMAGE_COMPASS}' by ${AUTO_STRETCH_AMOUNT}"
- 	# convert "${CURRENT_IMAGE_COMPASS}" -sigmoidal-contrast "${AUTO_STRETCH_AMOUNT},${AUTO_STRETCH_MID_POINT}" "${IMAGE_TO_USE}"
-	#if [ $? -ne 0 ] ; then
-	#	echo -e "${RED}*** ${ME}: ERROR: AUTO_STRETCH failed; not saving${NC}"
-	#	exit 4
-	#fi
 fi
 
 if [ "${DAY_OR_NIGHT}" = "NIGHT" ] ; then
@@ -343,7 +256,7 @@ else
 	export DATE_NAME="$(date +'%Y%m%d')"
 fi
 
-python ${ALLSKY_SCRIPTS}/flow-runner.py
+${ALLSKY_SCRIPTS}/flow-runner.py
 
 SAVED_FILE="${CURRENT_IMAGE}"				# The name of the file saved from the camera.
 WEBSITE_FILE="${WORKING_DIR}/${FULL_FILENAME}"		# The name of the file the websites look for
@@ -366,10 +279,6 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 	fi
 	DATE_DIR="${ALLSKY_IMAGES}/${DATE_NAME}"
 	mkdir -p "${DATE_DIR}"
-	DATE_DIR_CLEAN="${ALLSKY_IMAGES_CLEAN}/${DATE_NAME}"
-	mkdir -p "${DATE_DIR_CLEAN}"
-	DATE_DIR_COMPASS="${ALLSKY_IMAGES_COMPASS}/${DATE_NAME}"
-	mkdir -p "${DATE_DIR_COMPASS}"
 
 	if [[ ${IMG_CREATE_THUMBNAILS} == "true" ]]; then
 		THUMBNAILS_DIR="${DATE_DIR}/thumbnails"
@@ -389,71 +298,69 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 	if cp "${CURRENT_IMAGE}" "${FINAL_FILE}" ; then
 
 		if [[ ${TIMELAPSE_MINI_IMAGES} -ne 0 && ${TIMELAPSE_MINI_FREQUENCY} -ne 1 ]]; then
-			FREQUENCY_FILE="${ALLSKY_TMP}/MINI_UPLOAD_FREQUENCY.txt"
-			typeset -i LEFT
-			if [[ ! -f ${FREQUENCY_FILE} ]]; then
+			# We are creating mini-timelapses; see if we should create one now.
+
+			MINI_TIMELAPSE_FILES="${ALLSKY_TMP}/mini-timelapse_files.txt"	 # List of files
+			if [[ ! -f ${MINI_TIMELAPSE_FILES} ]]; then
 				# The file may have been deleted, or the user may have just changed the frequency.
-				let LEFT=${TIMELAPSE_MINI_FREQUENCY}
+				echo "${FINAL_FILE}" > "${MINI_TIMELAPSE_FILES}"
+				LEFT=$((TIMELAPSE_MINI_IMAGES-1))
+				NUM_IMAGES=1
 			else
-				let LEFT=$( < "${FREQUENCY_FILE}" )
+				grep --silent "${FINAL_FILE}" "${MINI_TIMELAPSE_FILES}"
+				RET=$?
+				if [ ${RET} -ne 0 ]; then
+					echo "${FINAL_FILE}" >> "${MINI_TIMELAPSE_FILES}"
+				elif [[ ${DEBUG} -ge 2 ]]; then
+					# This shouldn't happen...
+					echo -e "${YELLOW}${ME} WARNING: '${FINAL_FILE}' already in set.${NC}" >&2
+				fi
+				NUM_IMAGES=$(wc -l < "${MINI_TIMELAPSE_FILES}")
 			fi
-			if [[ ${LEFT} -le 1 ]]; then
-				# create and upload this one and reset the counter
-				echo "${TIMELAPSE_MINI_FREQUENCY}" > "${FREQUENCY_FILE}"
-			else
-				# Not ready to upload yet, so decrement the counter
-				let LEFT=LEFT-1
-				echo "${LEFT}" > "${FREQUENCY_FILE}"
+			[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && echo -e "NUM_IMAGES=${NUM_IMAGES}" >&2
+
+			if [[ ${NUM_IMAGES} -ge ${TIMELAPSE_MINI_IMAGES} ]]; then
+				# Create a timelapse
 				# This ALLSKY_DEBUG_LEVEL should be same as what's in upload.sh
+				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
+					# timelapse.sh produces a lot of debug output
+					D="--debug --debug"
+				elif [[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]]; then
+					D="--debug"
+				else
+					D=""
+				fi
+				"${ALLSKY_SCRIPTS}"/timelapse.sh ${D} --mini "${MINI_TIMELAPSE_FILES}" "${DATE_NAME}"
+				RET=$?
+				[ ${RET} -ne 0 ] && TIMELAPSE_MINI_UPLOAD_VIDEO="false"			# failed so don't try to upload
+				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]]; then
+					if [ ${RET} -eq 0 ]; then
+						echo "${ME}: mini-timelapse created"
+					else
+						echo "${ME}: mini-timelapse creation returned with RET=${RET}"
+					fi
+				fi
+
+				# Remove the oldest files
+				KEEP=$((TIMELAPSE_MINI_IMAGES - TIMELAPSE_MINI_FREQUENCY))
+				x="$(tail -${KEEP} "${MINI_TIMELAPSE_FILES}")"
+				echo -e "${x}" > "${MINI_TIMELAPSE_FILES}"
+				if [[ ${DEBUG} -ge 2 ]]; then
+					echo -e "${YELLOW}${ME} Replaced ${MINI_SUBTRACT} oldest file(s) in set and adding '${FINAL_FILE}'.${NC}" >&2
+				fi
+			else
+				# Not ready to create yet
 				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
 					echo "${ME}: Not creating or uploading mini timelapse: ${LEFT} images(s) left."
 				fi
-
 				TIMELAPSE_MINI_UPLOAD_VIDEO="false"
 			fi
 		fi
 
-		if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" ]]; then
-			[[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]] && echo "${ME}: creating mini-timelapse"
-			"${ALLSKY_SCRIPTS}"/timelapse.sh --mini-count ${TIMELAPSE_MINI_IMAGES} ${TIMELAPSE_MINI_FREQUENCY} "${DATE_NAME}"
-			RET=$?
-			[ ${RET} -ne 0 ] && TIMELAPSE_MINI_UPLOAD_VIDEO="false"			# failed so don't try to upload
-		fi
 	else
 		echo "*** ERROR: ${ME}: unable to copy ${CURRENT_IMAGE} ***"
 		SAVE_IMAGE="false"
 		TIMELAPSE_MINI_UPLOAD_VIDEO="false"			# so we can easily compare below
-	fi
-
-	FINAL_FILE="${DATE_DIR_CLEAN}/${IMAGE_NAME}"
-	if mv "${CURRENT_IMAGE_CLEAN}" "${FINAL_FILE}"; then
-		if [ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ]; then
-			echo -e "${GREEN}*** ${ME} moved '${CURRENT_IMAGE_CLEAN}' to '${FINAL_FILE}'.${NC}"
-		fi
-	else
-		echo "*** ERROR: ${ME}: unable to move '${CURRENT_IMAGE_CLEAN}' to '${FINAL_FILE}' ***"
-	fi
-
-	FINAL_FILE="${DATE_DIR_COMPASS}/${IMAGE_NAME}"
-	if mv "${CURRENT_IMAGE_COMPASS}" "${FINAL_FILE}"; then
-		if [ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ]; then
-			echo -e "${GREEN}*** ${ME} moved '${CURRENT_IMAGE_COMPASS}' to '${FINAL_FILE}'.${NC}"
-		fi
-	else
-		echo "*** ERROR: ${ME}: unable to move '${CURRENT_IMAGE_COMPASS}' to '${FINAL_FILE}' ***"
-	fi
-else
-	if [ -f "${CURRENT_IMAGE_CLEAN}" ]; then
-		rm -fv "${CURRENT_IMAGE_CLEAN}"
-	fi
-	if [ -s "${CURRENT_IMAGE_CLEAN}" ]; then
-		rm -fv "${CURRENT_IMAGE_CLEAN}"
-	fi
-	if [ -f "${CURRENT_IMAGE_COMPASS}" ]; then
-		rm -fv "${CURRENT_IMAGE_COMPASS}"
-	fi
-	if [ -s "${CURRENT_IMAGE_COMPASS}" ]; then
-		rm -fv "${CURRENT_IMAGE_COMPASS}"
 	fi
 fi
 
@@ -486,19 +393,6 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 
 			# We didn't create ${WEBSITE_FILE} yet so do that now.
 			mv "${CURRENT_IMAGE}" "${WEBSITE_FILE}"
-
-			if [ -f "${CURRENT_IMAGE_CLEAN}" ] ; then
-				rm -fv "${CURRENT_IMAGE_CLEAN}"
-			fi
-			if [ -s "${CURRENT_IMAGE_CLEAN}" ] ; then
-				rm -fv "${CURRENT_IMAGE_CLEAN}"
-			fi
-			if [ -f "${CURRENT_IMAGE_COMPASS}" ] ; then
-				rm -fv "${CURRENT_IMAGE_COMPASS}"
-			fi
-			if [ -s "${CURRENT_IMAGE_COMPASS}" ] ; then
-				rm -fv "${CURRENT_IMAGE_COMPASS}"
-			fi
 
 			exit 0
 		fi
@@ -563,18 +457,5 @@ fi
 
 # We create ${WEBSITE_FILE} as late as possible to avoid it being overwritten.
 mv "${SAVED_FILE}" "${WEBSITE_FILE}"
-
-if [ -f "${CURRENT_IMAGE_CLEAN}" ] ; then
-	rm -fv "${CURRENT_IMAGE_CLEAN}"
-fi
-if [ -s "${CURRENT_IMAGE_CLEAN}" ] ; then
-	rm -fv "${CURRENT_IMAGE_CLEAN}"
-fi
-if [ -f "${CURRENT_IMAGE_COMPASS}" ] ; then
-	rm -fv "${CURRENT_IMAGE_COMPASS}"
-fi
-if [ -s "${CURRENT_IMAGE_COMPASS}" ] ; then
-	rm -fv "${CURRENT_IMAGE_COMPASS}"
-fi
 
 exit 0
