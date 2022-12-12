@@ -31,3 +31,5 @@ sunwait
 .vscode/targets.log
 .vscode/dryrun.log
 *.bak
+__pycache__/
+*.pyc
