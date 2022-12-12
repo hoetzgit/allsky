@@ -42,22 +42,23 @@ def createTable(connection, cursor):
         #connection.commit()    
 
 def addImageRecord(connection, cursor):
+    
     imagePath = s.getEnvironmentVariable("CURRENT_IMAGE")
     imageFileName = os.path.basename(imagePath)
 
     folder = s.getEnvironmentVariable("DATE_NAME")
 
-    exposure = int(s.getEnvironmentVariable("AS_EXPOSURE_US"))
+    exposure = s.int(s.getEnvironmentVariable("AS_EXPOSURE_US"))
 
-    wbb = float(s.getEnvironmentVariable("AS_WBB").replace(',','.'))
-    wbr = float(s.getEnvironmentVariable("AS_WBR").replace(',','.'))
+    wbb = s.float(s.getEnvironmentVariable("AS_WBB"))
+    wbr = s.float(s.getEnvironmentVariable("AS_WBR"))
 
-    time = float(s.getEnvironmentVariable("AS_TIME").replace(',','.'))
+    time = s.float(s.getEnvironmentVariable("AS_TIME"))
     tod = s.getEnvironmentVariable("DAY_OR_NIGHT")
 
-    mean = float(s.getEnvironmentVariable("AS_MEAN").replace(',','.'))
-    brightness = float(s.getEnvironmentVariable("AS_BRIGHTNESS").replace(',','.'))
-    gain = float(s.getEnvironmentVariable("AS_GAIN").replace(',','.'))
+    mean = s.float(s.getEnvironmentVariable("AS_MEAN"))
+    brightness = s.float(s.getEnvironmentVariable("AS_BRIGHTNESS"))
+    gain = s.float(s.getEnvironmentVariable("AS_GAIN"))
 
     skyState = s.getEnvironmentVariable("AS_SKYSTATE")
     if skyState == None:
@@ -70,7 +71,7 @@ def addImageRecord(connection, cursor):
         if starCount.lower() == "disabled":
             starCount = 0
         else:
-            starCount = int(starCount)
+            starCount = s.int(starCount)
 
     meteorCount = s.getEnvironmentVariable("AS_METEORCOUNT")
     if meteorCount == None:
@@ -79,7 +80,7 @@ def addImageRecord(connection, cursor):
         if meteorCount.lower() == "disabled":
             meteorCount = 0
         else:
-            meteorCount = int(meteorCount)
+            meteorCount = s.int(meteorCount)
 
     query = "INSERT INTO images (filename, folder, exposure, wbb, wbr, time, tod, mean, brightness, gain, skystate, stars, meteors) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?);"
     cursor.execute(query, (imageFileName, folder, exposure, wbb, wbr, time, tod, mean, brightness, gain, skyState, starCount, meteorCount))
