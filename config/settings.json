@@ -75,7 +75,7 @@
     "showCompass": "1",
     "text": "",
     "extratext": "/home/pi/allsky/tmp/overlay.txt",
-    "extratextage": "120",
+    "extratextage": "240",
     "textlineheight": "70",
     "textx": "30",
     "texty": "80",

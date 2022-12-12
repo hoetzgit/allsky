@@ -9,7 +9,7 @@
 {
 "name" : "cameraType",
 "default" : "RPi",
-"description" : "The type of camera you are using.  'RPi' includes the HD and compatible cameras.<br>You <b>must</b> set and change the camera here, not in config.sh.",
+"description" : "The type of camera you are using.  <span class='WebUIValue'>RPi</span> includes the HD and compatible cameras.<br>You <b>must</b> set and change the camera here, not in config.sh.",
 "label" : "Camera Type",
 "type" : "select",
 "options" : [
@@ -49,7 +49,7 @@
 {
 "name" : "saveDaytimeImages",
 "default" : 0,
-"description" : "Activate to save daytime images.<br>Only applies if <b>Daytime Capture</b> is enabled.",
+"description" : "Activate to save daytime images.<br>Only applies if <span class='WebUISetting'>Daytime Capture</span> is enabled.",
 "label" : "Daytime Save",
 "type" : "checkbox",
 "display" : 1,
@@ -69,7 +69,7 @@
 "minimum" : "1",
 "maximum" : "230000",
 "default" : "230000",
-"description" : "Maximum daytime Auto-Exposure time in milliseconds (1000ms = 1 sec).<br>Only applies if daytime <b>Auto-Exposure</b> is enabled.",
+"description" : "Maximum daytime Auto-Exposure time in milliseconds (1000ms = 1 sec).<br>Only applies if daytime <span class='WebUISetting'>Auto-Exposure</span> is enabled.",
 "label" : "Max Auto-Exposure",
 "type" : "number",
 "display" : 1,
@@ -80,7 +80,7 @@
 "minimum" : "1",
 "maximum" : "230000000",
 "default" : "32",
-"description" : "Manual exposure time in milliseconds. Can be a fraction.<br>If using daytime <b>Auto-Exposure</b>, this number is used as a starting point.",
+"description" : "Manual exposure time in milliseconds. Can be a fraction.<br>If using daytime <span class='WebUISetting'>Auto-Exposure</span>, this number is used as a starting point.",
 "label" : "Manual Exposure",
 "type" : "number",
 "display" : 1,
@@ -91,7 +91,7 @@
 "minimum" : 0.0,
 "maximum" : 1.0,
 "default" : 0.5,
-"description" : "The target mean brightness level when <b>Auto-Exposure</b> is on. 1.0 is pure white.<br>Best used when <b>Auto-Exposure</b> and <b>Auto-Gain</b> are on.<br>0 disables this auto-exposure mode.",
+"description" : "The target mean brightness level when <span class='WebUISetting'>Auto-Exposure</span> is on. <span class='WebUIValue'>1.0</span> is pure white.<br>Best used when <span class='WebUISetting'>Auto-Exposure</span> and <span class='WebUISetting'>Auto-Gain</span> are on.<br><span class='WebUIValue'>0</span> disables this auto-exposure mode.",
 "label" : "Mean Target",
 "type" : "number",
 "display" : 1,
@@ -110,9 +110,9 @@
 },
 {
 "name" : "daysaturation",
-"minimum" : "0",
+"minimum" : "0.0",
 "maximum" : "none",
-"default" : "1",
+"default" : "1.0",
 "description" : "Changes the saturation level of the image.<br>The lowest level produces a black and white image.",
 "label" : "Saturation",
 "type" : "number",
@@ -121,9 +121,9 @@
 },
 {
 "name" : "daycontrast",
-"minimum" : "0",
+"minimum" : "0.0",
 "maximum" : "none",
-"default" : "1",
+"default" : "1.0",
 "description" : "Changes the contrast of an image.",
 "label" : "Contrast",
 "type" : "number",
@@ -155,7 +155,7 @@
 "minimum" : "1",
 "maximum" : "16",
 "default" : "16",
-"description" : "Maximum gain when using <b>Auto-Gain</b>.",
+"description" : "Maximum gain when using <span class='WebUISetting'>Auto-Gain</span>.",
 "label" : "Max Auto-Gain",
 "type" : "number",
 "display" : 1,
@@ -175,7 +175,7 @@
 {
 "name" : "daybin",
 "default" : 1,
-"description" : "Binning level. 1x1 = binning OFF.",
+"description" : "Binning level. <span class='WebUIValue'>1x1</span> = binning OFF.",
 "label" : "Binning",
 "type" : "select",
 "options" : [
@@ -217,7 +217,7 @@
 "minimum" : "0.1",
 "maximum" : "10",
 "default" : "2.5",
-"description" : "Red component for the white balance.<br>When using <b>Auto White Balance</b>, this number is a starting point.",
+"description" : "Red component for the white balance.<br>When using <span class='WebUISetting'>Auto White Balance</span>, this number is a starting point.",
 "label" : "Red Balance",
 "type" : "number",
 "display" : 1,
@@ -228,7 +228,7 @@
 "minimum" : "0.1",
 "maximum" : "10",
 "default" : "2",
-"description" : "Blue component for the white balance.<br>When using <b>Auto White Balance</b>, this number is a starting point.",
+"description" : "Blue component for the white balance.<br>When using <span class='WebUISetting'>Auto White Balance</span>, this number is a starting point.",
 "label" : "Blue Balance",
 "type" : "number",
 "display" : 1,
@@ -239,7 +239,7 @@
 "minimum" : 0,
 "maximum" : "none",
 "default" : 5,
-"description" : "When starting Allsky during the day, skip up to this many frames while the software gets to the correct exposure.<br>Only applies if daytime <b>Auto-Exposure</b> is on.",
+"description" : "When starting Allsky during the day, skip up to this many frames while the software gets to the correct exposure.<br>Only applies if daytime <span class='WebUISetting'>Auto-Exposure</span> is on.",
 "label" : "Frames To Skip",
 "type" : "number",
 "display" : 1,
@@ -276,7 +276,7 @@
 "minimum" : "1",
 "maximum" : "230000",
 "default" : "230000",
-"description" : "Maximum nighttime Auto-Exposure time in milliseconds.<br>Only applies if nighttime <b>Auto-Exposure</b> is enabled.",
+"description" : "Maximum nighttime Auto-Exposure time in milliseconds.<br>Only applies if nighttime <span class='WebUISetting'>Auto-Exposure</span> is enabled.",
 "label" : "Max Auto-Exposure",
 "type" : "number",
 "display" : 1,
@@ -287,7 +287,7 @@
 "minimum" : "1",
 "maximum" : "230000000",
 "default" : "32",
-"description" : "Manual exposure time in milliseconds. Can be a fraction.<br>If using nighttime <b>Auto-Exposure</b>, this number is used as a starting point.",
+"description" : "Manual exposure time in milliseconds. Can be a fraction.<br>If using nighttime <span class='WebUISetting'>Auto-Exposure</span>, this number is used as a starting point.",
 "label" : "Manual Exposure",
 "type" : "number",
 "display" : 1,
@@ -298,7 +298,7 @@
 "minimum" : 0.0,
 "maximum" : 1.0,
 "default" : 0.2,
-"description" : "The target mean brightness level when <b>Auto-Exposure</b> is on. 1.0 is pure white.<br>Best used when <b>Auto-Exposure</b> and <b>Auto-Gain</b> are on.<br>0 disables this auto-exposure mode.",
+"description" : "The target mean brightness level when <span class='WebUISetting'>Auto-Exposure</span> is on. <span class='WebUIValue'>1.0</span> is pure white.<br>Best used when <span class='WebUISetting'>Auto-Exposure</span> and <span class='WebUISetting'>Auto-Gain</span> are on.<br><span class='WebUIValue'>0</span> disables this auto-exposure mode.",
 "label" : "Mean Target",
 "type" : "number",
 "display" : 1,
@@ -362,7 +362,7 @@
 "minimum" : "1",
 "maximum" : "16",
 "default" : "16",
-"description" : "Maximum gain when using <b>Auto-Gain</b>.",
+"description" : "Maximum gain when using <span class='WebUISetting'>Auto-Gain</span>.",
 "label" : "Max Auto-Gain",
 "type" : "number",
 "display" : 1,
@@ -382,7 +382,7 @@
 {
 "name" : "nightbin",
 "default" : 1,
-"description" : "Binning level. 1x1 = binning OFF.",
+"description" : "Binning level. <span class='WebUIValue'>1x1</span> = binning OFF.",
 "label" : "Binning",
 "type" : "select",
 "options" : [
@@ -424,7 +424,7 @@
 "minimum" : "0.1",
 "maximum" : "10",
 "default" : "2.5",
-"description" : "Red component for the white balance.<br>When using <b>Auto White Balance</b>, this number is a starting point.",
+"description" : "Red component for the white balance.<br>When using <span class='WebUISetting'>Auto White Balance</span>, this number is a starting point.",
 "label" : "Red Balance",
 "type" : "number",
 "display" : 1,
@@ -435,7 +435,7 @@
 "minimum" : "0.1",
 "maximum" : "10",
 "default" : "2",
-"description" : "Blue component for the white balance.<br>When using <b>Auto White Balance</b>, this number is a starting point.",
+"description" : "Blue component for the white balance.<br>When using <span class='WebUISetting'>Auto White Balance</span>, this number is a starting point.",
 "label" : "Blue Balance",
 "type" : "number",
 "display" : 1,
@@ -446,7 +446,7 @@
 "minimum" : 0,
 "maximum" : "none",
 "default" : 1,
-"description" : "When starting Allsky at night, skip up to this many frames while the software gets to the correct exposure.<br>Only applies if nighttime <b>Auto-Exposure</b> is on.",
+"description" : "When starting Allsky at night, skip up to this many frames while the software gets to the correct exposure.<br>Only applies if nighttime <span class='WebUISetting'>Auto-Exposure</span> is on.",
 "label" : "Frames To Skip",
 "type" : "number",
 "display" : 1,
@@ -472,7 +472,7 @@
 {
 "name" : "config",
 "default" : "[none]",
-"description" : "Configuration file to use for settings.",
+"description" : "Optional configuration file to use for settings.",
 "label" : "Configuration File",
 "type" : "widetext",
 "display" : 1,
@@ -495,7 +495,7 @@
 "minimum" : "0",
 "maximum" : "4056",
 "default" : 0,
-"description" : "Image width in pixels. 0 = max sensor width.",
+"description" : "Image width in pixels. <span class='WebUIValue'>0</span> = max sensor width.",
 "label" : "Image Width",
 "type" : "number",
 "display" : 1,
@@ -506,7 +506,7 @@
 "minimum" : "0",
 "maximum" : "3040",
 "default" : 0,
-"description" : "Image height in pixels. 0 = max sensor height.",
+"description" : "Image height in pixels. <span class='WebUIValue'>0</span> = max sensor height.",
 "label" : "Image Height",
 "type" : "number",
 "display" : 1,
@@ -550,7 +550,7 @@
 {
 "name" : "filename",
 "default" : "image.jpg",
-"description" : "Extensions allowed: .jpg or .png.<br><b>WARNING</b>: saving a .png file can take 10 or more seconds so be sure the time between successive images is long enough.  To measure how long it takes your Pi to save a .png file, set the <b>Debug Level</b> to 3 and look in the log file.",
+"description" : "Extensions allowed: .jpg or .png.<br><b>WARNING</b>: saving a .png file can take 10 or more seconds so be sure the time between successive images is long enough.  To measure how long it takes your Pi to save a .png file, set the <span class='WebUISetting'>Debug Level</span> to 3 and look in the log file.",
 "label" : "Filename",
 "type" : "text",
 "display" : 1,
@@ -616,7 +616,7 @@
 {
 "name" : "latitude",
 "default" : "",
-"description" : "Latitude of the camera. Can be a number (-90 to 90) or a positive number with direction (N or S), for example: 60.7N.",
+"description" : "Latitude of the camera. Can be a number (-90 to 90) or a positive number with direction (N or S), for example: <span class='WebUIValue'>60.7N</span>.",
 "label" : "Latitude",
 "type" : "text",
 "display" : 1,
@@ -627,7 +627,7 @@
 {
 "name" : "longitude",
 "default" : "",
-"description" : "Longitude of the camera. Can be a number (-180 to 180) or a positive number with a direction (E or W), for example: 135.05W.",
+"description" : "Longitude of the camera. Can be a number (-180 to 180) or a positive number with a direction (E or W), for example: <span class='WebUIValue'>135.05W</span>.",
 "label" : "Longitude",
 "type" : "text",
 "display" : 1,
@@ -717,9 +717,13 @@
 {
 "name" : "externalOverlay",
 "default" : 0,
-"description" : "Activate to have image overlays done by the enhanced external program.<br><b>When active, the overlay settings below do NOT apply.</b>",
-"label" : "External Overlay",
-"type" : "checkbox",
+"description" : "Choose how to have image overlays done.<br><span class='WebUIValue'>module</span> has more features and is very flexible.<br><b>When set to <span class='WebUIValue'>module</span>, the overlay settings below do NOT apply.</b>",
+"label" : "Overlay Method",
+"type" : "select",
+"options" : [
+	{"value" : 0, "label" : "legacy"},
+	{"value" : 1, "label" : "module"}
+],
 "display" : 1,
 "advanced" : 0
 },
@@ -768,7 +772,7 @@
 {
 "name" : "showExposure",
 "default" : 1,
-"description" : "Activate to display the exposure length on the overlay.<br>If <b>Auto-Exposure</b> is set, '(auto)' will appear after the exposure time.",
+"description" : "Activate to display the exposure length on the overlay.<br>If <span class='WebUISetting'>Auto-Exposure</span> is set, '(auto)' will appear after the exposure time.",
 "label" : "Show Exposure",
 "type" : "checkbox",
 "display" : 1,
@@ -777,7 +781,7 @@
 {
 "name" : "showGain",
 "default" : 0,
-"description" : "Activate to display the camera gain on the overlay.<br>If <b>Auto-Gain</b> is set, '(auto)' will appear after the gain value.",
+"description" : "Activate to display the camera gain on the overlay.<br>If <span class='WebUISetting'>Auto-Gain</span> is set, '(auto)' will appear after the gain value.",
 "label" : "Show Gain",
 "type" : "checkbox",
 "display" : 1,
@@ -786,7 +790,7 @@
 {
 "name" : "showBrightness",
 "default" : 0,
-"description" : "Activate to display the <b>Brightness</b> value you set on the overlay.",
+"description" : "Activate to display the <span class='WebUISetting'>Brightness</span> value you set on the overlay.",
 "label" : "Show Brightness",
 "type" : "checkbox",
 "display" : 1,
@@ -835,6 +839,7 @@
 "label" : "Text Overlay",
 "type" : "widetext",
 "display" : 1,
+"optional" : 1,
 "advanced" : 0
 },
 {
@@ -845,6 +850,7 @@
 "type" : "widetext",
 "display" : 1,
 "checkchanges" : 1,
+"optional" : 1,
 "advanced" : 0
 },
 {
@@ -852,7 +858,7 @@
 "minimum" : 1,
 "maximum" : "none",
 "default" : 0,
-"description" : "The maximum age of the <b>Extra Text File</b> in seconds.<br>After this time the contents of the file will no longer be displayed. Set to 0 to always display.",
+"description" : "The maximum age of the <span class='WebUISetting'>Extra Text File</span> in seconds.<br>After this time the contents of the file will no longer be displayed. Set to <span class='WebUIValue'>0</span> to always display.",
 "label" : "Max Age Of Extra",
 "type" : "number",
 "display" : 1,
@@ -914,7 +920,7 @@
 "name" : "fontcolor",
 "minimum" : 0,
 "default" : "255 0 0",
-"description" : "Blue, Green, and Red (BGR) values of text color.<br>NOTE: When using RAW 16 only the first two values are used i.e., 255 128 0.",
+"description" : "Blue, Green, and Red (BGR) values of text color.<br>NOTE: When using RAW 16 only the first two values are used i.e., <span class='WebUIValue'>255 128 0</span>.",
 "label" : "Font Color",
 "type" : "text",
 "display" : 1,
@@ -924,7 +930,7 @@
 {
 "name" : "smallfontcolor",
 "default" : "0 0 255",
-"description" : "BGR value of text color.<br>NOTE: When using RAW 16 only the first two values are used i.e., 255 128 0.",
+"description" : "BGR value of text color.<br>NOTE: When using RAW 16 only the first two values are used i.e., <span class='WebUIValue'>255 128 0</span>.",
 "label" : "Small Font Color",
 "type" : "text",
 "display" : 1,
@@ -996,7 +1002,7 @@
 {
 "name" : "showonmap",
 "default" : 0,
-"description" : "Activate to have your camera appear on the <a href='https://www.thomasjacquin.com/allsky-map' target='_blank'><b>Allsky Map</b></a>.",
+"description" : "Activate to have your camera appear on the <a href='https://www.thomasjacquin.com/allsky-map' target='_blank'><span class='WebUISetting'>Allsky Map</span></a>.",
 "label" : "Show on Map",
 "type" : "checkbox",
 "display" : 1,
@@ -1011,6 +1017,7 @@
 "type" : "widetext",
 "display" : 1,
 "checkchanges" : 1,
+"optional" : 1,
 "advanced" : 0
 },
 {
@@ -1021,6 +1028,7 @@
 "type" : "widetext",
 "display" : 1,
 "checkchanges" : 1,
+"optional" : 1,
 "advanced" : 0
 },
 {
@@ -1031,6 +1039,7 @@
 "type" : "widetext",
 "display" : 1,
 "checkchanges" : 1,
+"optional" : 1,
 "advanced" : 0
 },
 {
@@ -1041,36 +1050,40 @@
 "type" : "text",
 "display" : 1,
 "checkchanges" : 1,
+"optional" : 1,
 "advanced" : 0
 },
 {
 "name" : "camera",
 "default" : "",
-"description" : "The type and model of your camera, for example: 'ZWO 224MC' or 'RPi HQ'.",
+"description" : "The type and model of your camera, for example: <span class='WebUIValue'>ZWO 224MC</span> or <span class='WebUIValue'>RPi HQ</span>.",
 "label" : "Camera",
 "type" : "widetext",
 "display" : 1,
 "checkchanges" : 1,
+"optional" : 1,
 "advanced" : 0
 },
 {
 "name" : "lens",
 "default" : "",
-"description" : "The lens you're using on your camera, for example: Arecont 1.55.",
+"description" : "The lens you're using on your camera, for example: <span class='WebUIValue'>Arecont 1.55<span>.",
 "label" : "Lens",
 "type" : "widetext",
 "display" : 1,
 "checkchanges" : 1,
+"optional" : 1,
 "advanced" : 0
 },
 {
 "name" : "computer",
 "default" : "",
-"description" : "The computer running your allsky camera, for example: Raspberry Pi 3, 4 GB.",
+"description" : "The computer running your allsky camera, for example: <span class='WebUIValue'>Raspberry Pi 3, 4 GB</span>.",
 "label" : "Computer",
 "type" : "widetext",
 "display" : 1,
 "checkchanges" : 1,
+"optional" : 1,
 "advanced" : 0
 },
 {

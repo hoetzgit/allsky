@@ -150,9 +150,9 @@
 		{
 			"Name" : "Brightness",
 			"argumentName" : "brightness",
-			"MinValue" : -1.0,
-			"MaxValue" : 1.0,
-			"DefaultValue" : 0.0,
+			"MinValue" : -1,
+			"MaxValue" : 1,
+			"DefaultValue" : 0,
 			"IsAutoSupported" : false,
 			"IsWritable" : true,
 			"ControlType" : 8
@@ -160,9 +160,9 @@
 		{
 			"Name" : "Saturation",
 			"argumentName" : "saturation",
-			"MinValue" : 0.0,
-			"MaxValue" : "none",
-			"DefaultValue" : 1.0,
+			"MinValue" : 0,
+			"MaxValue" : 9999999,
+			"DefaultValue" : 1,
 			"IsAutoSupported" : false,
 			"IsWritable" : true,
 			"ControlType" : 9
@@ -170,9 +170,9 @@
 		{
 			"Name" : "Contrast",
 			"argumentName" : "contrast",
-			"MinValue" : 0.0,
-			"MaxValue" : "none",
-			"DefaultValue" : 1.0,
+			"MinValue" : 0,
+			"MaxValue" : 9999999,
+			"DefaultValue" : 1,
 			"IsAutoSupported" : false,
 			"IsWritable" : true,
 			"ControlType" : 10
@@ -180,9 +180,9 @@
 		{
 			"Name" : "Sharpness",
 			"argumentName" : "sharpness",
-			"MinValue" : 0.0,
-			"MaxValue" : "none",
-			"DefaultValue" : 1.0,
+			"MinValue" : 0,
+			"MaxValue" : 9999999,
+			"DefaultValue" : 1,
 			"IsAutoSupported" : false,
 			"IsWritable" : true,
 			"ControlType" : 11
