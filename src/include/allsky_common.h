@@ -92,10 +92,12 @@ struct overlay {
 	bool showFocus						= false;
 	bool showHistogramBox				= false;
 	bool showUSB						= false;
-	bool externalOverlay				= false;
+	int overlayMethod					= NOT_SET;
 	bool showMode						= false;
 	bool showCompass					= false;
 };
+#define OVERLAY_METHOD_LEGACY			0
+#define OVERLAY_METHOD_MODULE			1
 
 // Histogram Box, ZWO only
 struct HB {

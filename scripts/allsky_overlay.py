@@ -180,7 +180,7 @@ class ALLSKYOVERLAY:
     def _readData(self, dataFilename, defaultExpiry):
         result = False
         fileExtension = pathlib.Path(dataFilename).suffix
-        fileModifiedTime = int(os.path.getmtime(dataFilename))
+        fileModifiedTime = s.int(os.path.getmtime(dataFilename))
         if fileExtension == '.json':
             if s.isFileReadable(dataFilename):
                 with open(dataFilename) as file:
@@ -593,11 +593,11 @@ class ALLSKYOVERLAY:
             opacity = self._extraData[placeHolder.upper()]['opacity']
 
             if self._extraData[placeHolder.upper()]["expires"] != 0:
-                age = int(time.time()) - self._extraData[placeHolder.upper()]["datecreated"]
+                age = s.int(time.time()) - self._extraData[placeHolder.upper()]["datecreated"]
                 if age > self._extraData[placeHolder.upper()]["expires"]:
-                    fileTime = datetime.fromtimestamp(int(self._extraData[placeHolder.upper()]["datecreated"]))
+                    fileTime = datetime.fromtimestamp(s.int(self._extraData[placeHolder.upper()]["datecreated"]))
                     fileTimeHR = fileTime.strftime("%d.%m.%y %H:%M:%S")
-                    nowTime = datetime.fromtimestamp(int(time.time()))
+                    nowTime = datetime.fromtimestamp(s.int(time.time()))
                     nowTimeHR = nowTime.strftime("%d.%m.%y %H:%M:%S")                    
                     s.log(4, "INFO: data field {0} expired. File time {1}, now {2}. Expiry {3} Seconds. Age {4} Seconds"
                         .format(placeHolder, fileTimeHR, nowTimeHR, self._extraData[placeHolder.upper()]["expires"], age))
@@ -780,7 +780,7 @@ class ALLSKYOVERLAY:
             if symbol < 0.2 or symbol > 25.8 :  
                 symbol = '1'  # new moon  
             else:  
-                symbol = chr(ord('A')+int(symbol+0.5)-1) 
+                symbol = chr(ord('A')+s.int(symbol+0.5)-1) 
 
             azTemp = str(moon.az).split(":")
             self._moonAzimuth = azTemp[0] + u"\N{DEGREE SIGN}"
@@ -807,7 +807,7 @@ class ALLSKYOVERLAY:
         fileModifiedTime = ''
 
         if os.path.exists(fileName):
-            fileModifiedTime = int(os.path.getmtime(fileName))
+            fileModifiedTime = s.int(os.path.getmtime(fileName))
             m_ti = time.ctime(fileModifiedTime)
             fileDate = time.strptime(m_ti)  
             fileDate = time.strftime('%Y-%m-%d', fileDate)
