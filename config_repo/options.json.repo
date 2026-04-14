@@ -119,7 +119,7 @@
 {
 "name" : "dayautogain",
 "default" : "_default",
-"description" : "Enable to use dayime auto-gain.",
+"description" : "Enable to use daytime auto-gain.",
 "label" : "Auto-Gain",
 "label_prefix" : "Daytime",
 "type" : "boolean",
