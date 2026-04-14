@@ -261,14 +261,14 @@ char *length_in_units(long us, bool multi)	// microseconds
 	// The boundaries on when to display one or two units are really a matter of taste.
 	if (abs_us_in_ms < 0.5)						// less than 0.5 ms
 	{
-		snprintf(length_p, l, "%'ld us", us);
+		snprintf(length_p, l, "%'ld \xC2\xB5s", us);
 	}
 	else if (abs_us_in_ms < 1.5)				// between 0.5 ms and 1.5 ms
 	{
 		if (multi)
-			snprintf(length_p, l, "%'ld us (%.3f ms)", us, us_in_ms);
+			snprintf(length_p, l, "%'ld \xC2\xB5s (%.3f ms)", us, us_in_ms);
 		else
-			snprintf(length_p, l, "%'ld us", us);
+			snprintf(length_p, l, "%'ld \xC2\xB5s", us);
 	}
 	else if (abs_us_in_ms < (0.5 * MS_IN_SEC))	// 1.5 ms to 0.5 sec
 	{
