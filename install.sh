@@ -317,7 +317,7 @@ usage_and_exit()
 	else
 		C="${RED}"
 	fi
-	USAGE="Usage: ${ME} [--help] [--debug [...]] [--fix |--update | --restore | --function function] [--skip | --skip2]"
+	USAGE="Usage: ${ME} [--help] [--debug [...]] [--fix |--update | --restore | --function function] [--skip | --skip2] [--doUpgrade]"
 	echo -e "\n${C}${USAGE}${NC}"
 	echo
 	echo "Arguments:"
@@ -330,6 +330,7 @@ usage_and_exit()
 	echo "   --skip       Skip some steps to speed up installation."
 	echo "                Use when installing after a 'git clone'."
 	echo "   --skip2      Skip more steps.  Use when Allsky is installed."
+	echo "   --doUpgrade  Used by the 'upgrade.sh' program to complete an upgrade."
 	echo
 
 	exit_installation "${RET}"
@@ -3949,6 +3950,7 @@ UPDATE="false"
 FIX="false"
 RESTORE="false"
 FUNCTION=""
+DO_UPGRADE="false"
 while [ $# -gt 0 ]; do
 	ARG="${1}"
 	case "${ARG,,}" in
@@ -3962,6 +3964,10 @@ while [ $# -gt 0 ]; do
 			;;
 		--update)
 			UPDATE="true"
+			;;
+		--doupdate)
+			DO_UPGRADE="true"
+DO_UPGRADE="${DO_UPGRADE}"	# XXXXXXXXXXXXX keeps shellcheck quiet during development
 			;;
 		--fix)
 			FIX="true"
