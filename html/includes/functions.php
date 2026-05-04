@@ -782,36 +782,39 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 				$imageTypes = array();
 				foreach (glob(ALLSKY_IMAGES . "/$day/$dir$imageFileName-$day.*") as $imageType) {
 					$imageTypes[] = $imageType;
+				}
+				foreach ($imageTypes as $imageType) {
+					$imageType_name = basename($imageType);
+					if (! isListFileTypeSupportedFile($imageType_name, $type)) {
+						continue;
+					}
 					$num += 1;
-					foreach ($imageTypes as $imageType) {
-						$imageType_name = basename($imageType);
-						$fullFilename = "$images_dir/$day/$dir$imageType_name";
-							if ($type == "picture") {
-								$thumbUrl = $useThumbnails ? getListFileTypePictureThumbnailUrl($day, $dir, $imageType_name, $fullFilename) : $fullFilename;
-								$lightboxSize = getLightboxSizeAttribute($imageType);
-								$itemCount += 1;
-								echo "<a href='$fullFilename' class='images-grid-item functions-listfiletype-item' data-lg-size='" . htmlspecialchars($lightboxSize, ENT_QUOTES) . "'>";
-								echo "<img src='" . htmlspecialchars($thumbUrl, ENT_QUOTES) . "' class='functions-listfiletype-media' />";
-								echo "<span class='images-grid-name functions-listfiletype-name'>$day</span>";
-								echo "<span class='images-grid-date functions-listfiletype-date' data-listfiletype-day='{$day}'></span>";
-							echo "</a>\n";
-						} else {
-							$itemCount += 1;
-							$thumbInfo = getVideoThumbnailInfo($day, $imageType, $fullFilename, $useThumbnails);
-							if (! empty($thumbInfo['warning'])) {
-								$thumbnailWarnings[$thumbInfo['warning']] = true;
-							}
-							$videoMimeType = getListFileTypeVideoMimeType($imageType_name);
-							$playerUrl = getListFileTypeVideoPlayerUrl($fullFilename, $videoMimeType);
-							echo "<a href='" . htmlspecialchars($playerUrl, ENT_QUOTES) . "' class='images-grid-item functions-listfiletype-item functions-listfiletype-video-item' data-iframe='true' data-download-url='" . htmlspecialchars($fullFilename, ENT_QUOTES) . "'>";
-							echo "<span class='functions-listfiletype-video-thumb-wrap'>";
-							echo "<img src='" . htmlspecialchars($thumbInfo['thumbUrl'], ENT_QUOTES) . "' class='functions-listfiletype-media functions-listfiletype-video-thumb' />";
-							echo "<span class='functions-listfiletype-video-badge'><i class='fa fa-play'></i></span>";
-							echo "</span>";
-							echo "<span class='images-grid-name functions-listfiletype-name'>$day</span>";
-							echo "<span class='images-grid-date functions-listfiletype-date' data-listfiletype-day='{$day}'></span>";
-							echo "</a>\n";
+					$fullFilename = "$images_dir/$day/$dir$imageType_name";
+					if ($type == "picture") {
+						$thumbUrl = $useThumbnails ? getListFileTypePictureThumbnailUrl($day, $dir, $imageType_name, $fullFilename) : $fullFilename;
+						$lightboxSize = getLightboxSizeAttribute($imageType);
+						$itemCount += 1;
+						echo "<a href='$fullFilename' class='images-grid-item functions-listfiletype-item' data-lg-size='" . htmlspecialchars($lightboxSize, ENT_QUOTES) . "'>";
+						echo "<img src='" . htmlspecialchars($thumbUrl, ENT_QUOTES) . "' class='functions-listfiletype-media' />";
+						echo "<span class='images-grid-name functions-listfiletype-name'>$day</span>";
+						echo "<span class='images-grid-date functions-listfiletype-date' data-listfiletype-day='{$day}'></span>";
+						echo "</a>\n";
+					} else {
+						$itemCount += 1;
+						$thumbInfo = getVideoThumbnailInfo($day, $imageType, $fullFilename, $useThumbnails);
+						if (! empty($thumbInfo['warning'])) {
+							$thumbnailWarnings[$thumbInfo['warning']] = true;
 						}
+						$videoMimeType = getListFileTypeVideoMimeType($imageType_name);
+						$playerUrl = getListFileTypeVideoPlayerUrl($fullFilename, $videoMimeType);
+						echo "<a href='" . htmlspecialchars($playerUrl, ENT_QUOTES) . "' class='images-grid-item functions-listfiletype-item functions-listfiletype-video-item' data-iframe='true' data-download-url='" . htmlspecialchars($fullFilename, ENT_QUOTES) . "'>";
+						echo "<span class='functions-listfiletype-video-thumb-wrap'>";
+						echo "<img src='" . htmlspecialchars($thumbInfo['thumbUrl'], ENT_QUOTES) . "' class='functions-listfiletype-media functions-listfiletype-video-thumb' />";
+						echo "<span class='functions-listfiletype-video-badge'><i class='fa fa-play'></i></span>";
+						echo "</span>";
+						echo "<span class='images-grid-name functions-listfiletype-name'>$day</span>";
+						echo "<span class='images-grid-date functions-listfiletype-date' data-listfiletype-day='{$day}'></span>";
+						echo "</a>\n";
 					}
 				}
 			}
@@ -830,7 +833,9 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 		}
 		$imageTypes = array();
 		foreach (glob($expr) as $imageType) {
-			$imageTypes[] = $imageType;
+			if (isListFileTypeSupportedFile(basename($imageType), $type)) {
+				$imageTypes[] = $imageType;
+			}
 		}
 		if (count($imageTypes) == 0) {
 			$renderListFileTypeError("No {$formalImageTypeName} Found", "There are no {$formalImageTypeName} for this day.");
@@ -943,17 +948,22 @@ $(document).ready(function () {
 			return;
 		}
 
-			const gallery = lightGallery(galleryElement, {
-				cssEasing: 'cubic-bezier(0.680, -0.550, 0.265, 1.550)',
-				selector: 'a',
-				plugins: [lgZoom, lgThumbnail],
-				mode: 'lg-slide-circular',
-				speed: 400,
-				download: false,
-				thumbnail: true,
-				iframeMaxWidth: '90%',
-				iframeMaxHeight: '90%'
-			});
+		const plugins = [lgZoom, lgThumbnail];
+		if (typeof lgVideo !== 'undefined') {
+			plugins.push(lgVideo);
+		}
+
+		const gallery = lightGallery(galleryElement, {
+			cssEasing: 'cubic-bezier(0.680, -0.550, 0.265, 1.550)',
+			selector: 'a',
+			plugins: plugins,
+			mode: 'lg-slide-circular',
+			speed: 400,
+			download: false,
+			thumbnail: true,
+			iframeMaxWidth: '90%',
+			iframeMaxHeight: '90%'
+		});
 		return gallery;
 	}
 
@@ -1120,6 +1130,27 @@ function getListFileTypeVideoMimeType($fileName) {
 	}
 
 	return 'video/mp4';
+}
+
+/**
+ * Check whether a file belongs in the requested ListFileType gallery.
+ *
+ * Some generated helpers write sidecar images next to videos, such as JPEG
+ * thumbnails for test timelapses.  Filtering by extension prevents those files
+ * from being rendered as playable video links.
+ */
+function isListFileTypeSupportedFile($fileName, $type) {
+	$extension = strtolower((string) pathinfo($fileName, PATHINFO_EXTENSION));
+
+	if ($type === 'video') {
+		return in_array($extension, ['mp4', 'webm', 'ogg', 'ogv'], true);
+	}
+
+	if ($type === 'picture') {
+		return in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'], true);
+	}
+
+	return true;
 }
 
 function getListFileTypeVideoPlayerUrl($videoUrl, $mimeType) {

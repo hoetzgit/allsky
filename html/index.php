@@ -493,27 +493,28 @@ function insertPage($p)
 			include_once("includes/$p.php");
 			break;
 		case "check_allsky":
-			include_once("helpers/allsky_config.php");
-			runAllskyConfig("check_allsky", "--fromWebUI");
+			include_once("includes/helper.php");
+			DisplayHelper("check_allsky");
 			break;
 		case "startrails_settings":
-			include_once("helpers/$p.php");
-			startrailsSettings();
+			include_once("includes/helper.php");
+			DisplayHelper("startrails_settings");
 			break;
 		case "stretch_settings":
-			include_once("helpers/$p.php");
-			stretchSettings();
+			include_once("includes/helper.php");
+			DisplayHelper("stretch_settings");
 			break;
 		case "timelapse_settings":
-			include_once("helpers/$p.php");
-			timelapseSettings();
+			include_once("includes/helper.php");
+			DisplayHelper("timelapse_settings");
 			break;
 		case "constellation_overlay":
 			include_once("helpers/$p.php");
 			break;
 		case "bad_images_settings":
-			include_once("helpers/$p.php");
-			// TODO: add function name
+			include_once("includes/helper.php");
+			// TODO: add function name			
+			//DisplayHelper("bad_images_settings");
 			break;
 
 		case "live_view":

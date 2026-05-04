@@ -2110,6 +2110,194 @@ div.dt-container div.dt-scroll-body {
 
 /** End Media helpers **/
 
+/** Directory Browser **/
+.allsky-directory-browser-modal .modal-dialog {
+	width: min(760px, calc(100vw - 40px));
+}
+
+.allsky-directory-browser-modal .modal-content {
+	display: flex;
+	flex-direction: column;
+	max-height: calc(100vh - 40px);
+}
+
+.allsky-directory-browser-modal .modal-body {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.allsky-directory-browser {
+	border: 1px solid var(--bs3-border-soft);
+	background: var(--bs3-panel-bg);
+	color: var(--bs3-body-color);
+	height: min(560px, calc(100vh - 180px));
+	min-height: 320px;
+	overflow: auto;
+	padding: 8px;
+}
+
+.allsky-directory-browser ul {
+	list-style: none;
+	margin: 0;
+	min-width: max-content;
+	padding-left: 18px;
+}
+
+.allsky-directory-browser > ul {
+	padding-left: 0;
+}
+
+.allsky-directory-browser-node {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	width: 100%;
+	border: 0;
+	background: transparent;
+	text-align: left;
+	padding: 4px 6px;
+	border-radius: 4px;
+	color: inherit;
+}
+
+.allsky-directory-browser-node:hover,
+.allsky-directory-browser-node:focus {
+	background: var(--bs3-list-group-hover-bg);
+	outline: none;
+}
+
+.allsky-directory-browser-node.is-selected {
+	background: var(--bs3-list-group-active-bg);
+	color: var(--bs3-list-group-active-text);
+}
+
+.allsky-directory-browser-root {
+	cursor: default;
+	font-weight: bold;
+}
+
+.allsky-directory-browser-node i {
+	width: 16px;
+	flex: 0 0 16px;
+	text-align: center;
+}
+
+.allsky-directory-browser-folder-state {
+	color: var(--bs3-text-muted);
+	font-size: 12px;
+}
+
+.allsky-directory-browser-directory.is-open .allsky-directory-browser-folder-icon {
+	color: var(--color-attention-fg);
+}
+
+.allsky-directory-browser-node-name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.allsky-directory-browser-children {
+	display: none;
+}
+
+.allsky-directory-browser-children.is-open {
+	display: block;
+}
+
+.allsky-directory-browser-placeholder {
+	color: var(--bs3-text-muted);
+	padding: 10px;
+}
+
+.allsky-directory-browser-selected {
+	float: left;
+	max-width: 70%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+	.allsky-directory-browser-modal .modal-dialog {
+		width: calc(100vw - 20px);
+		margin: 10px;
+	}
+
+	.allsky-directory-browser-selected {
+		float: none;
+		display: block;
+		max-width: 100%;
+		margin-bottom: 8px;
+	}
+}
+
+/** End Directory Browser **/
+
+/** Number Series **/
+.allsky-number-series-modal .modal-dialog {
+	width: min(620px, calc(100vw - 40px));
+}
+
+.allsky-number-series-controls {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 12px;
+}
+
+.allsky-number-series-controls label {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	margin: 0;
+	font-weight: normal;
+	color: var(--bs3-body-color);
+}
+
+.allsky-number-series-controls label span {
+	font-size: 12px;
+	color: var(--bs3-text-muted);
+}
+
+.allsky-number-series-controls input {
+	width: 120px;
+}
+
+.allsky-number-series-preview-label {
+	display: block;
+	margin-top: 14px;
+	color: var(--bs3-text-muted);
+	font-weight: normal;
+}
+
+.allsky-number-series-preview {
+	font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+	resize: vertical;
+}
+
+@media (max-width: 760px) {
+	.allsky-number-series-modal .modal-dialog {
+		width: calc(100vw - 20px);
+		margin: 10px;
+	}
+
+	.allsky-number-series-controls {
+		align-items: stretch;
+	}
+
+	.allsky-number-series-controls label {
+		flex: 1 1 120px;
+	}
+
+	.allsky-number-series-controls input {
+		width: 100%;
+	}
+}
+
+/** End Number Series **/
+
 /** Generic Helpers **/
 .center-text {
     text-align: center;
@@ -5326,6 +5514,71 @@ table.dataTable .selected .as-variable-has-value {
 	overflow-x: hidden !important;
 }
 /** End Variable Manager **/
+
+/** Helper Tools **/
+.helper-results-tabs {
+	margin-top: 20px;
+}
+
+.helper-results-content {
+	margin-top: 15px;
+}
+
+.helper-output {
+	font-size: 115%;
+	min-height: 8em;
+	white-space: pre-wrap;
+}
+
+.helper-images-hidden {
+	display: none;
+}
+
+.helper-notice-blockquote {
+	max-width: 100%;
+}
+
+.helper-no-settings {
+	background-color: var(--bs3-surface-3);
+	border: var(--as-border-width) solid var(--bs3-border-soft);
+	border-radius: var(--as-radius-lg);
+	margin-bottom: 15px;
+	padding: 14px 16px;
+}
+
+.helper-no-settings-title {
+	color: var(--bs3-heading-color);
+	font-size: 14px;
+	font-weight: 700;
+	margin-bottom: 4px;
+}
+
+.helper-no-settings-text {
+	color: var(--bs3-text-muted);
+	line-height: 1.45;
+}
+
+.helper-submit-row {
+	align-items: center;
+	display: flex;
+	gap: 10px;
+	justify-content: space-between;
+}
+
+.helper-submit-primary {
+	min-width: 0;
+}
+
+.helper-show-command-button {
+	flex: 0 0 auto;
+	margin-left: auto;
+}
+
+.helper-command-modal-command {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+/** End Helper Tools **/
 
 /** Error Messages **/
 .errorMsg,

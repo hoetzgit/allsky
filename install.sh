@@ -3333,6 +3333,11 @@ install_overlay()
 	cp  "${ALLSKY_REPO}/devicemanager.json.repo" "${ALLSKY_CONFIG}/devicemanager.json"
 
 	cp  "${ALLSKY_REPO}/suggested_modules.json.repo" "${ALLSKY_CONFIG}/suggested_modules.json"
+	cp  "${ALLSKY_REPO}/monitorable_logs.json.repo" "${ALLSKY_CONFIG}/monitorable_logs.json"
+
+	#TODO: Where is the best place to do these?
+	cp  "${ALLSKY_REPO}/helpers.json.repo" "${ALLSKY_CONFIG}/helpers.json"
+	cp  "${ALLSKY_REPO}/helpers.md.repo" "${ALLSKY_CONFIG}/helpers.md"
 
 	# ALLSKY_MY_OVERLAY_TEMPLATES is not in ALLSKY_REPO and we haven't restored anything yet,
 	# so create the directory.

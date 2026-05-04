@@ -1,0 +1,430 @@
+"use strict";
+
+class HelperToolPage {
+    constructor(rootElement) {
+        this.rootElement = $(rootElement);
+        this.formElement = this.rootElement.find(".js-helper-form");
+        this.overlayElement = $("body");
+        this.outputElement = this.rootElement.find(".js-helper-output");
+        this.resultsOutputElement = this.rootElement.find(".js-helper-results-output");
+        this.imagesContainerElement = this.rootElement.find(".js-helper-images");
+        this.runButtonElement = this.rootElement.find(".js-helper-run");
+        this.commandButtonElement = this.rootElement.find(".js-helper-show-command");
+        this.resultsTabsElement = this.rootElement.find(".js-helper-results-tabs");
+        this.resultsContentElement = this.rootElement.find(".js-helper-results-content");
+        this.settingsTabElement = this.rootElement.find(".js-helper-settings-tab");
+        this.resultsTabItemElement = this.rootElement.find(".js-helper-results-tab-item");
+        this.imagesTabItemElement = this.rootElement.find(".js-helper-images-tab-item");
+        this.outputTabItemElement = this.rootElement.find(".js-helper-output-tab-item");
+        this.resultsTabElement = this.rootElement.find(".js-helper-results-tab");
+        this.imagesTabElement = this.rootElement.find(".js-helper-images-tab");
+        this.outputTabElement = this.rootElement.find(".js-helper-output-tab");
+        this.imagesTabLabelElement = this.rootElement.find(".js-helper-images-tab-label");
+        this.outputTabLabelElement = this.rootElement.find(".js-helper-output-tab-label");
+        this.endpoint = String(this.rootElement.data("endpoint") || "");
+        this.request = String(this.rootElement.data("request") || "");
+        this.helper = String(this.rootElement.data("helper") || "");
+        this.method = String(this.rootElement.data("method") || "POST").toUpperCase();
+        this.autoRun = this.rootElement.data("autoRun") === true || String(this.rootElement.data("autoRun") || "") === "true";
+        this.outputFormat = String(this.rootElement.data("outputFormat") || "text").toLowerCase();
+        this.runningMessage = String(this.rootElement.data("runningMessage") || "Running helper...");
+        this.workingMessage = String(this.rootElement.data("workingMessage") || "Working...");
+        this.idleButtonLabel = String(this.runButtonElement.val() || "Run");
+        this.runningButtonLabel = String(this.rootElement.data("runningButtonLabel") || "Running...");
+    }
+
+    init() {
+        if (
+            this.formElement.length === 0 ||
+            this.outputElement.length === 0 ||
+            this.resultsOutputElement.length === 0 ||
+            this.imagesContainerElement.length === 0 ||
+            this.endpoint === "" ||
+            this.request === ""
+        ) {
+            return;
+        }
+
+        this.clearImages();
+        this.outputElement.text("");
+        this.resultsOutputElement.text("");
+        this.updateResultsVisibility();
+        this.selectTab(this.settingsTabElement.length > 0 ? this.settingsTabElement : this.imagesTabElement);
+
+        this.formElement.on("submit", (event) => {
+            event.preventDefault();
+            this.run();
+        });
+
+        this.commandButtonElement.on("click", (event) => {
+            event.preventDefault();
+            this.showCommandPreview();
+        });
+
+        if (this.autoRun) {
+            this.run();
+        }
+    }
+
+    run() {
+        this.showOutput(this.runningMessage, false);
+        this.clearImages();
+        this.selectTab(this.resultsTabElement);
+        this.setBusy(true, this.runningButtonLabel);
+        this.showWorkingOverlay(this.workingMessage);
+
+        $.ajax({
+            url: this.buildUrl(),
+            type: this.method,
+            dataType: "json",
+            data: this.formElement.serialize(),
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        }).done((response) => {
+            this.handleResponse(response).always(() => {
+                this.hideWorkingOverlay();
+                this.setBusy(false, this.idleButtonLabel);
+            });
+        }).fail((xhr) => {
+            this.showOutput(this.getAjaxError(xhr), true, false);
+            this.clearImages();
+            this.selectTab(this.resultsTabElement);
+            this.hideWorkingOverlay();
+            this.setBusy(false, this.idleButtonLabel);
+        });
+    }
+
+    buildUrl(request) {
+        let url = this.endpoint + "?request=" + encodeURIComponent(request || this.request);
+
+        if (this.helper !== "") {
+            url += "&helper=" + encodeURIComponent(this.helper);
+        }
+
+        return url;
+    }
+
+    showCommandPreview() {
+        this.commandButtonElement.prop("disabled", true);
+
+        $.ajax({
+            url: this.buildUrl("HelperCommand"),
+            type: this.method,
+            dataType: "json",
+            data: this.formElement.serialize(),
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        }).done((response) => {
+            const command = response && response.command ? response.command : "No command returned.";
+            this.showCommandModal(command);
+        }).fail((xhr) => {
+            this.showCommandModal(this.getAjaxError(xhr));
+        }).always(() => {
+            this.commandButtonElement.prop("disabled", false);
+        });
+    }
+
+    showCommandModal(command) {
+        const modalElement = this.getCommandModal();
+
+        modalElement.find(".js-helper-command-modal-command").text(command);
+        modalElement.modal("show");
+    }
+
+    getCommandModal() {
+        let modalElement = $("#helper-command-modal");
+
+        if (modalElement.length > 0) {
+            return modalElement;
+        }
+
+        modalElement = $(
+            "<div class='modal fade' id='helper-command-modal' tabindex='-1' role='dialog' aria-labelledby='helper-command-modal-title'>" +
+                "<div class='modal-dialog modal-lg' role='document'>" +
+                    "<div class='modal-content'>" +
+                        "<div class='modal-header'>" +
+                            "<button type='button' class='close' data-dismiss='modal' aria-label='Close'><span aria-hidden='true'>&times;</span></button>" +
+                            "<h4 class='modal-title' id='helper-command-modal-title'>Command</h4>" +
+                        "</div>" +
+                        "<div class='modal-body'>" +
+                            "<pre class='helper-command-modal-command js-helper-command-modal-command'></pre>" +
+                        "</div>" +
+                        "<div class='modal-footer'>" +
+                            "<button type='button' class='btn btn-default' data-dismiss='modal'>Close</button>" +
+                        "</div>" +
+                    "</div>" +
+                "</div>" +
+            "</div>"
+        );
+
+        $("body").append(modalElement);
+        return modalElement;
+    }
+
+    selectTab(tabElement) {
+        if (tabElement.length > 0) {
+            tabElement.tab("show");
+        }
+    }
+
+    updateResultsVisibility() {
+        const hasImages = $.trim(this.imagesContainerElement.html()) !== "";
+        const outputText = $.trim(this.outputElement.text());
+        const hasOutput = outputText !== "" && outputText !== "No output returned.";
+        const hasResults = hasOutput && !hasImages;
+
+        this.updateResultTabLabels();
+
+        if (this.settingsTabElement.length > 0) {
+            this.resultsTabsElement.show();
+            this.resultsContentElement.show();
+            this.resultsTabItemElement.toggle(hasResults);
+            this.imagesTabItemElement.toggle(hasImages);
+            this.outputTabItemElement.toggle(hasOutput);
+
+            if (
+                this.resultsTabItemElement.is(":visible") &&
+                !this.resultsTabItemElement.hasClass("active") &&
+                !this.imagesTabItemElement.hasClass("active") &&
+                !this.outputTabItemElement.hasClass("active")
+            ) {
+                this.selectTab(this.resultsTabElement);
+            }
+            return;
+        }
+
+        const hasAnyContent = hasImages || hasOutput;
+
+        this.resultsTabsElement.toggle(hasAnyContent);
+        this.resultsContentElement.toggle(hasAnyContent);
+        this.resultsTabItemElement.toggle(hasResults);
+        this.imagesTabItemElement.toggle(hasImages);
+        this.outputTabItemElement.toggle(hasOutput);
+
+        if (!hasAnyContent) {
+            return;
+        }
+
+        if (
+            this.resultsTabItemElement.is(":visible") &&
+            !this.resultsTabItemElement.hasClass("active") &&
+            !this.imagesTabItemElement.hasClass("active") &&
+            !this.outputTabItemElement.hasClass("active")
+        ) {
+            this.selectTab(this.resultsTabElement);
+            return;
+        }
+
+        if (
+            this.imagesTabItemElement.is(":visible") &&
+            !this.imagesTabItemElement.hasClass("active") &&
+            !this.outputTabItemElement.hasClass("active")
+        ) {
+            this.selectTab(this.imagesTabElement);
+            return;
+        }
+
+        if (
+            !this.resultsTabItemElement.is(":visible") &&
+            this.resultsTabItemElement.hasClass("active") &&
+            this.imagesTabItemElement.is(":visible")
+        ) {
+            this.selectTab(this.imagesTabElement);
+            return;
+        }
+
+        if (
+            !this.resultsTabItemElement.is(":visible") &&
+            this.resultsTabItemElement.hasClass("active") &&
+            this.outputTabItemElement.is(":visible")
+        ) {
+            this.selectTab(this.outputTabElement);
+            return;
+        }
+
+        if (
+            !this.imagesTabItemElement.is(":visible") &&
+            this.imagesTabItemElement.hasClass("active") &&
+            this.outputTabItemElement.is(":visible")
+        ) {
+            this.selectTab(this.outputTabElement);
+            return;
+        }
+
+        if (
+            !this.outputTabItemElement.is(":visible") &&
+            this.outputTabItemElement.hasClass("active") &&
+            this.imagesTabItemElement.is(":visible")
+        ) {
+            this.selectTab(this.imagesTabElement);
+        }
+    }
+
+    updateResultTabLabels() {
+        if (this.imagesTabLabelElement.length > 0) {
+            this.imagesTabLabelElement.text("Images");
+        }
+
+        if (this.outputTabLabelElement.length > 0) {
+            this.outputTabLabelElement.text("Output");
+        }
+    }
+
+    clearImages() {
+        this.imagesContainerElement.empty();
+        this.updateResultsVisibility();
+    }
+
+    showOutput(text, isError, renderHtml) {
+        const output = text && text !== "" ? text : "No output returned.";
+
+        if (renderHtml) {
+            this.outputElement.html(output);
+            this.resultsOutputElement.html(output);
+        } else {
+            this.outputElement.text(output);
+            this.resultsOutputElement.text(output);
+        }
+
+        this.outputElement.toggleClass("errorMsgBig", !!isError);
+        this.resultsOutputElement.toggleClass("errorMsgBig", !!isError);
+        this.updateResultsVisibility();
+    }
+
+    setBusy(isBusy, buttonText) {
+        this.runButtonElement.prop("disabled", isBusy).val(buttonText);
+        this.commandButtonElement.prop("disabled", isBusy);
+    }
+
+    showWorkingOverlay(message) {
+        this.overlayElement.LoadingOverlay("show", {
+            image: "",
+            fontawesome: "fa fa-spinner fa-spin",
+            fontawesomeColor: "#ffffff",
+            background: "rgba(0, 0, 0, 0.55)",
+            text: message,
+            textColor: "#ffffff"
+        });
+    }
+
+    hideWorkingOverlay() {
+        this.overlayElement.LoadingOverlay("hide");
+    }
+
+    getAjaxError(xhr) {
+        if (xhr.responseJSON && xhr.responseJSON.message) {
+            return xhr.responseJSON.message;
+        }
+
+        if (xhr.responseText) {
+            try {
+                const parsed = JSON.parse(xhr.responseText);
+                if (parsed.message) {
+                    return parsed.message;
+                }
+            } catch (error) {
+            }
+            return xhr.responseText;
+        }
+
+        return "Request failed.";
+    }
+
+    stripHtml(rawOutput) {
+        return $("<div>").html(rawOutput || "").text();
+    }
+
+    initialiseLocaleDates() {
+        const dateOnlyFormatter = new Intl.DateTimeFormat(undefined, {
+            dateStyle: "medium"
+        });
+
+        this.imagesContainerElement.find(".functions-listfiletype-date").each(function() {
+            const element = $(this);
+            const rawDate = element.attr("data-listfiletype-date");
+            const rawDay = element.attr("data-listfiletype-day");
+            let date;
+
+            if (rawDate) {
+                date = new Date(rawDate);
+                if (!Number.isNaN(date.getTime())) {
+                    element.text(dateOnlyFormatter.format(date));
+                }
+                return;
+            }
+
+            if (!rawDay || !/^\d{8}$/.test(rawDay)) {
+                return;
+            }
+
+            date = new Date(
+                parseInt(rawDay.slice(0, 4), 10),
+                parseInt(rawDay.slice(4, 6), 10) - 1,
+                parseInt(rawDay.slice(6, 8), 10)
+            );
+            if (!Number.isNaN(date.getTime())) {
+                element.text(dateOnlyFormatter.format(date));
+            }
+        });
+    }
+
+    initialiseGallery() {
+        const galleryElement = this.imagesContainerElement.find(".functions-listfiletype-grid").get(0);
+
+        if (!galleryElement || typeof lightGallery !== "function") {
+            return;
+        }
+
+        if ($(galleryElement).data("lightGalleryInitialized")) {
+            return;
+        }
+
+        const plugins = [lgZoom, lgThumbnail];
+        if (typeof lgVideo !== "undefined") {
+            plugins.push(lgVideo);
+        }
+
+        lightGallery(galleryElement, {
+            cssEasing: "cubic-bezier(0.680, -0.550, 0.265, 1.550)",
+            selector: "a",
+            plugins: plugins,
+            mode: "lg-slide-circular",
+            speed: 400,
+            download: false,
+            thumbnail: true,
+            iframeMaxWidth: "90%",
+            iframeMaxHeight: "90%"
+        });
+        $(galleryElement).data("lightGalleryInitialized", true);
+    }
+
+    renderImagesHtml(imagesHtml) {
+        if (!imagesHtml) {
+            this.clearImages();
+            return $.Deferred().resolve().promise();
+        }
+
+        this.imagesContainerElement.html(imagesHtml);
+        this.initialiseLocaleDates();
+        this.initialiseGallery();
+        this.updateResultsVisibility();
+        return $.Deferred().resolve().promise();
+    }
+
+    handleResponse(response) {
+        const rawOutput = response && response.output ? response.output : "";
+        const renderHtml = this.outputFormat === "html";
+        const output = renderHtml ? rawOutput : this.stripHtml(rawOutput);
+        const imagesHtml = response && response.imagesHtml ? response.imagesHtml : "";
+
+        this.showOutput(output, !(response && response.ok), renderHtml);
+        return this.renderImagesHtml(imagesHtml).always(() => {
+            this.selectTab($.trim(imagesHtml) !== "" ? this.imagesTabElement : this.resultsTabElement);
+        });
+    }
+}
+
+$(function() {
+    $(".js-helper-tool-page").each(function() {
+        const helperToolPage = new HelperToolPage(this);
+        helperToolPage.init();
+    });
+});
