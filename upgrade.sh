@@ -382,6 +382,7 @@ fi
 		# change messages to say "upgrade", not "install", etc.
 		# shellcheck disable=SC2086,SC2291
 		X="$(
+#shellcheck disable=SC2116		# XXXXXXXXX temporary
 echo XXX		./install.sh ${DEBUG_ARG} --branch "${BRANCH}" --doUpgrade
 		)"
 		RET=$?
