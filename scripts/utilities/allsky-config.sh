@@ -323,42 +323,8 @@ function compare_paths()
 # update them and not always quick to check if they need updating.
 function recreate_files()
 {
-	local X
-
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}"
-		echo
-		echo "Recreates files when their 'parent' files change, e.g., a '.repo' file."
-		return
-	fi
-
-	echo "* Updating variables.json file"
-	create_variables_json ""		# Should come first so other steps get the newest file.
-
-	echo "* Updating sudoers file"
-	create_sudoers
-
-	echo "* Updating options file"
-	create_options_file --no-settings-file
-
-	echo "* Updating config_repo files"
-	update_repo_files
-
-	create_links "allsky-config"
-
-	echo "* Updating variables used by C programs and running 'make' if needed"
-	X="$( update_allsky_common "true" 2>&1 )"	# "true" means run "make" if needed
-	if [[ $? -ne 0 ]]; then
-		W_ "WARNING: ${X}" >&2
-	fi
-
-	echo "* Updating lighttpd config file and restarting the service"
-	create_lighttpd_config_file ""
-	X="$( sudo systemctl restart lighttpd 2>&1 )"
-	if [[ $? -ne 0 ]]; then
-		W_ "WARNING: unable to restart lighttpd service in ${ME_F}: ${X}" >&2
-	fi
+	# shellcheck disable=SC2068
+	"${ALLSKY_UTILITIES}/recreateFiles.sh" "${@}"
 }
 
 
