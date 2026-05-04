@@ -767,7 +767,7 @@ if ($debug) {
 		echo "<span>$x $pageHeaderTitle for &nbsp;<b>$cameraType $cameraModel</b></span>";
 		if (!empty($pageHelp)) { doHelpLink(htmlspecialchars($pageHelp, ENT_QUOTES)); }
 	echo "</div>";
-	echo "<div class='panel-body' style='padding: 5px;'>";
+	echo "<div class='panel-body'>";
 	if ($formReadonly != "readonly") {
 		echo "<div id='messages'>";
 			$status->showMessages();
