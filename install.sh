@@ -418,36 +418,6 @@ CAMERA_to_CAMERA_TYPE()
 
 
 #######
-# Set up the file that contains information on all supported RPi cameras.
-# Have separate function so it can be called from "--function".
-setup_rpi_supported_cameras()
-{
-	local CMD="${1}"
-	local notCMD
-
-	if [[ ! -f ${ALLSKY_RPi_SUPPORTED_CAMERAS} ]]; then
-		local B="$( basename "${ALLSKY_RPi_SUPPORTED_CAMERAS}" )"
-
-		# "libcamera" is the only software packages supported as of 2025,
-		# but leave the code to check for any future new software.
-		if [[ -z ${CMD} ]]; then
-			notCMD="xxxxx"		# won't match anything
-			CMD="all"
-		elif [[ ${CMD} == "NEW-TBD-SOFTWARE" ]]; then
-			notCMD="libcamera"
-		else
-			notCMD="NEW-TBD-SOFTWARE"
-		fi
-
-		local MSG="Creating ${ALLSKY_RPi_SUPPORTED_CAMERAS} with '${CMD}' entries."
-		display_msg --logonly info "${MSG}"
-
-		# Remove comment and blank lines and lines for the command we are NOT using.
-		grep -v -E "^\$|^#|^${notCMD}" "${ALLSKY_REPO}/${B}.repo" > "${ALLSKY_RPi_SUPPORTED_CAMERAS}"
-	fi
-}
-
-#######
 CONNECTED_CAMERA_MODELS=""
 NUM_CONNECTED_CAMERAS=0
 CT=()			# Camera Type array - what to display in whiptail
@@ -462,7 +432,7 @@ get_connected_cameras()
 	CMD_RET=$?		# return of 2 means no command was found
 	[[ ${CMD_RET} -ne 0 ]] && CMD=""
 
-	setup_rpi_supported_cameras "${CMD}"		# Will create full file is CMD == ""
+	setup_rpi_supported_cameras "${CMD}" "false"		# Will create full file is CMD == ""
 
 	# RPi format:	RPi \t camera_number \t camera_sensor [\t optional_other_stuff]
 	# ZWO format:	ZWO \t camera_number \t camera_model
@@ -3326,18 +3296,6 @@ install_overlay()
 	display_msg --log progress "Setting up default modules and overlays."
 	# Some of these will get overwritten later if the user has prior versions.
 	cp -ar "${ALLSKY_REPO}/overlay" "${ALLSKY_REPO}/modules" "${ALLSKY_CONFIG}"
-	cp  "${ALLSKY_REPO}/allskyvariables.json.repo" "${ALLSKY_CONFIG}/allskyvariables.json"
-	cp  "${ALLSKY_REPO}/backup.json.repo" "${ALLSKY_CONFIG}/backup.json"
-
-	cp  "${ALLSKY_REPO}/onewire.json.repo" "${ALLSKY_CONFIG}/onewire.json"
-	cp  "${ALLSKY_REPO}/devicemanager.json.repo" "${ALLSKY_CONFIG}/devicemanager.json"
-
-	cp  "${ALLSKY_REPO}/suggested_modules.json.repo" "${ALLSKY_CONFIG}/suggested_modules.json"
-	cp  "${ALLSKY_REPO}/monitorable_logs.json.repo" "${ALLSKY_CONFIG}/monitorable_logs.json"
-
-	#TODO: Where is the best place to do these?
-	cp  "${ALLSKY_REPO}/helpers.json.repo" "${ALLSKY_CONFIG}/helpers.json"
-	cp  "${ALLSKY_REPO}/helpers.md.repo" "${ALLSKY_CONFIG}/helpers.md"
 
 	# ALLSKY_MY_OVERLAY_TEMPLATES is not in ALLSKY_REPO and we haven't restored anything yet,
 	# so create the directory.
@@ -3368,6 +3326,12 @@ install_overlay()
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }
 
+
+copy_repo_files_to_config()
+{
+	display_msg --logonly progress "Copying static repo files to config."
+	copy_repo_files		# is defined elsewhere
+}
 
 ####
 log_info()
@@ -4163,6 +4127,9 @@ create_allsky_logs "true"			# "true" == do everything
 install_PHP_modules
 install_Python
 install_overlay
+
+##### Copy some files to config.
+copy_repo_files_to_config
 
 ##### Get Website checksums for optional remote Website.
 # Do this before we change the local Website files.
