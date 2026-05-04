@@ -191,36 +191,6 @@ $pageInfo = [
 		"icon" => "fa fa-question fa-fw",
 		"help" => "docs/allsky_guide/using/support.html"
 	],
-	"check_allsky" => [
-		"title" => "Check Allsky",
-		"icon" => "fa fa-check fa-fw",
-		"headerTitle" => "Check Allsky Settings For Issues",
-	],
-	"startrails_settings" => [
-		"title" => "Startrails Settings",
-		"icon" => "fa fa-star fa-fw",
-		"headerTitle" => "Help Determine Startrails Settings",
-	],
-	"stretch_settings" => [
-		"title" => "Image Stretch Settings",
-		"icon" => "fa fa-arrows-left-right fa-fw",
-		"headerTitle" => "Help Determine Image Stretch Settings",
-	],
-	"timelapse_settings" => [
-		"title" => "Timelapse Settings",
-		"icon" => "fa fa-video fa-fw",
-		"headerTitle" => "Help Determine Timelapse Settings",
-	],
-	"bad_images_settings" => [
-		"title" => "Bad Images",
-		"icon" => "fa fa-image fa-fw",
-		"headerTitle" => "Help Determine Bad Images Settings",
-	],
-	"constellation_overlay" => [
-		"title" => "Constellation Overlay",
-		"icon" => "fa allsky-constellation fa-fw",
-		"headerTitle" => "Help Configure Constellation Overlay",
-	],
 	"documentation" => [
 		"title" => "Allsky Documentation",
 		"icon" => "fa fa-book fa-fw",
@@ -415,6 +385,28 @@ function insertMenuItem($p, $day, $type = "", $href_only = false)
 	}
 }
 
+function insertHelperMenuItems()
+{
+	include_once('includes/helper.php');
+
+	foreach (HelperPageRenderer::configuredHelpers() as $helperId => $helperConfig) {
+		if (!is_array($helperConfig)) {
+			continue;
+		}
+
+		$title = (string) ($helperConfig['title'] ?? $helperId);
+		$icon = (string) ($helperConfig['icon'] ?? 'fa-solid fa-hammer');
+		$href = 'index.php?page=helper&helper=' . rawurlencode((string) $helperId);
+
+		echo "<li>";
+		echo "<a id='" . htmlspecialchars((string) $helperId, ENT_QUOTES) . "' href='" . htmlspecialchars($href, ENT_QUOTES) . "'>";
+		echo "<i class='" . htmlspecialchars($icon, ENT_QUOTES) . "'></i>";
+		echo ' ' . htmlspecialchars($title, ENT_QUOTES);
+		echo "</a>";
+		echo "</li>\n";
+	}
+}
+
 function insertPage($p)
 {
 	global $image_name, $pageHelp, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg, $darkframe;
@@ -492,29 +484,12 @@ function insertPage($p)
 		case "support":
 			include_once("includes/$p.php");
 			break;
-		case "check_allsky":
+		case "helper":
 			include_once("includes/helper.php");
-			DisplayHelper("check_allsky");
-			break;
-		case "startrails_settings":
-			include_once("includes/helper.php");
-			DisplayHelper("startrails_settings");
-			break;
-		case "stretch_settings":
-			include_once("includes/helper.php");
-			DisplayHelper("stretch_settings");
-			break;
-		case "timelapse_settings":
-			include_once("includes/helper.php");
-			DisplayHelper("timelapse_settings");
+			DisplayHelper();
 			break;
 		case "constellation_overlay":
 			include_once("helpers/$p.php");
-			break;
-		case "bad_images_settings":
-			include_once("includes/helper.php");
-			// TODO: add function name			
-			//DisplayHelper("bad_images_settings");
 			break;
 
 		case "live_view":
@@ -886,13 +861,7 @@ if ($page == "logout") {
 										Tools</span></a>
 								<ul class="dropdown-menu">
 									<?php
-									insertMenuItem('check_allsky', "", "dropdown");
-									insertMenuItem('startrails_settings', "", "dropdown");
-									insertMenuItem('stretch_settings', "", "dropdown");
-									insertMenuItem('timelapse_settings', "", "dropdown");
-									// TODO: uncomment when scripts are created
-									// insertMenuItem('bad_images_settings', "", "dropdown");
-									// insertMenuItem('constellation_overlay', "", "dropdown");
+									insertHelperMenuItems();
 									?>
 								</ul>
 							</li>
