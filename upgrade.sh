@@ -325,7 +325,7 @@ fi
 
 	if [[ ${CHOSEN_METHOD} == "${METHOD_IN_PLACE}" ]]; then
 		display_msg --log progress "Stopping Allsky"
-		sudo systemctl stop allsky
+		stop_Allsky
 
 		cd "${ALLSKY_HOME}"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
@@ -340,6 +340,14 @@ fi
 			fi
 			display_msg --log error "${MSG}" "Contact the Allsky Team"
 			exit "${ALLSKY_EXIT_ERROR_STOP}"
+		fi
+
+		# If no files were retrieved, let the user know and exit.
+		if echo "${X}" | grep -i --silent "already up to date" ; then
+			MSG="\nNo new files, restarting Allsky and existing upgrade.\n"
+			display_msg --log progress "" "${MSG}"
+			start_Allsky
+			exit 0
 		fi
 
 		# This script may have been updated so re-run it.
