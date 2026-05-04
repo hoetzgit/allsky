@@ -13,7 +13,7 @@ source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 #############  TODO: Changes to install.sh needed:
-#	* Accept "--upgrade" argument which means we're doing an upgrade.
+#	* Accept "--doUpgrade" argument which means we're doing an upgrade.
 #		- Don't display "**** Welcome to the installer ****"
 #		- Don't prompt for camera
 #		- Don't prompt to reboot
@@ -22,7 +22,6 @@ source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERR
 #############
 # TODO:
 #	Check for symbolic links
-#	Allow installing other branches.
 #############
 
 # shellcheck disable=SC2034
@@ -44,20 +43,20 @@ function do_initial_heading()
 	fi
 	MSG+=" and all settings and images maintained."
 
-	if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
-		MSG+="\n\n'${PRIOR_ALLSKY_DIR}' will be renamed to '${OLDEST_DIR}'."
+	if [[ -d ${ALLSKY_PRIOR_DIR} ]]; then
+		MSG+="\n\n'${ALLSKY_PRIOR_DIR}' will be renamed to '${OLDEST_DIR}'."
 	fi
-	MSG+="\n\n'${ALLSKY_HOME}' will be renamed to '${PRIOR_ALLSKY_DIR}'."
+	MSG+="\n\n'${ALLSKY_HOME}' will be renamed to '${ALLSKY_PRIOR_DIR}'."
 	MSG+="\n\nThe new release will go in '${ALLSKY_HOME}'."
 
 	MSG+="\n\n\nContinue?"
-	if ! whiptail --title "${TITLE}" --yesno "${MSG}" 25 "${WT_WIDTH}" \
+	if ! dialog --title "${TITLE}" --yesno "${MSG}" 25 "${T_WIDTH}" \
 			3>&1 1>&2 2>&3; then
 		display_msg --logonly info "User not ready to continue."
+		clear
 		exit 0
 	fi
-
-	display_header "Welcome to the ${SHORT_TITLE}"
+	clear
 }
 
 function check_for_current()
@@ -67,14 +66,19 @@ function check_for_current()
 	if [[ ${NEWEST_VERSION} == "${ALLSKY_VERSION}" ]]; then
 		MSG="STARTING REINSTALLATION OF ${ALLSKY_VERSION}.\n"
 		display_msg --logonly info "${MSG}"
-		MSG="The current version of Allsky (${ALLSKY_VERSION}) is the newest version."
+
+		MSG="\nThe current version of Allsky (${ALLSKY_VERSION}) is the newest version."
 		MSG+="\n\nReinstalling the current version is useful"
-		MSG+=" if it's corrupted or you just want to start over."
-		MSG+="\nYour current settings and images will remain."
+		MSG+=" if it's corrupted, you just want to start over,"
+		MSG+=" or the Allsky Team updated the current version in GitHub without"
+		MSG+=" changing the version name (e.g., for an emergency fix)."
+		MSG+="\n\nYour current settings and images will remain."
 		MSG+="\n\nContinue?"
-		if ! whiptail --title "${TITLE}" --yesno "${MSG}" 25 "${WT_WIDTH}" \
+		if ! dialog --title "${TITLE}" --yesno "${MSG}" 25 "${T_WIDTH}" \
 				3>&1 1>&2 2>&3; then
 			display_msg --logonly info "User elected not to continue."
+			clear
+			display_msg --log note "\nNo changes made.\n"
 			exit 0
 		fi
 	else
@@ -87,29 +91,29 @@ function check_for_current()
 # If so, we can't continue since we can't rename the prior directory to the oldest.
 function check_for_oldest()
 {
-	[[ ! -d ${PRIOR_ALLSKY_DIR} ]] && return 0
+	[[ ! -d ${ALLSKY_PRIOR_DIR} ]] && return 0
 
 	if [[ -d ${OLDEST_DIR} ]]; then
 		local MSG="Directory '${OLDEST_DIR}' already exist."
 		local MSG2="\n\nIf you want to upgrade to the newest release, either remove '${OLDEST_DIR}'"
 		MSG2+=" or rename it to something else, then re-run this upgrade."
-		whiptail --title "${TITLE}" --msgbox "${MSG}${MSG2}" 25 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+		dialog --title "${TITLE}" --msgbox "${MSG}${MSG2}" 25 "${T_WIDTH}" 3>&1 1>&2 2>&3
 		display_msg --log info "${MSG}"
 		exit 2
 	fi
 
-	display_msg --log progress "Renaming '${PRIOR_ALLSKY_DIR}' to '${OLDEST_DIR}."
-	mv "${PRIOR_ALLSKY_DIR}" "${OLDEST_DIR}"
+	display_msg --log progress "Renaming '${ALLSKY_PRIOR_DIR}' to '${OLDEST_DIR}."
+	mv "${ALLSKY_PRIOR_DIR}" "${OLDEST_DIR}"
 }
 
 
 function restore_directories()
 {
-	display_msg --log info "Renaming '${PRIOR_ALLSKY_DIR}' back to '${ALLSKY_HOME}'."
-	echo mv "${PRIOR_ALLSKY_DIR}" "${ALLSKY_HOME}"
+	display_msg --log info "Renaming '${ALLSKY_PRIOR_DIR}' back to '${ALLSKY_HOME}'."
+	mv "${ALLSKY_PRIOR_DIR}" "${ALLSKY_HOME}"
 	if [[ -d ${OLDEST_DIR} ]]; then
-		display_msg --log info "Renaming '${OLDEST_DIR}' back to '${PRIOR_ALLSKY_DIR}'."
-		mv "${OLDEST_DIR}" "${PRIOR_ALLSKY_DIR}"
+		display_msg --log info "Renaming '${OLDEST_DIR}' back to '${ALLSKY_PRIOR_DIR}'."
+		mv "${OLDEST_DIR}" "${ALLSKY_PRIOR_DIR}"
 	fi
 }
 
@@ -121,7 +125,7 @@ function usage_and_exit()
 	exec >&2
 
 	echo
-	local USAGE="Usage: ${ME} [--help] [--debug] [--branch branch] [--doUpgrade] [--in-place]"
+	local USAGE="Usage: ${ME} [--help] [--debug] [--branch branch] [--doUpgrade] [--in-place] [--ssh]"
 	if [[ ${RET} -eq 0 ]]; then
 		echo "Upgrade the Allsky software to a newer version."
 		echo -e "\n${USAGE}"
@@ -131,9 +135,10 @@ function usage_and_exit()
 	echo "Arguments:"
 	echo "   --help            Displays this message and exits."
 	echo "   --debug           Displays debugging information."
-	echo "   --branch branch   Uses 'branch' instead of the production '${GITHUB_MAIN_BRANCH}' branch."
+	echo "   --branch branch   Uses 'branch' instead of the production '${ALLSKY_GITHUB_MAIN_BRANCH}' branch."
 	echo "   --doUpgrade       Completes the upgrade."
 	echo "   --in-place        Specifies an 'in-place' upgrade should be performed."
+	echo "   --ssh             Use ssh with git clone.  For developers only."
 	echo
 	exit "${RET}"
 }
@@ -141,6 +146,10 @@ function usage_and_exit()
 ####################### main part of program
 #shellcheck disable=SC2124
 ALL_ARGS="$@"
+
+METHOD_IN_PLACE="In Place"
+METHOD_REPLACE_ALL="Replace All"
+CHOSEN_METHOD=""
 
 ##### Check arguments
 OK="true"
@@ -151,7 +160,7 @@ BRANCH="$( get_branch )"
 [[ -z ${BRANCH} ]] && BRANCH="${ALLSKY_GITHUB_MAIN_BRANCH}"
 # Possible ACTION's: "upgrade" (to prepare things), "doUpgrade" (to actually do the upgrade)
 ACTION="upgrade"
-IN_PLACE="false"
+SSH="false"
 
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
@@ -171,7 +180,10 @@ while [[ $# -gt 0 ]]; do
 			ACTION="doUpgrade"
 			;;
 		--in-place)
-			IN_PLACE="true"
+			CHOSEN_METHOD="${METHOD_IN_PLACE}"
+			;;
+		--ssh)
+			SSH="true"
 			;;
 		-*)
 			E_ "Unknown argument: '${ARG}'." >&2
@@ -198,32 +210,43 @@ if [[ ! -d ${ALLSKY_CONFIG} ]]; then
 	exit 2
 fi
 
-if [[ "${ACTION}" == "upgrade" ]]; then
-	echo
-	echo "**********************************************"
-	echo "*** Welcome to the Allsky Software Upgrade ***"
-	echo "**********************************************"
-	echo
-else	# we're continuing where we left off, so don't welcome again.
+if [[ "${ACTION}" != "upgrade" ]]; then
+	# we're continuing where we left off, so don't welcome again.
 	display_msg --log progress "Continuing the upgrade..."
 fi
 
 ##### Calculate whiptail sizes
-WT_WIDTH="$( calc_wt_size )"
+T_WIDTH="$( calc_wt_size )"
 
 SHORT_TITLE="Allsky Upgrader"
 TITLE="${SHORT_TITLE} - ${ALLSKY_VERSION}"
-OLDEST_DIR="${PRIOR_ALLSKY_DIR}-OLDEST"
+OLDEST_DIR="${ALLSKY_PRIOR_DIR/OLD/OLDEST}"
 
 if [[ ${ACTION} == "upgrade" ]]; then
+	display_header "Welcome to the ${SHORT_TITLE}"
+
 	# First part of upgrade, executed by user in ${ALLSKY_HOME}.
+	if ! NEWEST_VERSION="$( "${ALLSKY_UTILITIES}/getNewestAllskyVersion.sh" --branch "${BRANCH}" --version-only 2>&1 )" ; then
+		MSG="Unable to determine newest version; cannot continue."
+		if [[ ${BRANCH} != "${ALLSKY_GITHUB_MAIN_BRANCH}" ]];
+		then
+			MSG2="Make sure '${BRANCH}' is a valid branch in GitHub."
+		else
+			MSG2=""
+		fi
+		display_msg --log error "${MSG}" "${MSG2}"
+		display_msg --logonly info "${NEWEST_VERSION}"		# is the error message.
+		echo
+		exit 2
+	fi
+	check_for_current
 
 	# Ask user how they want to upgrade.
-if false; then
+if true; then
 	MSG="\n"
 	MSG+="There are two ways to upgrade Allsky:"
 	MSG+="\n"
-	MSG+="\n1. In Place"
+	MSG+="\n1. ${METHOD_IN_PLACE}"
 	MSG+="\n   This overwrites existing Allsky files on your Pi that have been"
 	MSG+="\n   updated in GitHub, and is the preferred method for POINT RELEASES or"
 	MSG+="\n   unless the Allsky Team suggests the method below."
@@ -233,36 +256,51 @@ if false; then
 	MSG+="\n   NOTE: If you have changed any Allsky source files this method"
 	MSG+="\n   will not work."
 	MSG+="\n"
-	MSG+="\n2. Replace All"
+	MSG+="\n2. ${METHOD_REPLACE_ALL}"
 	MSG+="\n   This moves '${ALLSKY_HOME}' to '${ALLSKY_PRIOR_DIR}' then"
 	MSG+="\n   recreates '${ALLSKY_HOME}' with the newest release from GitHub."
 	MSG+="\n   It is safer than the method above but takes longer, and"
 	MSG+="\n   is the preferred method for MAJOR updates or when you don't want"
 	MSG+="\n   to overwrite the current release."
+	MSG+="\n \nPick the upgrade method:"
 
-	MSG+="\n\n\nYou will be prompted for which method to use in the next screen."
+#XXX	MSG+="\n\n\nYou will be prompted for which method to use in the next screen."
 
 	HEIGHT="$( echo -e "${MSG}" | wc -l )"
-	(( HEIGHT += 5 ))
+	(( HEIGHT += 10 ))
 
+if false; then
 	dialog \
 		--title "${SHORT_TITLE}" --msgbox "${MSG}" \
-		"${HEIGHT}" 80   3>&1 1>&2 2>&3
+		"${HEIGHT}" "${T_WIDTH}"   3>&1 1>&2 2>&3
 	if [[ $? -ne 0 ]]; then
 		clear
 		display_msg --log progress "\nNo changes made.\n"
 		exit 0
 	fi
+fi
 
-	RESPONSE="$( dialog \
+	X="$( dialog \
 		--title "${SHORT_TITLE}" \
-		--menu "\nPick The Upgrade Method:\n \n" 15 40 2 \
-			1 "In Place" \
-			2 "Replace All" \
-		3>&1 1>&2 2>&3)"
+		--menu "${MSG}" "${HEIGHT}" "${T_WIDTH}" 2 \
+			1 "${METHOD_IN_PLACE}" \
+			2 "${METHOD_REPLACE_ALL}" \
+		3>&1 1>&2 2>&3 )"
 	clear
+
+	if [[ ${X} -eq 1 ]]; then
+		CHOSEN_METHOD="${METHOD_IN_PLACE}"
+	elif [[ ${X} -eq 2 ]]; then
+		CHOSEN_METHOD="${METHOD_REPLACE_ALL}"
+	else
+		MSG="User elected to not continue while picking an upgrade method."
+		display_msg --logonly info "${MSG}"
+		display_msg --log progress "\nNo changes made - no upgrade method chosen.\n"
+		exit 0
+	fi
 else
-	RESPONSE=1		# TODO: FIX: remove "else" when "Replace All" is implemented.
+# TODO: FIX: remove "else" when "Replace All" is implemented.
+	CHOSEN_METHOD="${METHOD_IN_PLACE}"	# XXXX
 
 	MSG="\n"
 	MSG+="\nThis upgrade will download the newest files from GitHub and"
@@ -285,18 +323,7 @@ else
 	fi
 fi
 
-	if [[ ${RESPONSE} == "1" ]]; then
-		IN_PLACE="true"
-	elif [[ ${RESPONSE} == "2" ]]; then
-		IN_PLACE="false"
-	else
-		MSG="User elected to not continue while picking an upgrade method."
-		display_msg --logonly info "${MSG}"
-		display_msg --log progress "\nNo changes made.\n"
-		exit 0
-	fi
-
-	if [[ ${IN_PLACE} == "true" ]]; then
+	if [[ ${CHOSEN_METHOD} == "${METHOD_IN_PLACE}" ]]; then
 		display_msg --log progress "Stopping Allsky"
 		sudo systemctl stop allsky
 
@@ -324,74 +351,25 @@ fi
 
 	else		# move ${ALLSKY_HOME}
 
-		OLDEST="${ALLSKY_PRIOR_DIR/OLD/OLDEST}"
-		if [[ -d ${ALLSKY_PRIOR_DIR} ]]; then
-			if [[ -d ${OLDEST} ]]; then
-				MSG="Both '${ALLSKY_PRIOR_DIR}' and '${OLDEST}' exist; connot continue."
-				display_msg --log warning "${MSG}" "If you are not using '${OLDEST}' delete it then rerun the upgrade."
-
-#xxx				MSG="If you are not using '${OLDEST}' delete it then rerun the upgrade."
-#xxx				display_msg --log note "${MSG}"
-			fi
-exit
-
-			display_msg --log progress "Renaming '${ALLSKY_PRIOR_DIR}' to '${OLDEST}'."
-			mv "${ALLSKY_PRIOR_DIR}" "${OLDEST}"
-			display_msg --log progress "Renaming '${ALLSKY_HOME}' to '${ALLSKY_PRIOR_DIR}'."
-		fi
-		#	Check for prior Allsky versions:
-		#		If ${ALLSKY_PRIOR_DIR} exist:
-		#			If ${ALLSKY_PRIOR_DIR}-OLDEST exists
-		#				Let user know both old versions exist.
-		#				Exit
-		#			Let the user know ${ALLSKY_PRIOR_DIR} exists as FYI:
-		#				echo "Renaming ${ALLSKY_PRIOR_DIR} to ${ALLSKY_PRIOR_DIR}-OLDEST"
-		#			Move ${ALLSKY_PRIOR_DIR} to ${ALLSKY_PRIOR_DIR}-OLDEST
-		#	Stop allsky
-		#	cd
-		#	mv "${ALLSKY_HOME}" "${ALLSKY_PRIOR_DIR}"
-		GIT_URL="https://github.com/AllskyTeam/allsky.git"
-GIT_URL="${GIT_URL}"	# XXXXXXXXXXXXX keeps shellcheck quiet
-		#	git clone --branch "${BRANCH}" --depth=1 --recursive "${GIT_URL}"
-#[[ -z ${BRANCH} ]] && BRANCH="${ALLSKY_GITHUB_MAIN_BRANCH}"
-		#	cd ${ALLSKY_HOME}
-		#	Run: ./install.sh ${DEBUG_ARG} .... --doUpgrade
-		#		--doUpgrade tells it to use prior version without asking and to
-		#		not display header, change messages to say "upgrade", not "install", etc.
-		#	?? anything else?
-
-		if ! NEWEST_VERSION="$( "${ALLSKY_UTILITIES}/getNewestAllskyVersion.sh" --branch "${BRANCH}" --version-only 2>&1 )" ; then
-			MSG="Unable to determine newest version; cannot continue."
-			if [[ ${BRANCH} != "${GITHUB_MAIN_BRANCH}" ]];
-			then
-				MSG2="Make sure '${BRANCH}' is a valid branch in GitHub."
-			else
-				MSG2=""
-			fi
-			display_msg --log error "${MSG}" "${MSG2}"
-			display_msg --logonly info "${NEWEST_VERSION}"		# is the error message.
-			echo
-			exit 2
-		fi
-
-
-		do_initial_heading
-
-		check_for_current
+		# XXXXX   no longer needed?   do_initial_heading
 
 		check_for_oldest
 
 		display_msg --log progress "Stopping Allsky"
 		stop_Allsky
 
-		display_msg --log progress "Renaming '${ALLSKY_HOME}' to '${PRIOR_ALLSKY_DIR}'."
-		mv "${ALLSKY_HOME}" "${PRIOR_ALLSKY_DIR}" || exit "${ALLSKY_EXIT_ERROR_STOP}"
+		display_msg --log progress "Renaming '${ALLSKY_HOME}' to '${ALLSKY_PRIOR_DIR}'."
+		mv "${ALLSKY_HOME}" "${ALLSKY_PRIOR_DIR}" || exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 		# Keep using same log file which is now in the "prior" directory.
-		DISPLAY_MSG_LOG="${DISPLAY_MSG_LOG/${ALLSKY_HOME}/${PRIOR_ALLSKY_DIR}}"
+		DISPLAY_MSG_LOG="${DISPLAY_MSG_LOG/${ALLSKY_HOME}/${ALLSKY_PRIOR_DIR}}"
 
-		R="${GITHUB_ROOT}/${GITHUB_ALLSKY_REPO}.git"
+		R="${ALLSKY_GITHUB_ROOT}/${ALLSKY_GITHUB_ALLSKY_REPO}.git"
+		if [[ ${SSH} == "true" ]]; then
+			R="${R/https:??/git@}"
+		fi
 		display_msg --log progress "Running: git clone --depth=1 --recursive --branch '${BRANCH}' '${R}'"
+		display_msg note "" "This will take a minute or two."
 		if ! ERR="$( git clone --depth=1 --recursive --branch "${BRANCH}" "${R}" 2>&1 )" ; then
 			display_msg --log error "'git clone' failed." " ${ERR}"
 			restore_directories
@@ -402,13 +380,21 @@ GIT_URL="${GIT_URL}"	# XXXXXXXXXXXXX keeps shellcheck quiet
 
 		# --doUpgrade tells it to use prior version without asking and to not display header,
 		# change messages to say "upgrade", not "install", etc.
-# TODO: used "exec" ?
 		# shellcheck disable=SC2086,SC2291
-		./install.sh ${DEBUG_ARG} --branch "${BRANCH}" --doUpgrade
+		X="$(
+echo XXX		./install.sh ${DEBUG_ARG} --branch "${BRANCH}" --doUpgrade
+		)"
+		RET=$?
+		display_msg --logonly info "ENDING UPGRADE."
+		if [[ ${RET} -ne 0 ]]; then
+			display_msg --log warning "install.sh failed."  "Contact the Allsky Team"
+			exit "${RET}"
+		fi
+		display_msg --log progress "The upgrade is complete."  "  Go to the WebUI to restart Allsky.\n"
 	fi
 
 elif [[ ${ACTION} == "doUpgrade" ]]; then
-	if [[ ${IN_PLACE} == "true" ]]; then
+	if [[ ${CHOSEN_METHOD} == "${METHOD_IN_PLACE}" ]]; then
 		X="$( "${ALLSKY_UTILITIES}/allsky-config.sh" recreate_files 2>&1 )"
 		if [[ $? -ne 0 ]]; then
 			MSG="Unable to update files: ${X}"
