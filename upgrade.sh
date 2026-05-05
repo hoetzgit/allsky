@@ -380,7 +380,12 @@ fi
 		display_msg --log progress "Running: git clone --depth=1 --recursive --branch '${BRANCH}' '${R}'"
 		display_msg note "" "This will take a minute or two."
 		if ! ERR="$( git clone --depth=1 --recursive --branch "${BRANCH}" "${R}" 2>&1 )" ; then
+			# In case the git clone created ${ALLSKY_HOME}, delete it since it's not complete.
 			display_msg --log error "'git clone' failed." " ${ERR}"
+			if [[ -d ${ALLSKY_HOME} ]]; then
+				display_msg --log error "Removing incomplete ${ALLSKY_HOME}."
+				rm -fr "${ALLSKY_HOME}"
+			fi
 			restore_directories
 			exit 3
 		fi
