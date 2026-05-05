@@ -845,9 +845,10 @@ function create_lighttpd_log_file()
 	# Start off with a 0-length log file the user can write to.
 	sudo chmod 755 "${LIGHTTPD_LOG_DIR}"
 	sudo rm -fr "${LIGHTTPD_LOG_DIR}"/*
+
+	sudo touch "${LIGHTTPD_LOG_FILE}"
 	sudo chmod 664 "${LIGHTTPD_LOG_FILE}"
 	sudo chown "${ALLSKY_WEBSERVER_GROUP}:${ALLSKY_GROUP}" "${LIGHTTPD_LOG_FILE}"
-	truncate -s 0 "${LIGHTTPD_LOG_FILE}"
 }
 
 ####
