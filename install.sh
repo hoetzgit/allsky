@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2154,SC2024		# referenced but not assigned, sudo redirects
+# shellcheck disable=SC2154,SC2024		# referenced but not assigned, sudo redirects 
 
 unset ALLSKY_VARIABLE_SET		# To force variables.sh to be read
 
