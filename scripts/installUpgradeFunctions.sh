@@ -1995,9 +1995,7 @@ function update_repo_files()
 # those values overwrite the defaults.
 function update_allsky_common()
 {
-	local MAKE_IF_NEEDED="${1:-false}"
-	local FILES_DOWNLOADED_FILE="${2}"
-	local TMP="/tmp/x.${RANDOM}"
+	local FILES_DOWNLOADED_FILE="${1}"
 	local DOT_H="${ALLSKY_HOME}/src/include/allsky_common.h"
 
 	# shellcheck disable=SC2154
@@ -2012,10 +2010,11 @@ function update_allsky_common()
 		-e "s;XX_EXIT_ERROR_STOP_XX;${ALLSKY_EXIT_ERROR_STOP};" \
 		-e "s;XX_EXIT_NO_CAMERA_XX;${ALLSKY_EXIT_NO_CAMERA};" \
 		"${DOT_H}.repo" \
-	> "${TMP}"
+	> "${DOT_H}"
 
 	# See if any source files changed.  If so, re-run make if told to.
-	if [[ -n ${FILES_DOWNLOADED_FILE} && ${MAKE_IF_NEEDED} == "true" ]] && \
+	# Source files end in .cpp, .c, or .h.
+	if [[ -n ${FILES_DOWNLOADED_FILE} ]] && \
 		grep --silent -E "^src/.*\.cpp|^src/.*\.c|^src/.*\.h" "${FILES_DOWNLOADED_FILE}" ; then
 
 		# At least one file in the "src" directory changed, so re-run make.
@@ -2031,28 +2030,6 @@ function update_allsky_common()
 		fi
 	fi
 
-if true; then			# XXXXXXXXXXXX TODO REMOVE
-cp "${TMP}" "${DOT_H}" && rm -f "${TMP}"   # Change "> $TMP" above to "> DOT_H".
-else
-
-	# If the new file is the same as the old, don't do anything.
-	if ! cmp --silent "${TMP}" "${DOT_H}" ; then
-		cp "${TMP}" "${DOT_H}"
-		if [[ ${MAKE_IF_NEEDED} == "true" ]]; then
-			local X="$(
-				cd "${ALLSKY_HOME}" &&
-				sudo make -C src deps &&
-				make -C src all &&
-				sudo make install
-			)"
-			if [[ $? -ne 0 ]]; then
-				echo "'make' failed: ${X}" >&2
-				return 1
-			fi
-		fi
-	fi
-	rm -f "${TMP}"
-fi
 	return 0
 }
 
