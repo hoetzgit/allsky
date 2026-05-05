@@ -1744,7 +1744,7 @@ install_dependencies_etc()
 			exit_with_image 1 "${STATUS_ERROR}" "dependency installation failed"
 	fi
 
-	update_allsky_common "" ""
+	update_allsky_common ""
 	update_repo_files
 
 	# "make -C src deps" may need to install some packages, so needs "sudo".
