@@ -2094,17 +2094,15 @@ function setup_rpi_supported_cameras()
 
 
 # Copy certain "static" files from ALLSKY_REPO to ALLSKY_CONFIG.
+# The files in ALLSKY_CONFIG won't change so we can safely overwrite them.
 function copy_repo_files()
 {
 	cp  "${ALLSKY_REPO}/allskyvariables.json.repo" "${ALLSKY_CONFIG}/allskyvariables.json"
 	cp  "${ALLSKY_REPO}/backup.json.repo" "${ALLSKY_CONFIG}/backup.json"
-
 	cp  "${ALLSKY_REPO}/onewire.json.repo" "${ALLSKY_CONFIG}/onewire.json"
 	cp  "${ALLSKY_REPO}/devicemanager.json.repo" "${ALLSKY_CONFIG}/devicemanager.json"
-
 	cp  "${ALLSKY_REPO}/suggested_modules.json.repo" "${ALLSKY_CONFIG}/suggested_modules.json"
 	cp  "${ALLSKY_REPO}/monitorable_logs.json.repo" "${ALLSKY_CONFIG}/monitorable_logs.json"
-
 	cp  "${ALLSKY_REPO}/helpers.json.repo" "${ALLSKY_CONFIG}/helpers.json"
 	cp  "${ALLSKY_REPO}/helpers.md.repo" "${ALLSKY_CONFIG}/helpers.md"
 }
