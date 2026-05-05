@@ -27,6 +27,7 @@ source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERR
 # shellcheck disable=SC2034
 DISPLAY_MSG_LOG="${ALLSKY_LOGS}/upgrade.log"	# send log entries here
 
+FILES_DOWNLOADED_FILE="${ALLSKY_LOGS}/upgrade-files-downloaded.log"
 
 ############################## functions
 ####
@@ -350,6 +351,11 @@ fi
 			start_Allsky
 			exit 0
 		fi
+
+		# Get a list of all files downloaded.  They have a " | " in their line.
+		echo "${X}" | sed --silent -e 's/^ //' -e '/ | /s/ *| *.*//p' > "${FILES_DOWNLOADED_FILE}"
+		NUM="$( wc -l < "${FILES_DOWNLOADED_FILE}" )"
+		display_msg --log progress "${NUM} file(s) were downloaded."
 
 		# This script may have been updated so re-run it.
 		# shellcheck disable=SC2093
