@@ -336,16 +336,36 @@ class HelperToolPage {
         const dateOnlyFormatter = new Intl.DateTimeFormat(undefined, {
             dateStyle: "medium"
         });
+        const getDateFromParts = function(year, month, day) {
+            const date = new Date(year, month - 1, day);
+            if (
+                Number.isNaN(date.getTime()) ||
+                date.getFullYear() !== year ||
+                date.getMonth() !== month - 1 ||
+                date.getDate() !== day
+            ) {
+                return null;
+            }
+
+            return date;
+        };
 
         this.imagesContainerElement.find(".functions-listfiletype-date").each(function() {
             const element = $(this);
             const rawDate = element.attr("data-listfiletype-date");
             const rawDay = element.attr("data-listfiletype-day");
-            let date;
+            let date = null;
 
             if (rawDate) {
-                date = new Date(rawDate);
-                if (!Number.isNaN(date.getTime())) {
+                const matches = rawDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                if (matches) {
+                    date = getDateFromParts(
+                        parseInt(matches[1], 10),
+                        parseInt(matches[2], 10),
+                        parseInt(matches[3], 10)
+                    );
+                }
+                if (date) {
                     element.text(dateOnlyFormatter.format(date));
                 }
                 return;
@@ -355,12 +375,12 @@ class HelperToolPage {
                 return;
             }
 
-            date = new Date(
+            date = getDateFromParts(
                 parseInt(rawDay.slice(0, 4), 10),
-                parseInt(rawDay.slice(4, 6), 10) - 1,
+                parseInt(rawDay.slice(4, 6), 10),
                 parseInt(rawDay.slice(6, 8), 10)
             );
-            if (!Number.isNaN(date.getTime())) {
+            if (date) {
                 element.text(dateOnlyFormatter.format(date));
             }
         });

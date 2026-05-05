@@ -967,34 +967,52 @@ $(document).ready(function () {
 		return gallery;
 	}
 
-	function initialiseLocaleDates() {
-		const dateOnlyFormatter = new Intl.DateTimeFormat(undefined, {
-			dateStyle: 'medium'
-		});
-
-		document.querySelectorAll('.functions-listfiletype-date').forEach(function (element) {
-			const rawDate = element.getAttribute('data-listfiletype-date');
-			const rawDay = element.getAttribute('data-listfiletype-day');
-
-			if (rawDate) {
-				const date = new Date(rawDate);
-				if (!Number.isNaN(date.getTime())) {
-					element.textContent = dateOnlyFormatter.format(date);
+		function initialiseLocaleDates() {
+			const dateOnlyFormatter = new Intl.DateTimeFormat(undefined, {
+				dateStyle: 'medium'
+			});
+			const getDateFromParts = function (year, month, day) {
+				const date = new Date(year, month - 1, day);
+				if (
+					Number.isNaN(date.getTime()) ||
+					date.getFullYear() !== year ||
+					date.getMonth() !== month - 1 ||
+					date.getDate() !== day
+				) {
+					return null;
 				}
-				return;
-			}
+
+				return date;
+			};
+
+			document.querySelectorAll('.functions-listfiletype-date').forEach(function (element) {
+				const rawDate = element.getAttribute('data-listfiletype-date');
+				const rawDay = element.getAttribute('data-listfiletype-day');
+
+				if (rawDate) {
+					const matches = rawDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
+					const date = matches ? getDateFromParts(
+						parseInt(matches[1], 10),
+						parseInt(matches[2], 10),
+						parseInt(matches[3], 10)
+					) : null;
+					if (date) {
+						element.textContent = dateOnlyFormatter.format(date);
+					}
+					return;
+				}
 
 			if (!rawDay || !/^\d{8}$/.test(rawDay)) {
 				return;
 			}
 
-			const year = parseInt(rawDay.slice(0, 4), 10);
-			const month = parseInt(rawDay.slice(4, 6), 10) - 1;
-			const day = parseInt(rawDay.slice(6, 8), 10);
-			const date = new Date(year, month, day);
-			if (Number.isNaN(date.getTime())) {
-				return;
-			}
+				const year = parseInt(rawDay.slice(0, 4), 10);
+				const month = parseInt(rawDay.slice(4, 6), 10);
+				const day = parseInt(rawDay.slice(6, 8), 10);
+				const date = getDateFromParts(year, month, day);
+				if (!date) {
+					return;
+				}
 
 			element.textContent = dateOnlyFormatter.format(date);
 		});
