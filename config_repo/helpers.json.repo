@@ -25,30 +25,6 @@
         "label": "Run Check"
       }      
     },
-    "bad_images": {
-      "title": "Bad Images Info",
-      "icon": "fa fa-images fa-fw",
-      "pageTitle": "Display Information On Bad Images",
-      "action": "HelperRun",
-      "method": "GET",
-      "autoRun": true,
-      "outputFormat": "html",
-      "showResultsTabs": true,
-      "command": [
-        "bad_images_info"
-      ],
-      "contentHtml": [
-        "<p>This page display information on any bad images that have been rejected after capture.</p>"
-      ],      
-      "messages": {
-        "running": "Checking bad images...",
-        "working": "Checking bad images..."
-      },
-      "submit": {
-        "name": "checkbadimages",
-        "label": "Run Check"
-      }      
-    },    
     "startrails_settings": {
       "title": "Startrails Settings",
       "icon": "fa fa-star fa-fw",
