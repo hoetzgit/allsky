@@ -28,12 +28,11 @@ fi
 if [[ ${1} == "--files-downloaded" ]]; then
 	FILES_DOWNLOADED_FILE="${2}"
 	shift 2
-FILES_DOWNLOADED="$( < "${FILES_DOWNLOADED_FILE}" )" # XXXXX
-echo -e "XXXXXXXXXXXXXXXXX   FILES_DOWNLOADED=\n${FILES_DOWNLOADED}"
 else
 	FILES_DOWNLOADED_FILE=""
 fi
 
+############################################## main
 echo "* Updating variables.json file."
 create_variables_json ""	# Should come first so other steps get the newest variables.
 
@@ -48,10 +47,9 @@ update_repo_files
 
 create_links "allsky-config"
 
-######### TODO: FIX: Add "--files-downloaded "${FILES_DOWNLOADED_FILE}"
-
 echo "* Updating variables used by C programs and running 'make' if needed."
-X="$( update_allsky_common "true" 2>&1 )"	# "true" means run "make" if needed
+# "true" means run "make" if needed.
+X="$( update_allsky_common "true" "${FILES_DOWNLOADED_FILE}" 2>&1 )"
 if [[ $? -ne 0 ]]; then
 	W_ "WARNING: ${X}" >&2
 fi
