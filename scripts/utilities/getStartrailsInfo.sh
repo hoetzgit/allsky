@@ -134,6 +134,15 @@ fi
 			printf(numFmtData, date, min, max, mean, median, used, notUsed, t);
 		}
 		END {
+			if (entries_not_used > 0) {
+				printf("\n%d entr", entries_not_used);
+				if (entries_not_used == 1)
+					printf("y");
+				else
+					printf("ies");
+				printf(" not used due to invalid data.\n");
+			}
+
 			if (num == 0) {
 				exit 1;
 			} else if (num == 1) {
@@ -146,20 +155,11 @@ fi
 					t_median/num, t_used/num, t_notUsed/num);
 			}
 
-			if (entries_not_used > 0) {
-				printf("\n%d entr", entries_not_used);
-				if (entries_not_used == 1)
-					printf("y");
-				else
-					printf("ies");
-				printf(" not used due to invalid data.\n");
-			}
-
 			exit 0;
 		}'
 RET=$?
 if [[ ${RET} -ne 0 ]]; then
-	echo "No information found.  Try again after some startrails have been created."
+	echo "No valid information found.  Try again after some startrails have been created."
 	echo
 	STATUS="$( get_allsky_status )"
 	if [[ -z ${STATUS} ]]; then
