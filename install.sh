@@ -931,7 +931,7 @@ install_webserver_et_al()
 	fi
 
 	create_lighttpd_config_file ""
-	create_lighttpd_log_file ""
+	create_lighttpd_log_file
 
 	# Disable old php module.
 	sudo lighty-disable-mod fastcgi-php > /dev/null 2>&1
