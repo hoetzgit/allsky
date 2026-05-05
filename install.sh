@@ -931,7 +931,6 @@ install_webserver_et_al()
 	fi
 
 	create_lighttpd_config_file ""
-	create_lighttpd_log_file
 
 	# Disable old php module.
 	sudo lighty-disable-mod fastcgi-php > /dev/null 2>&1
@@ -942,8 +941,8 @@ install_webserver_et_al()
 	TMP="${ALLSKY_LOGS}/lighttpd.start.log"
 	sudo systemctl start lighttpd > "${TMP}" 2>&1
 	check_success $? "Unable to start lighttpd" "${TMP}" "${DEBUG}"
-	# Starting it added an entry so truncate the file so it's 0-length
-	sleep 1; truncate -s 0 "${LIGHTTPD_LOG_FILE}"
+
+	create_lighttpd_log_file		# Creates 0-length file with permissions so we can modify it.
 
 	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }
