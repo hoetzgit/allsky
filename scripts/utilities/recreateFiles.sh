@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# This scripts is similar to "raspi-config" but for Allsky.
-# It's a command-line method to view and set certain Allsky items.
+# Recreate files after a "git pull" or whenever any "parent" file changes.
+# It's very possible some of the files don't need updating, but it's quick to
+# update them and not always quick to check if they need updating.
 
 # Allow this script to be executed manually, which requires several variables to be set.
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
@@ -14,10 +15,6 @@ source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
-# Recreate files after a "git pull" or whenever any "parent" file changes.
-# It's very possible some of the files don't need updating, but it's quick to
-# update them and not always quick to check if they need updating.
-
 if [[ ${1} == "--help" ]]; then
 	echo
 	W_ "Usage: ${ME}  ${ME_F}"
@@ -26,8 +23,9 @@ if [[ ${1} == "--help" ]]; then
 	exit 0
 fi
 
+
 echo "* Updating variables.json file."
-create_variables_json ""		# Should come first so other steps get the newest file.
+create_variables_json ""	# Should come first so other steps get the newest variables.
 
 echo "* Updating sudoers file."
 create_sudoers
