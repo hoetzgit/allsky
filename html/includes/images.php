@@ -91,10 +91,14 @@ function ListImages() {
 			$imageTimestampIso = '';
 			$imagePath = $dir . '/' . $image;
 			if (preg_match('/(\d{14})/', $image, $matches)) {
-				$imageDateTime = DateTimeImmutable::createFromFormat('YmdHis', $matches[1], new DateTimeZone('UTC'));
-				if ($imageDateTime !== false) {
-					$imageTimestampIso = $imageDateTime->format('Y-m-d\TH:i:s\Z');
-				}
+				$timestamp = $matches[1];
+				$imageTimestampIso =
+					substr($timestamp, 0, 4) . '-' .
+					substr($timestamp, 4, 2) . '-' .
+					substr($timestamp, 6, 2) . 'T' .
+					substr($timestamp, 8, 2) . ':' .
+					substr($timestamp, 10, 2) . ':' .
+					substr($timestamp, 12, 2);
 			}
 			$imageItems[] = [
 				'name' => $image,
@@ -127,23 +131,42 @@ $(document).ready(function () {
   const thumbWidth = <?php echo (int) $width; ?>;
   const thumbHeight = <?php echo (int) $height; ?>;
   const batchSize = 60;
-  const galleryElement = document.getElementById('lightgallery');
-  const loadingElement = document.getElementById('images-grid-loading');
-  const sentinelElement = document.getElementById('images-grid-sentinel');
-  const formatter = new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'medium'
-  });
-  let renderedCount = 0;
+	  const galleryElement = document.getElementById('lightgallery');
+	  const loadingElement = document.getElementById('images-grid-loading');
+	  const sentinelElement = document.getElementById('images-grid-sentinel');
+	  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+	  let renderedCount = 0;
 
-  function escapeHtml(value) {
-    return String(value)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-  }
+	  function escapeHtml(value) {
+	    return String(value)
+	      .replace(/&/g, '&amp;')
+	      .replace(/</g, '&lt;')
+	      .replace(/>/g, '&gt;')
+	      .replace(/"/g, '&quot;')
+	      .replace(/'/g, '&#39;');
+	  }
+
+	  function formatImageTimestamp(value) {
+	    const matches = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
+	    if (!matches) {
+	      return '';
+	    }
+
+	    const year = parseInt(matches[1], 10);
+	    const month = parseInt(matches[2], 10);
+	    const day = parseInt(matches[3], 10);
+	    if (
+	      year < 1000 ||
+	      month < 1 ||
+	      month > 12 ||
+	      day < 1 ||
+	      day > 31
+	    ) {
+	      return '';
+	    }
+
+	    return day + ' ' + monthNames[month - 1] + ' ' + year + ' at ' + matches[4] + ':' + matches[5] + ':' + matches[6];
+	  }
 
 	  function buildImageItem(item) {
 	    const safeName = escapeHtml(item.name || '');
@@ -152,12 +175,12 @@ $(document).ready(function () {
 	    const lightboxSize = escapeHtml(item.lgSize || '1600-2400');
 	    let dateHtml = '';
 
-    if (item.timestamp) {
-      const date = new Date(item.timestamp);
-      if (!Number.isNaN(date.getTime())) {
-        dateHtml = '<span class="images-grid-date">' + escapeHtml(formatter.format(date)) + '</span>';
-      }
-    }
+	    if (item.timestamp) {
+	      const displayTimestamp = formatImageTimestamp(item.timestamp);
+	      if (displayTimestamp) {
+	        dateHtml = '<span class="images-grid-date">' + escapeHtml(displayTimestamp) + '</span>';
+	      }
+	    }
 
 	    return (
 	      '<a class="images-grid-item" href="' + imagePath + '" data-lg-size="' + lightboxSize + '">' +

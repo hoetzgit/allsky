@@ -968,21 +968,13 @@ $(document).ready(function () {
 	}
 
 		function initialiseLocaleDates() {
-			const dateOnlyFormatter = new Intl.DateTimeFormat(undefined, {
-				dateStyle: 'medium'
-			});
-			const getDateFromParts = function (year, month, day) {
-				const date = new Date(year, month - 1, day);
-				if (
-					Number.isNaN(date.getTime()) ||
-					date.getFullYear() !== year ||
-					date.getMonth() !== month - 1 ||
-					date.getDate() !== day
-				) {
-					return null;
+			const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+			const formatDateFromParts = function (year, month, day) {
+				if (year < 1000 || month < 1 || month > 12 || day < 1 || day > 31) {
+					return '';
 				}
 
-				return date;
+				return day + ' ' + monthNames[month - 1] + ' ' + year;
 			};
 
 			document.querySelectorAll('.functions-listfiletype-date').forEach(function (element) {
@@ -991,13 +983,13 @@ $(document).ready(function () {
 
 				if (rawDate) {
 					const matches = rawDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
-					const date = matches ? getDateFromParts(
+					const displayDate = matches ? formatDateFromParts(
 						parseInt(matches[1], 10),
 						parseInt(matches[2], 10),
 						parseInt(matches[3], 10)
-					) : null;
-					if (date) {
-						element.textContent = dateOnlyFormatter.format(date);
+					) : '';
+					if (displayDate) {
+						element.textContent = displayDate;
 					}
 					return;
 				}
@@ -1006,17 +998,17 @@ $(document).ready(function () {
 				return;
 			}
 
-				const year = parseInt(rawDay.slice(0, 4), 10);
-				const month = parseInt(rawDay.slice(4, 6), 10);
-				const day = parseInt(rawDay.slice(6, 8), 10);
-				const date = getDateFromParts(year, month, day);
-				if (!date) {
-					return;
-				}
+					const year = parseInt(rawDay.slice(0, 4), 10);
+					const month = parseInt(rawDay.slice(4, 6), 10);
+					const day = parseInt(rawDay.slice(6, 8), 10);
+					const displayDate = formatDateFromParts(year, month, day);
+					if (!displayDate) {
+						return;
+					}
 
-			element.textContent = dateOnlyFormatter.format(date);
-		});
-	}
+				element.textContent = displayDate;
+			});
+		}
 
 	$.ajax({
 		url: requestUrl,
@@ -1121,17 +1113,19 @@ function setListFileTypePathOwnership($path, $isDirectory) {
 
 function getListFileTypeDisplayDateValue($fileName, $fallbackDay='') {
 	if (preg_match('/(\d{14})/', $fileName, $matches)) {
-		$dateTime = DateTimeImmutable::createFromFormat('YmdHis', $matches[1]);
-		if ($dateTime !== false) {
-			return $dateTime->format('Y-m-d\TH:i:s');
-		}
+		$timestamp = $matches[1];
+		return substr($timestamp, 0, 4) . '-' .
+			substr($timestamp, 4, 2) . '-' .
+			substr($timestamp, 6, 2) . 'T' .
+			substr($timestamp, 8, 2) . ':' .
+			substr($timestamp, 10, 2) . ':' .
+			substr($timestamp, 12, 2);
 	}
 
 	if ($fallbackDay !== '' && preg_match('/^\d{8}$/', $fallbackDay)) {
-		$date = DateTimeImmutable::createFromFormat('Ymd', $fallbackDay);
-		if ($date !== false) {
-			return $date->format('Y-m-d');
-		}
+		return substr($fallbackDay, 0, 4) . '-' .
+			substr($fallbackDay, 4, 2) . '-' .
+			substr($fallbackDay, 6, 2);
 	}
 
 	return '';
