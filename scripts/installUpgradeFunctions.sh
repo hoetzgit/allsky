@@ -1998,6 +1998,7 @@ function update_allsky_common()
 	local TMP="/tmp/x.${RANDOM}"
 	local DOT_H="${ALLSKY_HOME}/src/include/allsky_common.h"
 
+	# shellcheck disable=SC2154
 	sed \
 		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
 		-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
@@ -2008,7 +2009,7 @@ function update_allsky_common()
 		-e "s;XX_EXIT_RESET_USB_XX;${ALLSKY_EXIT_RESET_USB};" \
 		-e "s;XX_EXIT_ERROR_STOP_XX;${ALLSKY_EXIT_ERROR_STOP};" \
 		-e "s;XX_EXIT_NO_CAMERA_XX;${ALLSKY_EXIT_NO_CAMERA};" \
-		"${ALLSKY_HOME}/src/include/allsky_common.h.repo" \
+		"${DOT_H}.repo" \
 	> "${TMP}"
 
 # TODO: FIX: need to run "make" if any .cpp file changed.
