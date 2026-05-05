@@ -17,12 +17,20 @@ source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERR
 
 if [[ ${1} == "--help" ]]; then
 	echo
-	W_ "Usage: ${ME}  ${ME_F}"
+	W_ "Usage: ${ME}  ${ME_F} [--files-downloaded f]"
 	echo
 	echo "Recreates files when their 'parent' files change, e.g., a '.repo' file."
+	echo
+	echo "   --files-downloaded f    File 'f' contains a list of files that were downloaded."
 	exit 0
 fi
 
+FILES_DOWNLOADED=""
+if [[ ${1} == "--files-downloaded" ]]; then
+	FILES_DOWNLOADED="$( < "${2}" )"
+	shift 2
+echo -e "XXXXXXXXXXXXXXXXX   FILES_DOWNLOADED=\n${FILES_DOWNLOADED}"
+fi
 
 echo "* Updating variables.json file."
 create_variables_json ""	# Should come first so other steps get the newest variables.
