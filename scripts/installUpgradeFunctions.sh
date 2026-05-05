@@ -2014,7 +2014,7 @@ function update_allsky_common()
 
 	# See if any source files changed.  If so, re-run make if told to.
 	# Source files end in .cpp, .c, or .h.
-	if [[ -n ${FILES_DOWNLOADED_FILE} ]] && \
+	if [[ -s ${FILES_DOWNLOADED_FILE} ]] && \
 		grep --silent -E "^src/.*\.cpp|^src/.*\.c|^src/.*\.h" "${FILES_DOWNLOADED_FILE}" ; then
 
 		# At least one file in the "src" directory changed, so re-run make.
