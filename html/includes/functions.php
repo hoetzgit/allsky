@@ -1103,9 +1103,9 @@ function setListFileTypePathOwnership($path, $isDirectory) {
 
 function getListFileTypeDisplayDateValue($fileName, $fallbackDay='') {
 	if (preg_match('/(\d{14})/', $fileName, $matches)) {
-		$dateTime = DateTimeImmutable::createFromFormat('YmdHis', $matches[1], new DateTimeZone('UTC'));
+		$dateTime = DateTimeImmutable::createFromFormat('YmdHis', $matches[1]);
 		if ($dateTime !== false) {
-			return $dateTime->format('Y-m-d\TH:i:s\Z');
+			return $dateTime->format('Y-m-d\TH:i:s');
 		}
 	}
 
