@@ -51,6 +51,9 @@ create_lighttpd_config_file ""
 X="$( sudo systemctl restart lighttpd 2>&1 )"
 if [[ $? -ne 0 ]]; then
 	W_ "WARNING: unable to restart lighttpd service in ${ME_F}: ${X}" >&2
+else
+	# Starting it added an entry so truncate the file so it's 0-length.
+	truncate -s 0 "${LIGHTTPD_LOG_FILE}"
 fi
 
 echo "* Updating list of RPi supported cameras."
