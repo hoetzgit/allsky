@@ -344,7 +344,8 @@ fi
 
 		# If no files were retrieved, let the user know and exit.
 		if echo "${X}" | grep -i --silent "already up to date" ; then
-			MSG="\nNo new files, restarting Allsky and existing upgrade.\n"
+			echo
+			MSG="No new files, restarting Allsky and existing upgrade.\n"
 			display_msg --log progress "" "${MSG}"
 			start_Allsky
 			exit 0
