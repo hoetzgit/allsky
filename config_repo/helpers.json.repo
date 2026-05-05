@@ -79,7 +79,7 @@
             "baseFolder": "{ALLSKY_IMAGES}",
             "maxDepth": 1
           },
-          "inputClass": "col-xs-6",
+          "inputClass": "col-xs-8",
           "default": {
             "type": "previousDay"
           },
@@ -321,7 +321,7 @@
             "baseFolder": "{ALLSKY_IMAGES}",
             "maxDepth": 1
           },
-          "inputClass": "col-xs-6",
+          "inputClass": "col-xs-8",
           "default": {
             "type": "timelapseInputDirectory"
           },
