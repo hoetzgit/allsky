@@ -49,7 +49,7 @@ create_links "allsky-config"
 
 echo "* Updating variables used by C programs and running 'make' if needed."
 # "true" means run "make" if needed.
-X="$( update_allsky_common "true" "${FILES_DOWNLOADED_FILE}" 2>&1 )"
+X="$( update_allsky_common "${FILES_DOWNLOADED_FILE}" 2>&1 )"
 if [[ $? -ne 0 ]]; then
 	W_ "WARNING: ${X}" >&2
 fi
