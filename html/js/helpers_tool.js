@@ -10,6 +10,10 @@ class HelperToolPage {
         this.imagesContainerElement = this.rootElement.find(".js-helper-images");
         this.runButtonElement = this.rootElement.find(".js-helper-run");
         this.commandButtonElement = this.rootElement.find(".js-helper-show-command");
+        this.runCommandButtonElement = this.rootElement.find(".js-helper-run-command");
+        this.runCommandModalElement = this.rootElement.find(".js-helper-run-command-modal");
+        this.runCommandModalTitleElement = this.rootElement.find(".js-helper-run-command-modal-title");
+        this.runCommandOutputElement = this.rootElement.find(".js-helper-run-command-output");
         this.resultsTabsElement = this.rootElement.find(".js-helper-results-tabs");
         this.resultsContentElement = this.rootElement.find(".js-helper-results-content");
         this.settingsTabElement = this.rootElement.find(".js-helper-settings-tab");
@@ -31,6 +35,7 @@ class HelperToolPage {
         this.workingMessage = String(this.rootElement.data("workingMessage") || "Working...");
         this.idleButtonLabel = String(this.runButtonElement.val() || "Run");
         this.runningButtonLabel = String(this.rootElement.data("runningButtonLabel") || "Running...");
+        this.runCommandRequest = String(this.rootElement.data("runCommandRequest") || "");
     }
 
     init() {
@@ -60,6 +65,13 @@ class HelperToolPage {
             event.preventDefault();
             this.showCommandPreview();
         });
+
+        this.runCommandButtonElement.on("click", (event) => {
+            event.preventDefault();
+            this.runCommandButton($(event.currentTarget));
+        });
+
+        this.runCommandButtonElement.popover();
 
         if (this.autoRun) {
             this.run();
@@ -292,6 +304,14 @@ class HelperToolPage {
     setBusy(isBusy, buttonText) {
         this.runButtonElement.prop("disabled", isBusy).val(buttonText);
         this.commandButtonElement.prop("disabled", isBusy);
+        this.runCommandButtonElement.prop("disabled", isBusy);
+    }
+
+    setRunCommandBusy(buttonElement, isBusy, buttonText) {
+        this.runCommandButtonElement.prop("disabled", isBusy);
+        buttonElement.text(buttonText);
+        this.runButtonElement.prop("disabled", isBusy);
+        this.commandButtonElement.prop("disabled", isBusy);
     }
 
     showWorkingOverlay(message) {
@@ -330,6 +350,60 @@ class HelperToolPage {
 
     stripHtml(rawOutput) {
         return $("<div>").html(rawOutput || "").text();
+    }
+
+    showRunCommandOutput(text, isError, renderHtml, modalTitle) {
+        const output = text && text !== "" ? text : "No output returned.";
+
+        this.runCommandModalTitleElement.text(modalTitle || "Command Output");
+
+        if (renderHtml) {
+            this.runCommandOutputElement.html(output);
+        } else {
+            this.runCommandOutputElement.text(output);
+        }
+
+        this.runCommandOutputElement.toggleClass("errorMsgBig", !!isError);
+        this.runCommandModalElement.modal("show");
+    }
+
+    runCommandButton(buttonElement) {
+        if (
+            buttonElement.length === 0 ||
+            this.runCommandModalElement.length === 0 ||
+            this.runCommandOutputElement.length === 0 ||
+            this.runCommandRequest === ""
+        ) {
+            return;
+        }
+
+        const idleButtonLabel = $.trim(buttonElement.text()) || "Run Command";
+        const modalTitle = String(buttonElement.data("modalTitle") || "Command Output");
+        const workingMessage = String(buttonElement.data("workingMessage") || "Running command...");
+        const runningButtonLabel = String(buttonElement.data("runningButtonLabel") || "Running...");
+        const outputFormat = String(buttonElement.data("outputFormat") || "text").toLowerCase();
+        const commandButtonIndex = String(buttonElement.data("commandButtonIndex") || "0");
+
+        this.showWorkingOverlay(workingMessage);
+        this.setRunCommandBusy(buttonElement, true, runningButtonLabel);
+
+        $.ajax({
+            url: this.buildUrl(this.runCommandRequest),
+            type: "POST",
+            dataType: "json",
+            data: this.formElement.serialize() + "&command_button_index=" + encodeURIComponent(commandButtonIndex),
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        }).done((response) => {
+            const rawOutput = response && response.output ? response.output : "";
+            const renderHtml = outputFormat === "html";
+            const output = renderHtml ? rawOutput : this.stripHtml(rawOutput);
+            this.showRunCommandOutput(output, !(response && response.ok), renderHtml, modalTitle);
+        }).fail((xhr) => {
+            this.showRunCommandOutput(this.getAjaxError(xhr), true, false, modalTitle);
+        }).always(() => {
+            this.hideWorkingOverlay();
+            this.setRunCommandBusy(buttonElement, false, idleButtonLabel);
+        });
     }
 
     initialiseLocaleDates() {

@@ -47,6 +47,7 @@ class HELPERSUTIL extends UTILBASE
 		return [
 			'HelperRun' => ['get', 'post'],
 			'HelperCommand' => ['get', 'post'],
+			'HelperCommandRun' => ['post'],
 			'ImagePickerList' => ['get'],
 		];
 	}
@@ -77,6 +78,51 @@ class HELPERSUTIL extends UTILBASE
 	public function postHelperRun(): void
 	{
 		$this->runConfiguredHelper();
+	}
+
+	/**
+	 * Run the optional extra command configured for a helper button.
+	 *
+	 * The browser only identifies the helper.  The command itself always comes
+	 * from config/helpers.json so callers cannot submit arbitrary commands.
+	 */
+	public function postHelperCommandRun(): void
+	{
+		$helperId = HelperPageRenderer::resolveHelperId((string) ($_POST['helper'] ?? $_GET['helper'] ?? ''));
+		$helper = HelperPageRenderer::getHelperConfig($helperId);
+		if ($helper === null) {
+			$this->send404('Unknown helper.');
+		}
+
+		$buttons = $helper['commandButton'] ?? null;
+		if (!is_array($buttons)) {
+			$this->send404('Helper command is not configured.');
+		}
+
+		if (isset($buttons['command'])) {
+			$buttons = [$buttons];
+		}
+
+		$buttonIndex = filter_input(INPUT_POST, 'command_button_index', FILTER_VALIDATE_INT);
+		if ($buttonIndex === false || $buttonIndex === null || $buttonIndex < 0 || !isset($buttons[$buttonIndex]) || !is_array($buttons[$buttonIndex])) {
+			$this->send400('Invalid helper command button.');
+		}
+
+		$button = $buttons[$buttonIndex];
+		$command = $button['command'] ?? null;
+		if (!is_array($command) || count($command) === 0) {
+			$this->send500('Helper command is not configured.');
+		}
+
+		$commandArgs = [];
+		foreach ($command as $arg) {
+			if (!is_string($arg) || $arg === '') {
+				$this->send500('Helper command contains an invalid argument.');
+			}
+			$commandArgs[] = $arg;
+		}
+
+		$this->sendCommandResponse($this->buildAllskyConfigCommand($commandArgs));
 	}
 
 	/**

@@ -41,7 +41,14 @@ declare(strict_types=1);
  *       "args": [{"flag": "--input"}]
  *     }
  *   ],
- *   "submit": {"name": "startrails", "label": "Create Startrails"}
+ *   "submit": {"name": "startrails", "label": "Create Startrails"},
+ *   "commandButton": [{
+ *     "label": "Get Startrails Info",
+ *     "helpText": "Show previous startrails brightness data.",
+ *     "modalTitle": "Startrails Info",
+ *     "command": ["get_startrails_info"],
+ *     "outputFormat": "text"
+ *   }]
  * }
  */
 class HelperPageRenderer
@@ -173,11 +180,13 @@ class HelperPageRenderer
 			'data-running-message' => $this->getMessage('running', 'Running helper...'),
 			'data-working-message' => $this->getMessage('working', 'Working...'),
 			'data-running-button-label' => $this->getMessage('runningButton', 'Running...'),
+			'data-run-command-request' => $this->hasCommandButton() ? 'HelperCommandRun' : '',
 		];
 
 		return ''
 			. '<div ' . $this->attrs($attrs) . '>'
 			. ($this->useTabbedToolPage() ? $this->renderTabbedToolPage() : $this->renderForm() . $this->renderResultContainers())
+			. $this->renderCommandModal()
 			. '</div>';
 	}
 
@@ -582,12 +591,51 @@ class HelperPageRenderer
 				'name' => $name,
 				'value' => $label,
 			]) . ' />'
+			. $this->renderCommandButton()
 			. ($warning !== '' ? '&nbsp; &nbsp; &nbsp;' . $warning : '')
 			. '</span>'
 			. '<button type="button" class="btn btn-default helper-show-command-button js-helper-show-command">'
 			. '<i class="fa fa-terminal"></i> Show Command'
 			. '</button>'
 			. '</div>';
+	}
+
+	/**
+	 * Render the optional configured run-command button.
+	 */
+	private function renderCommandButton(): string
+	{
+		if (!$this->hasCommandButton()) {
+			return '';
+		}
+
+		$html = '';
+		foreach ($this->commandButtons() as $index => $button) {
+			$label = (string) ($button['label'] ?? 'Run Command');
+			$helpText = (string) ($button['helpText'] ?? '');
+			$attrs = [
+				'type' => 'button',
+				'class' => 'btn btn-default js-helper-run-command',
+				'data-command-button-index' => (string) $index,
+				'data-modal-title' => (string) ($button['modalTitle'] ?? 'Command Output'),
+				'data-working-message' => (string) ($button['workingMessage'] ?? 'Running command...'),
+				'data-running-button-label' => (string) ($button['runningButtonLabel'] ?? 'Running...'),
+				'data-output-format' => (string) ($button['outputFormat'] ?? 'text'),
+			];
+
+			if ($helpText !== '') {
+				$attrs['data-toggle'] = 'popover';
+				$attrs['data-trigger'] = 'hover focus';
+				$attrs['data-placement'] = 'top';
+				$attrs['data-container'] = 'body';
+				$attrs['data-content'] = $helpText;
+				$attrs['title'] = $label;
+			}
+
+			$html .= '&nbsp; <button ' . $this->attrs($attrs) . '>' . $this->e($label) . '</button>';
+		}
+
+		return $html;
 	}
 
 	/**
@@ -603,6 +651,34 @@ class HelperPageRenderer
 		}
 
 		return '';
+	}
+
+	/**
+	 * Render the modal used by the optional configured run-command button.
+	 */
+	private function renderCommandModal(): string
+	{
+		if (!$this->hasCommandButton()) {
+			return '';
+		}
+
+		$id = $this->e($this->helperId);
+
+		return ''
+			. "<div class='modal fade js-helper-run-command-modal' id='{$id}-run-command-modal' tabindex='-1' role='dialog' aria-labelledby='{$id}-run-command-modal-title'>"
+			. "<div class='modal-dialog modal-lg' role='document'>"
+			. "<div class='modal-content'>"
+			. "<div class='modal-header'>"
+			. "<button type='button' class='close' data-dismiss='modal' aria-label='Close'><span aria-hidden='true'>&times;</span></button>"
+			. "<h4 class='modal-title js-helper-run-command-modal-title' id='{$id}-run-command-modal-title'>Command Output</h4>"
+			. '</div>'
+			. "<div class='modal-body'>"
+			. "<pre class='helper-output js-helper-run-command-output' style='font-size: 0.9em; max-height: 65vh; overflow: auto;'></pre>"
+			. '</div>'
+			. "<div class='modal-footer'><button type='button' class='btn btn-default' data-dismiss='modal'>Close</button></div>"
+			. '</div>'
+			. '</div>'
+			. '</div>';
 	}
 
 	/**
@@ -730,6 +806,33 @@ class HelperPageRenderer
 	{
 		$messages = $this->helper['messages'] ?? [];
 		return is_array($messages) ? (string) ($messages[$key] ?? $default) : $default;
+	}
+
+	/**
+	 * Whether this helper has an extra configured command button.
+	 */
+	private function hasCommandButton(): bool
+	{
+		return count($this->commandButtons()) > 0;
+	}
+
+	/**
+	 * Return configured command buttons.
+	 */
+	private function commandButtons(): array
+	{
+		$buttons = $this->helper['commandButton'] ?? [];
+		if (!is_array($buttons)) {
+			return [];
+		}
+
+		if (isset($buttons['command'])) {
+			$buttons = [$buttons];
+		}
+
+		return array_values(array_filter($buttons, function ($button) {
+			return is_array($button) && !empty($button['command']) && is_array($button['command']);
+		}));
 	}
 
 	/**

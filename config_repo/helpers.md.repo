@@ -8,6 +8,7 @@ This configuration is intentionally declarative. A helper usually needs:
 - explanatory content
 - zero or more form fields
 - a command to run through `allsky-config`
+- optional extra command buttons
 - a way to present output, generated images, or generated videos
 
 Instead of creating a separate PHP page for each helper, add a helper
@@ -41,6 +42,7 @@ definition, validates it, builds the command arguments, and either:
 
 - runs the helper via `HelperRun`, or
 - returns the command preview via `HelperCommand`
+- runs one configured extra command button via `HelperCommandRun`
 
 ## How The Current UI Works
 
@@ -65,6 +67,12 @@ that helper, together with `Run` and `Show Command` buttons.
 
 `Show Command` opens a modal window containing the exact command that would be
 run. It does not execute the helper.
+
+Helpers may also define one or more extra command buttons with `commandButton`.
+These buttons are rendered beside the `Run` button. Each button runs its own
+JSON-defined `allsky-config` command and displays the resulting output in a
+modal window. If a button has `helpText`, hovering or focusing the button shows
+that text in a popover.
 
 ## Top-Level Helper Fields
 
@@ -350,6 +358,49 @@ If `submit` is omitted:
 - auto-run helpers render no run button
 - manual helpers still render a default `Run` button and a `Show Command`
   button
+
+### `commandButton`
+
+Optional.
+
+An array of extra buttons rendered to the right of the `Run` button. Each
+button runs a separate command through `allsky-config` and displays the command
+output in a modal.
+
+```json
+"commandButton": [
+  {
+    "label": "Get Startrails Info",
+    "helpText": "Display brightness information from previous startrails runs.",
+    "modalTitle": "Startrails Info",
+    "command": ["get_startrails_info"],
+    "workingMessage": "Getting startrails info...",
+    "runningButtonLabel": "Getting...",
+    "outputFormat": "text"
+  }
+]
+```
+
+Supported keys:
+
+- `label`: text shown on the button
+- `helpText`: optional text shown in a popover when the button is hovered or
+  focused
+- `modalTitle`: title shown in the output modal
+- `command`: required base argument list passed to `allsky-config`
+- `workingMessage`: text shown in the full-page loading overlay while the
+  command runs
+- `runningButtonLabel`: temporary button text while the command runs
+- `outputFormat`: `text` strips HTML before display; `html` renders returned
+  output as HTML
+
+Do not include `sudo`, `--user=...`, or the path to `allsky-config` in a
+button command. The PHP utility adds the execution wrapper, just as it does for
+the helper's main `command`.
+
+Each button command is selected by its array index when the browser calls
+`HelperCommandRun`. The server ignores browser-supplied command text and only
+runs commands defined in `helpers.json`.
 
 ## Field Structure
 
@@ -1047,9 +1098,10 @@ This renders a full tabbed helper. If the helper script emits a valid
 4. Add `contentHtml` if the page needs explanation.
 5. Add `fields` if the helper needs user input.
 6. Add `submit` if you want a custom run button label.
-7. Enable `showResultsTabs` if the helper should use the tabbed layout when
+7. Add `commandButton` entries if the helper needs extra command buttons.
+8. Enable `showResultsTabs` if the helper should use the tabbed layout when
    running automatically, or if the helper is expected to produce media.
-8. Link to it with:
+9. Link to it with:
 
 ```text
 index.php?page=helper&helper=focus_test
