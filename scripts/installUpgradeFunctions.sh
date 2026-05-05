@@ -1996,6 +1996,7 @@ function update_repo_files()
 function update_allsky_common()
 {
 	local MAKE_IF_NEEDED="${1:-false}"
+	local FILES_DOWNLOADED_FILE="${2}"
 	local TMP="/tmp/x.${RANDOM}"
 	local DOT_H="${ALLSKY_HOME}/src/include/allsky_common.h"
 
@@ -2013,7 +2014,26 @@ function update_allsky_common()
 		"${DOT_H}.repo" \
 	> "${TMP}"
 
-# TODO: FIX: need to run "make" if any .cpp file changed.
+	# See if any source files changed.  If so, re-run make if told to.
+	if [[ -n ${FILES_DOWNLOADED_FILE} && ${MAKE_IF_NEEDED} == "true" ]] && \
+		grep --silent -E "^src/.*\.cpp|^src/.*\.c|^src/.*\.h" "${FILES_DOWNLOADED_FILE}" ; then
+
+		# At least one file in the "src" directory changed, so re-run make.
+		local X="$(
+			cd "${ALLSKY_HOME}" &&
+			sudo make -C src deps &&
+			make -C src all &&
+			sudo make install
+		)"
+		if [[ $? -ne 0 ]]; then
+			echo "'make' failed: ${X}" >&2
+			return 1
+		fi
+	fi
+
+if true; then			# XXXXXXXXXXXX TODO REMOVE
+cp "${TMP}" "${DOT_H}" && rm -f "${TMP}"   # Change "> $TMP" above to "> DOT_H".
+else
 
 	# If the new file is the same as the old, don't do anything.
 	if ! cmp --silent "${TMP}" "${DOT_H}" ; then
@@ -2031,8 +2051,8 @@ function update_allsky_common()
 			fi
 		fi
 	fi
-
 	rm -f "${TMP}"
+fi
 	return 0
 }
 
