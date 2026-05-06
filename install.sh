@@ -1821,7 +1821,7 @@ convert_settings_file()			# prior_file, new_file
 	local MSG="Converting '$( basename "${PRIOR_FILE}" )' to new format if needed."
 	display_msg --log progress "${MSG}"
 
-	DIR="/tmp/converted_settings"
+	DIR="${ALLSKY_LOGS}/converted_settings"
 	mkdir -p "${DIR}"
 	local TEMP_PRIOR="${DIR}/PRIOR-${PRIOR_CAMERA_TYPE}_${PRIOR_CAMERA_MODEL// /_}.json"
 	local DELETED_SETTINGS="${DIR}/deleted_settings.txt"
