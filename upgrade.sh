@@ -19,10 +19,6 @@ source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERR
 #		- Don't prompt to reboot
 #		- Don't prompt other things ??
 #
-#############
-# TODO:
-#	Check for symbolic links
-#############
 
 # shellcheck disable=SC2034
 DISPLAY_MSG_LOG="${ALLSKY_LOGS}/upgrade.log"	# send log entries here
@@ -110,12 +106,20 @@ function check_for_oldest()
 
 function restore_directories()
 {
+	if [[ -d ${ALLSKY_HOME} ]]; then
+		local MSG="Cannot restore directories: '${ALLSKY_HOME}' already exists."
+		display_msg --log warning "${MSG}"
+		return 1
+	fi
+
 	display_msg --log info "Renaming '${ALLSKY_PRIOR_DIR}' back to '${ALLSKY_HOME}'."
 	mv "${ALLSKY_PRIOR_DIR}" "${ALLSKY_HOME}"
 	if [[ -d ${OLDEST_DIR} ]]; then
 		display_msg --log info "Renaming '${OLDEST_DIR}' back to '${ALLSKY_PRIOR_DIR}'."
 		mv "${OLDEST_DIR}" "${ALLSKY_PRIOR_DIR}"
 	fi
+
+	return 0
 }
 
 
@@ -126,7 +130,7 @@ function usage_and_exit()
 	exec >&2
 
 	echo
-	local USAGE="Usage: ${ME} [--help] [--debug] [--branch branch] [--doUpgrade] [--in-place]"
+	local USAGE="Usage: ${ME} [--help] [--debug] [--branch branch] [--doUpgrade] [--in-place] [--skip]"
 	if [[ ${RET} -eq 0 ]]; then
 		echo "Upgrade the Allsky software to a newer version."
 		echo -e "\n${USAGE}"
@@ -139,6 +143,7 @@ function usage_and_exit()
 	echo "   --branch branch   Uses 'branch' instead of the production '${ALLSKY_GITHUB_MAIN_BRANCH}' branch."
 	echo "   --doUpgrade       Completes the upgrade."
 	echo "   --in-place        Specifies an 'in-place' upgrade should be performed."
+	echo "   --skip            Tells install.sh to skip some steps."
 	echo
 	exit "${RET}"
 }
@@ -155,6 +160,7 @@ CHOSEN_METHOD=""
 OK="true"
 HELP="false"
 DEBUG="false"; DEBUG_ARG=""
+SKIP=""
 # shellcheck disable=SC2119
 BRANCH="$( get_branch )"
 [[ -z ${BRANCH} ]] && BRANCH="${ALLSKY_GITHUB_MAIN_BRANCH}"
@@ -180,6 +186,9 @@ while [[ $# -gt 0 ]]; do
 			;;
 		--in-place)
 			CHOSEN_METHOD="${METHOD_IN_PLACE}"
+			;;
+		--skip)
+			SKIP="${ARG}"
 			;;
 		-*)
 			E_ "Unknown argument: '${ARG}'." >&2
@@ -369,13 +378,15 @@ fi
 		# --doUpgrade tells it to use prior version without asking and to not display header,
 		# change messages to say "upgrade", not "install", etc.
 if false; then		# XXXXXXXXXX TODO: FIX
+		MSG="The first step of the upgrade is complete.\n"
+		display_msg --log progress "${MSG}" "  Running install.sh"
+		display_msg --logonly info "ENDING UPGRADE; calling install.sh"
 		# shellcheck disable=SC2086,SC2291
 		X="$(
 #shellcheck disable=SC2116		# XXXXXXXXX temporary
-echo XXX		./install.sh ${DEBUG_ARG} --branch "${BRANCH}" --doUpgrade
+echo XXX		./install.sh ${DEBUG_ARG} --branch "${BRANCH}" ${SKIP} --doUpgrade
 		)"
 		RET=$?
-		display_msg --logonly info "ENDING UPGRADE."
 		if [[ ${RET} -ne 0 ]]; then
 			display_msg --log warning "install.sh failed."  "Contact the Allsky Team"
 			exit "${RET}"
@@ -383,7 +394,7 @@ echo XXX		./install.sh ${DEBUG_ARG} --branch "${BRANCH}" --doUpgrade
 		display_msg --log progress "The upgrade is complete."  "  Go to the WebUI to restart Allsky.\n"
 else	# XXXXXXXXXXX
 		display_msg --log progress "The first step of the upgrade is complete.\n"
-		MSG="cd ~/allsky; ./install.sh ${DEBUG_ARG}"
+		MSG="cd ~/allsky; ./install.sh ${DEBUG_ARG} ${SKIP}"
 		[[ ${BRANCH} != "${ALLSKY_GITHUB_MAIN_BRANCH}" ]] && MSG+=" --branch ${BRANCH}"
 		display_msg --log note "Now run:" "   ${MSG}\n"
 fi
