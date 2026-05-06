@@ -5578,7 +5578,7 @@ def detect_meteors(img: np.ndarray,
 
     # --- adaptive threshold ---
     mean, std = cv2.meanStdDev(highpass, mask=mask)
-    tval = float(mean + k_sigma * std)
+    tval = float(mean[0][0] + k_sigma * std[0][0])
     tval = max(tval, 10.0)
     _, bin_img = cv2.threshold(highpass, tval, 255, cv2.THRESH_BINARY)
 
