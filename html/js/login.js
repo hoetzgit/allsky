@@ -103,9 +103,9 @@ class ASLOGIN {
 
   // Pull CSS custom properties that drive colors/fades
   applyTheme() {
-    const cs = getComputedStyle(document.documentElement);
-    this.fadeRGB = (cs.getPropertyValue('--fade-rgb') || '0,0,0').trim();
-    this.bgRGB = (cs.getPropertyValue('--canvas-bg-rgb') || '0,0,0').trim();
+    const cs = getComputedStyle(document.body);
+    this.fadeRGB = (cs.getPropertyValue('--login-fade-rgb') || '0,0,0').trim();
+    this.bgRGB = (cs.getPropertyValue('--login-canvas-bg-rgb') || '0,0,0').trim();
   }
 
   // Resize all canvases with device pixel ratio and reset background
@@ -778,25 +778,47 @@ class Ship {
  * and wire the easter egg (dblclick .login-avatar).
  */
 jQuery(function () {
-  // Apply stored theme or default to dark
-  const savedTheme = (localStorage.getItem('theme') || '').toLowerCase();
   const root = document.documentElement;
+  const body = document.body;
 
-  if (savedTheme === 'light' || savedTheme === 'dark') {
-    root.classList.toggle('theme-light', savedTheme === 'light');
-    root.classList.toggle('theme-dark', savedTheme === 'dark');
-  } else {
-    if (!root.classList.contains('theme-light') && !root.classList.contains('theme-dark')) {
-      root.classList.add('theme-dark');
-    }
+  function normaliseTheme(theme) {
+    theme = (theme || '').toLowerCase();
+    return theme === 'dark' ? 'dark' : 'light';
   }
+
+  function applyLoginTheme(theme) {
+    theme = normaliseTheme(theme);
+
+    root.classList.remove('light', 'dark', 'theme-light', 'theme-dark');
+    root.classList.add(theme);
+
+    body.classList.remove('light', 'dark', 'theme-light', 'theme-dark');
+    body.classList.add(theme);
+
+    localStorage.setItem('theme', theme);
+
+    if (window.asLogin) {
+      window.asLogin.applyTheme();
+      window.asLogin.resize();
+    }
+
+    jQuery('.theme-toggle').html(
+      theme === 'light'
+        ? '<i class="fa-solid fa-sun"></i> Light'
+        : '<i class="fa-solid fa-moon"></i> Dark'
+    );
+  }
+
+  applyLoginTheme(localStorage.getItem('theme') || body.className || root.className);
 
   // Start background effects
   window.asLogin = new ASLOGIN();
+  window.asLogin.applyTheme();
+  window.asLogin.resize();
 
   // Optional theme toggle button if page provides none
   if (document.querySelector('.theme-toggle') == null) {
-    const isLight = root.classList.contains('theme-light');
+    const isLight = body.classList.contains('light');
     const btn = jQuery('<button>', {
       class: 'theme-toggle',
       type: 'button',
@@ -804,19 +826,7 @@ jQuery(function () {
     });
 
     btn.on('click', function () {
-      const currentlyLight = root.classList.contains('theme-light');
-      const newLight = !currentlyLight;
-
-      root.classList.toggle('theme-light', newLight);
-      root.classList.toggle('theme-dark', !newLight);
-      localStorage.setItem('theme', newLight ? 'light' : 'dark');
-
-      if (window.asLogin) {
-        window.asLogin.applyTheme();
-        window.asLogin.resize();
-      }
-
-      jQuery(this).html(newLight ? '<i class="fa-solid fa-sun"></i> Light' : '<i class="fa-solid fa-moon"></i> Dark');
+      applyLoginTheme(body.classList.contains('light') ? 'dark' : 'light');
     });
 
     jQuery('body').append(btn);
