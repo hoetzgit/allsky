@@ -194,7 +194,7 @@ class ALLSKYMETEOR(ALLSKYMODULEBASE):
 			extra_data['AS_METEORIMAGEURL'] = ''
 			extra_data['AS_METEORCOUNT'] = 0
 			result = "No Meteors detected"
-			self.log(4, "INFO: {result}")
+			self.log(4, f"INFO: {result}")
       		
 		allsky_shared.saveExtraData(self.meta_data["extradatafilename"], extra_data, self.meta_data['module'], self.meta_data['extradata'], event=self.event)
 
