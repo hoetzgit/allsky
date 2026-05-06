@@ -32,6 +32,7 @@ function DisplayModule()
         '/js/jquery-variable/jquery-variable.js',
         '/js/datatables/datatables.min.css',
         '/js/datatables/datatables.js',
+        '/js/spectrum/dist/spectrum.js',
         '/js/spectrum/dist/spectrum.css',
         '/js/jquery-select2/dist/css/select2.min.css',
         '/js/jquery-select2-bootstrap-theme/dist/select2-bootstrap.min.css',
