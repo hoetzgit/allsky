@@ -293,13 +293,6 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	# Anything at or above EXIT_ERROR_STOP is unrecoverable and the service must be stopped
 	ALLSKY_EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service
 	ALLSKY_EXIT_NO_CAMERA=101		# cannot find camera
-# TODO: change all code to use variables above, not below, for consistency.
-#XX	EXIT_OK="${ALLSKY_EXIT_OK}"
-#XX	EXIT_PARTIAL_OK="${ALLSKY_EXIT_PARTIAL_OK}"
-#XX	EXIT_RESTARTING="${ALLSKY_EXIT_RESTARTING}"
-#XX	EXIT_RESET_USB="${ALLSKY_EXIT_RESET_USB}"
-#XX	EXIT_ERROR_STOP="${ALLSKY_EXIT_ERROR_STOP}"
-#XX	EXIT_NO_CAMERA="${ALLSKY_EXIT_NO_CAMERA}"
 
 	# Name of the Pi's OS in lowercase.
 	ALLSKY_PI_OS="$( grep VERSION_CODENAME /etc/os-release )"
