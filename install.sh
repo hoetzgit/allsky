@@ -1434,7 +1434,7 @@ does_prior_Allsky_Website_exist()
 # See if a prior Allsky exists; if so, set some variables.
 does_prior_Allsky_exist()
 {
-	local MSG  DIR  CAPTURE  STRING  L
+	local MSG  DIR  STRING  L
 
 	# ${ALLSKY_PRIOR_DIR} points to where the prior Allsky would be.
 	# See if it's there, and if so, it's valid.
@@ -1630,6 +1630,12 @@ install_dependencies_etc()
 	if [[ ${SKIP} != "true" ]]; then
 		TMP="${ALLSKY_LOGS}/allsky_dependencies.log"
 		run_aptGet ffmpeg lftp imagemagick sqlite3 bc > "${TMP}" 2>&1
+		check_success $? "Allsky dependency installation failed" "${TMP}" "${DEBUG}" ||
+			exit_with_image 1 "${STATUS_ERROR}" "dependency installation failed"
+
+		TMP="${ALLSKY_LOGS}/allsky_deps.log"
+		# shellcheck disable=SC2086
+		run_aptGet libopencv-dev libusb-dev libusb-1.0-0-dev > "${TMP}" 2>&1
 		check_success $? "Allsky dependency installation failed" "${TMP}" "${DEBUG}" ||
 			exit_with_image 1 "${STATUS_ERROR}" "dependency installation failed"
 	fi
