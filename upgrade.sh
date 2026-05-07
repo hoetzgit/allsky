@@ -406,7 +406,7 @@ fi
 
 elif [[ ${ACTION} == "doUpgrade" ]]; then
 	if [[ ${CHOSEN_METHOD} == "${METHOD_IN_PLACE}" ]]; then
-		X="$( "${ALLSKY_UTILITIES}/allsky-config.sh" recreate_files "${FILES_DOWNLADED_FILE}" 2>&1 )"
+		X="$( "${ALLSKY_UTILITIES}/allsky-config.sh" recreate_files "${FILES_DOWNLOADED_FILE}" 2>&1 )"
 		if [[ $? -ne 0 ]]; then
 			MSG="Unable to update files: ${X}"
 			display_msg --log error "${MSG}" "Contact the Allsky Team"
