@@ -8,7 +8,7 @@
 #	It does NOT assume Allsky has been installed so only uses scripts and functions
 #	that do not require Allsky to be installed.  This is to prevent any issues
 #	with the Allsky installation from interfering with the data collection.
-
+#	Several variables used in the script are defined in variables.sh or installUpgradeFunctions.sh.
 
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )" )"
 ME="$( basename "${BASH_ARGV0}" )"
@@ -107,9 +107,9 @@ function print_heading()
 
 function collect_support_info()
 {
+	### OS Information
 	# shellcheck disable=SC1091
 	source /etc/os-release	|| true
-	### OS Information
 	OS_ID="${ID,,}"
 	OS_VERSION_ID="${VERSION_ID}"
 	OS_VERSION_CODENAME="${VERSION_CODENAME,,}"
@@ -122,12 +122,26 @@ function collect_support_info()
 	USER_ID="$( id -u )"
 
 	### Hardware Information
-	PI_REVISION="$( grep -m 1 'Revision' /proc/cpuinfo | gawk '{print $3}' )"
+	PI_REVISION="$( gawk '
+		{
+			if ($1 == "Revision") {
+				print $3;
+				exit 0;
+			}
+		}' /proc/cpuinfo
+	)"
 	CPU_ARCH="$( uname -m )"
 	CPU_BITS="$( getconf LONG_BIT )"
 	CPU_TOTAL="$( nproc )"
 	MEMORY_INFO="$( free -h )"
-	MEM_TOTAL="$( echo "${MEMORY_INFO}" | grep Mem | gawk '{print $2}' )"
+	MEM_TOTAL="$( echo "${MEMORY_INFO}" | gawk '
+		{
+			if ($1 == "Mem:") {
+				print $2;
+				exit 0;
+			}
+		}'
+	)"
 	if [[ -s ${ALLSKY_PI_VERSION_FILE} ]]; then
 		PI_MODEL="$( < "${ALLSKY_PI_VERSION_FILE}" )"
 	else
@@ -144,7 +158,6 @@ function collect_support_info()
 
 	### File system information
 	FILE_SYSTEMS="$( df -h )"
-	# TODO: GET AS image dir sizes
 
 	activate_python_venv
 	PYTHON_VERSION="$( python3 -V )"
@@ -307,20 +320,15 @@ function generate_support_info()
 		sudo dpkg-query -l
 	} > "${APT_FILE}"
 
-	local LIGHTTPD_ERROR_LOG="/var/log/lighttpd/error.log"
 	local LIGHTTPD_ERROR_LOG_FILE="${TEMP_DIR}/lighttpd_error.txt"
-	if [[ -f ${LIGHTTPD_ERROR_LOG} ]]; then
+	if [[ -f ${LIGHTTPD_LOG_FILE} ]]; then
 		# Don't include these - they aren't errors.
 		grep -E -v " server started | server stopped | logfiles cycled " \
-			"${LIGHTTPD_ERROR_LOG}" > "${LIGHTTPD_ERROR_LOG_FILE}"
+			"${LIGHTTPD_LOG_FILE}" > "${LIGHTTPD_ERROR_LOG_FILE}"
 	fi
 
-	PRIOR_WEBSITE_DIR="${ALLSKY_PRIOR_DIR}${ALLSKY_WEBSITE/${ALLSKY_HOME}/}"
-	if [[ -d ${PRIOR_WEBSITE_DIR} ]]; then
-		PRIOR_WEBSITE_CONFIG_FILE="${PRIOR_WEBSITE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
-		if [[ -s ${PRIOR_WEBSITE_CONFIG_FILE} ]]; then
-			cp "${PRIOR_WEBSITE_CONFIG_FILE}" "${TEMP_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}-OLD.json"
-		fi
+	if [[ -d ${PRIOR_WEBSITE_DIR} && -s ${PRIOR_WEBSITE_CONFIG_FILE} ]]; then
+		cp "${PRIOR_WEBSITE_CONFIG_FILE}" "${TEMP_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}-OLD.json"
 	fi
 
 	if [[ -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]]; then
@@ -339,12 +347,12 @@ function generate_support_info()
 		print "${RPI_CAMERAS}"
 	} > "${LIBCAMERA_FILE}"
 
-	local CONF_FILE="/etc/lighttpd/lighttpd.conf"
-	if [[ -f ${CONF_FILE} ]]; then
-		cp "${CONF_FILE}" "${TEMP_DIR}/etc-$( basename "${CONF_FILE}" ).txt"
+
+	if [[ -f ${LIGHTTPD_CONFIG_FILE} ]]; then
+		cp "${LIGHTTPD_CONFIG_FILE}" "${TEMP_DIR}/etc-$( basename "${LIGHTTPD_CONFIG_FILE}" ).txt"
 	fi
 
-	cp "${ALLSKY_HOME}/variables.json" "${TEMP_DIR}"
+	[[ -f ${ALLSKY_VARIABLES_JSON_FILE} ]] && cp "${ALLSKY_VARIABLES_JSON_FILE}" "${TEMP_DIR}"
 
 	# Copy most of ${ALLSKY_TMP} directory.
 	if [[ -d ${ALLSKY_TMP} ]]; then
@@ -360,29 +368,17 @@ function generate_support_info()
 	# The directory should exists unless installation failed.
 	[[ -d ${ALLSKY_CONFIG} ]] && cp -ar "${ALLSKY_CONFIG}" "${TEMP_DIR}"
 
-	local TEMP_DIR_MODULES="${TEMP_DIR}/${ALLSKY_MODULES/${ALLSKY_HOME}}"
 	local TEMP_DIR_OVERLAY="${TEMP_DIR}/${ALLSKY_OVERLAY/${ALLSKY_HOME}}"
+	local TEMP_MY_MODULES="${TEMP_DIR}/${ALLSKY_MY_MODULES/${ALLSKY_HOME}}"
+	local TEMP_DIR_MODULES="${TEMP_DIR}/${ALLSKY_MODULES/${ALLSKY_HOME}}"
 
-	# Truncate large files not needed for support.
-	local X="${TEMP_DIR_OVERLAY}/config/tmp/overlay/de421.bsp"
+	# Truncate or delete large files not needed for support.
+	local X="${TEMP_DIR_OVERLAY}/config/overlay/tmp/de421.bsp"
 	[[ -s ${X} ]] && truncate -s 0 "${X}"
-	X="${TEMP_DIR_OVERLAY}/system_fonts"
-	rm -fr "${X}"
-
-	# We don't need these files so delete them.
-	X="${TEMP_DIR}/config/myFiles/modules/moduledata/data/allsky_adsb/adsb_data"
-	rm -fr "${X}"
-	X="${TEMP_DIR}/config/myFiles/modules/__pycache__"
-	rm -fr "${X}"
-
-	# If we have any sensitive data in the flows then truncate them.
-	# If the variables.json file exists then there will be no sensitive data in the flows since
-	# this data was moved to the env.json file in the same release that created variables.json.
-	# This could do a version comparison but this is a much simpler check.
-	if [[ ! -f "${ALLSKY_HOME}/variables.json" ]]; then
-		X="${TEMP_DIR_MODULES}"
-		[[ -d ${X} ]] && find "${X}" -type f -exec truncate -s 0 {} +
-	fi
+	rm -fr \
+		"${TEMP_DIR_OVERLAY}/system_fonts" \
+		"${TEMP_MY_MODULES}/moduledata/data/allsky_adsb/adsb_data" \
+		"${TEMP_MY_MODULES}/__pycache__"
 
 	cd "${TEMP_DIR}" || exit 1
 
@@ -405,12 +401,11 @@ function generate_support_info()
 			{ TOTAL += $5; }
 			END { printf("%d", 0.5 + ((TOTAL / 1024 / 1024) * C)); }'
 	}
-	function get_size()
+	function get_actual_size()
 	{
 		local ZIP_FILE="${1}"
 		local SOURCE="${2}"
-		# shellcheck disable=SC2086
-		zip -r "${ZIP_FILE}" ${SOURCE} > /dev/null 2>&1
+		zip -r "${ZIP_FILE}" "${SOURCE}" > /dev/null 2>&1
 		get_mb "${ZIP_FILE}"
 		rm -f "${ZIP_FILE}"
 	}
@@ -427,22 +422,19 @@ function generate_support_info()
 	local COMPRESSION_RATIO=0.3		# Normally the logs compress to around 10%, but be very conservative
 	declare -a ALL_LOGS=()
 	local INDEX=-1
-	local ALLSKY_LOG_SIZE_MB=0
-	local ALLSKY_LOG1_SIZE_MB=0
-	local ALLSKY_PERIODIC_LOG_SIZE_MB=0
 	local ALLSKY_LOG1_INDEX=""		# If the ".1" log file exist this will be it's index in the array.
 	local ALLSKY_LOG1="${ALLSKY_LOG}.1"		# this should probably go in variables.sh...
 
-	# First determine the zipped size of what's currently going into the support log.
+	# First determine the actual zipped size of what's currently going into the support log.
 	local TMP_ZIP="${TEMP_DIR}/OTHER_THAN.zip"
-	local REST_OF_LOG_MB="$( get_size "${TMP_ZIP}" "./*" )"
+	local REST_OF_LOG_MB="$( get_actual_size "${TMP_ZIP}" "./*" )"
 	display_msg --logonly info "Zipped size of everything EXCEPT log files: ${REST_OF_LOG_MB} MB."
 	local TOTAL_SIZE_MB="${REST_OF_LOG_MB}"
 
 	local LOG_LINES_TEMP="${LOG_LINES}"
 	local ESTIMATED_SIZE_MB="$( get_mb --compression-ratio "${COMPRESSION_RATIO}" \
 			"${ALLSKY_LOG}" "${ALLSKY_LOG1}" "${ALLSKY_PERIODIC_LOG}" )"
-	ESTIMATED_SIZE_MB=$(( ESTIMATED_SIZE_MB + REST_OF_LOG_MB ))
+	ESTIMATED_SIZE_LOG=$(( ESTIMATED_SIZE_MB + REST_OF_LOG_MB ))
 	if [[ ${ESTIMATED_SIZE_MB} -le "${GIT_HUB_LIMIT_MB}" ]]; then
 		ALL_LOGS=( "${ALLSKY_LOG}" "${ALLSKY_LOG1}" "${ALLSKY_PERIODIC_LOG}" )
 		MSG="WORST CASE support log size: ${ESTIMATED_SIZE_MB} MB is UNDER limit of ${GIT_HUB_LIMIT_MB} MB."
@@ -451,33 +443,33 @@ function generate_support_info()
 	else
 		MSG="ESTIMATED support log size: ${ESTIMATED_SIZE_MB} MB is OVER limit of ${GIT_HUB_LIMIT_MB} MB."
 		display_msg --logonly info "${MSG}"
-		display_msg --logonly info "Will check each file."
+		display_msg --logonly info "Will check each log file:"
 
 		# Create a list of logs that exist as well as their size.
 		if [[ -f ${ALLSKY_LOG} ]]; then
-			INDEX=$(( INDEX + 1 ))
+			$(( INDEX++ ))
 			ALL_LOGS[${INDEX}]="${ALLSKY_LOG}"
 			TMP_ZIP="${TEMP_DIR}/ALLSKY_LOG.zip"
-			ALLSKY_LOG_SIZE_MB="$( get_size "${TMP_ZIP}" "${ALLSKY_LOG}" )"
-			TOTAL_SIZE_MB=$(( TOTAL_SIZE_MB + ALLSKY_LOG_SIZE_MB ))
-			display_msg --logonly info "Zipped size of ${ALLSKY_LOG}: ${ALLSKY_LOG_SIZE_MB} MB."
+			X_MB="$( get_actual_size "${TMP_ZIP}" "${ALLSKY_LOG}" )"
+			TOTAL_SIZE_MB=$(( TOTAL_SIZE_MB + X_MB ))
+			display_msg --logonly info "Zipped size of ${ALLSKY_LOG}: ${X_MB} MB."
 		fi
 		if [[ -f ${ALLSKY_LOG1} ]]; then
-			INDEX=$(( INDEX + 1 ))
+			$(( INDEX++ ))
 			ALL_LOGS[${INDEX}]="${ALLSKY_LOG1}"
 			TMP_ZIP="${TEMP_DIR}/ALLSKY_LOG1.zip"
-			ALLSKY_LOG1_SIZE_MB="$( get_size "${TMP_ZIP}" "${ALLSKY_LOG1}" )"
-			TOTAL_SIZE_MB=$(( TOTAL_SIZE_MB + ALLSKY_LOG1_SIZE_MB ))
-			display_msg --logonly info "Zipped size of ${ALLSKY_LOG1}: ${ALLSKY_LOG1_SIZE_MB} MB."
+			X_MB="$( get_actual_size "${TMP_ZIP}" "${ALLSKY_LOG1}" )"
+			TOTAL_SIZE_MB=$(( TOTAL_SIZE_MB + X_MB ))
+			display_msg --logonly info "Zipped size of ${ALLSKY_LOG1}: ${X_MB} MB."
 		fi
 		if [[ -f ${ALLSKY_PERIODIC_LOG} ]]; then
-			INDEX=$(( INDEX + 1 ))
+			$(( INDEX++ ))
 			ALLSKY_LOG1_INDEX="${INDEX}"
 			ALL_LOGS[${INDEX}]="${ALLSKY_PERIODIC_LOG}"
 			TMP_ZIP="${TEMP_DIR}/ALLSKY_PERIODIC_LOG.zip"
-			ALLSKY_PERIODIC_LOG_SIZE_MB="$( get_size "${TMP_ZIP}" "${ALLSKY_PERIODIC_LOG}" )"
-			TOTAL_SIZE_MB=$(( TOTAL_SIZE_MB + ALLSKY_PERIODIC_LOG_SIZE_MB ))
-			display_msg --logonly info "Zipped size of ${ALLSKY_PERIODIC_LOG}: ${ALLSKY_PERIODIC_LOG_SIZE_MB} MB."
+			X_MB="$( get_actual_size "${TMP_ZIP}" "${ALLSKY_PERIODIC_LOG}" )"
+			TOTAL_SIZE_MB=$(( TOTAL_SIZE_MB + X_MB ))
+			display_msg --logonly info "Zipped size of ${ALLSKY_PERIODIC_LOG}: ${X_MB} MB."
 		fi
 
 		local MSG="EXPECTED size of zipped support log: ${TOTAL_SIZE_MB} MB, GitHub limit: ${GIT_HUB_LIMIT_MB} MB."
@@ -521,6 +513,9 @@ function generate_support_info()
 
 	# We're in a subshell so we need to "echo" this to pass it back to our invoker.
 	echo "${DIALOG_COMPLETE_MESSAGE//XX_ZIPNAME_XX/${ZIP_NAME}}"
+
+	# Copy this last thing so we get the updated copy.
+	cp "${DISPLAY_MSG_LOG}" "${TEMP_DIR}/config/logs/"
 
 	zip -r "${TEMP_DIR}/${ZIP_NAME}" ./* > /dev/null 2>&1
 	sudo mv "${ZIP_NAME}" "${ALLSKY_SUPPORT_DIR}"
