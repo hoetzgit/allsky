@@ -13,11 +13,9 @@ source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 #############  TODO: Changes to install.sh needed:
-#	* Accept "--doUpgrade" argument which means we're doing an upgrade.
-#		- Don't display "**** Welcome to the installer ****"
-#		- Don't prompt for camera
-#		- Don't prompt to reboot
-#		- Don't prompt other things ??
+#	- Don't prompt for camera
+#	- Don't prompt to reboot
+#	- Don't prompt other things ??
 #
 
 # shellcheck disable=SC2034
@@ -374,6 +372,12 @@ fi
 		fi
 
 		cd "${ALLSKY_HOME}" || exit "${ALLSKY_EXIT_ERROR_STOP}"
+
+		if [[ -d ${OLDEST_DIR} ]]; then
+			MSG="If you don't need the '${OLDEST_DIR}' directory, you can remove it:"
+			MSG+="    sudo rm -fr '${OLDEST_DIR}'\n"
+			add_to_post_actions "${MSG}"
+		fi
 
 		# --doUpgrade tells it to use prior version without asking and to not display header,
 		# change messages to say "upgrade", not "install", etc.
