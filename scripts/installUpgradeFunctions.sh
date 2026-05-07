@@ -2110,5 +2110,6 @@ function copy_repo_files()
 add_to_post_actions()
 {
 	local MSG="${1}"
+	mkdir -p "$( dirname "${ALLSKY_POST_INSTALL_ACTIONS}" )"
 	echo -e "\n\n========== ACTION NEEDED:\n${MSG}" >> "${ALLSKY_POST_INSTALL_ACTIONS}"
 }
