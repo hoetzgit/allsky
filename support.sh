@@ -375,9 +375,12 @@ function generate_support_info()
 	local X="${TEMP_DIR_OVERLAY}/config/overlay/tmp/de421.bsp"
 	[[ -s ${X} ]] && truncate -s 0 "${X}"
 	rm -fr \
-		"${TEMP_DIR_OVERLAY}/system_fonts" \
 		"${TEMP_MY_MODULES}/moduledata/data/allsky_adsb/adsb_data" \
 		"${TEMP_MY_MODULES}/__pycache__"
+
+	X="${TEMP_DIR_OVERLAY}/system_fonts"
+	Y="${TEMP_DIR_OVERLAY}/fonts"
+	[[ -d ${X} ]] && find "${X}" "${Y}" -type f -exec truncate -s 0 {} + 2> /dev/null
 
 	cd "${TEMP_DIR}" || exit 1
 
