@@ -448,28 +448,28 @@ function generate_support_info()
 
 		# Create a list of logs that exist as well as their size.
 		if [[ -f ${ALLSKY_LOG} ]]; then
-			INDEX=$(( INDEX + 1 ))
+			(( INDEX++ ))
 			ALL_LOGS[${INDEX}]="${ALLSKY_LOG}"
 			TMP_ZIP="${TEMP_DIR}/ALLSKY_LOG.zip"
 			X_MB="$( get_actual_size "${TMP_ZIP}" "${ALLSKY_LOG}" )"
-			TOTAL_SIZE_MB=$(( TOTAL_SIZE_MB + X_MB ))
+			(( TOTAL_SIZE_MB += X_MB ))
 			display_msg --logonly info "Zipped size of ${ALLSKY_LOG}: ${X_MB} MB."
 		fi
 		if [[ -f ${ALLSKY_LOG1} ]]; then
-			INDEX=$(( INDEX + 1 ))
+			(( INDEX++ ))
 			ALL_LOGS[${INDEX}]="${ALLSKY_LOG1}"
 			TMP_ZIP="${TEMP_DIR}/ALLSKY_LOG1.zip"
 			X_MB="$( get_actual_size "${TMP_ZIP}" "${ALLSKY_LOG1}" )"
-			TOTAL_SIZE_MB=$(( TOTAL_SIZE_MB + X_MB ))
+			(( TOTAL_SIZE_MB += X_MB ))
 			display_msg --logonly info "Zipped size of ${ALLSKY_LOG1}: ${X_MB} MB."
 		fi
 		if [[ -f ${ALLSKY_PERIODIC_LOG} ]]; then
-			INDEX=$(( INDEX + 1 ))
+			(( INDEX++ ))
 			ALLSKY_LOG1_INDEX="${INDEX}"
 			ALL_LOGS[${INDEX}]="${ALLSKY_PERIODIC_LOG}"
 			TMP_ZIP="${TEMP_DIR}/ALLSKY_PERIODIC_LOG.zip"
 			X_MB="$( get_actual_size "${TMP_ZIP}" "${ALLSKY_PERIODIC_LOG}" )"
-			TOTAL_SIZE_MB=$(( TOTAL_SIZE_MB + X_MB ))
+			(( TOTAL_SIZE_MB += X_MB ))
 			display_msg --logonly info "Zipped size of ${ALLSKY_PERIODIC_LOG}: ${X_MB} MB."
 		fi
 
@@ -480,7 +480,7 @@ function generate_support_info()
 			# If the ".1" log file is in the list, delete it, then recalculate the size.
 			if [[ -n ${ALLSKY_LOG1_INDEX} ]]; then
 				unset "ALL_LOGS[${ALLSKY_LOG1_INDEX}]"
-				TOTAL_SIZE_MB=$(( TOTAL_SIZE_MB - ALLSKY_LOG1_SIZE_MB ))
+				(( TOTAL_SIZE_MB -= ALLSKY_LOG1_SIZE_MB ))
 				display_msg --logonly info "Not including ${ALLSKY_LOG1} gives a new size of ${TOTAL_SIZE_MB} MB."
 			fi
 
