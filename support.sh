@@ -370,7 +370,6 @@ function generate_support_info()
 
 	local TEMP_DIR_OVERLAY="${TEMP_DIR}/${ALLSKY_OVERLAY/${ALLSKY_HOME}}"
 	local TEMP_MY_MODULES="${TEMP_DIR}/${ALLSKY_MY_MODULES/${ALLSKY_HOME}}"
-	local TEMP_DIR_MODULES="${TEMP_DIR}/${ALLSKY_MODULES/${ALLSKY_HOME}}"
 
 	# Truncate or delete large files not needed for support.
 	local X="${TEMP_DIR_OVERLAY}/config/overlay/tmp/de421.bsp"
@@ -427,14 +426,13 @@ function generate_support_info()
 
 	# First determine the actual zipped size of what's currently going into the support log.
 	local TMP_ZIP="${TEMP_DIR}/OTHER_THAN.zip"
-	local REST_OF_LOG_MB="$( get_actual_size "${TMP_ZIP}" "./*" )"
-	display_msg --logonly info "Zipped size of everything EXCEPT log files: ${REST_OF_LOG_MB} MB."
-	local TOTAL_SIZE_MB="${REST_OF_LOG_MB}"
+	local TOTAL_SIZE_MB="$( get_actual_size "${TMP_ZIP}" "./*" )"
+	display_msg --logonly info "Zipped size of everything EXCEPT log files: ${TOTAL_SIZE_MB} MB."
 
 	local LOG_LINES_TEMP="${LOG_LINES}"
-	local ESTIMATED_SIZE_MB="$( get_mb --compression-ratio "${COMPRESSION_RATIO}" \
+	local ESTIMATED_SIZE_LOG_MB="$( get_mb --compression-ratio "${COMPRESSION_RATIO}" \
 			"${ALLSKY_LOG}" "${ALLSKY_LOG1}" "${ALLSKY_PERIODIC_LOG}" )"
-	ESTIMATED_SIZE_LOG=$(( ESTIMATED_SIZE_MB + REST_OF_LOG_MB ))
+	ESTIMATED_SIZE_MB=$(( ESTIMATED_SIZE_LOG_MB + TOTAL_SIZE_MB ))
 	if [[ ${ESTIMATED_SIZE_MB} -le "${GIT_HUB_LIMIT_MB}" ]]; then
 		ALL_LOGS=( "${ALLSKY_LOG}" "${ALLSKY_LOG1}" "${ALLSKY_PERIODIC_LOG}" )
 		MSG="WORST CASE support log size: ${ESTIMATED_SIZE_MB} MB is UNDER limit of ${GIT_HUB_LIMIT_MB} MB."
@@ -447,7 +445,7 @@ function generate_support_info()
 
 		# Create a list of logs that exist as well as their size.
 		if [[ -f ${ALLSKY_LOG} ]]; then
-			$(( INDEX++ ))
+			INDEX=$(( INDEX + 1 ))
 			ALL_LOGS[${INDEX}]="${ALLSKY_LOG}"
 			TMP_ZIP="${TEMP_DIR}/ALLSKY_LOG.zip"
 			X_MB="$( get_actual_size "${TMP_ZIP}" "${ALLSKY_LOG}" )"
@@ -455,7 +453,7 @@ function generate_support_info()
 			display_msg --logonly info "Zipped size of ${ALLSKY_LOG}: ${X_MB} MB."
 		fi
 		if [[ -f ${ALLSKY_LOG1} ]]; then
-			$(( INDEX++ ))
+			INDEX=$(( INDEX + 1 ))
 			ALL_LOGS[${INDEX}]="${ALLSKY_LOG1}"
 			TMP_ZIP="${TEMP_DIR}/ALLSKY_LOG1.zip"
 			X_MB="$( get_actual_size "${TMP_ZIP}" "${ALLSKY_LOG1}" )"
@@ -463,7 +461,7 @@ function generate_support_info()
 			display_msg --logonly info "Zipped size of ${ALLSKY_LOG1}: ${X_MB} MB."
 		fi
 		if [[ -f ${ALLSKY_PERIODIC_LOG} ]]; then
-			$(( INDEX++ ))
+			INDEX=$(( INDEX + 1 ))
 			ALLSKY_LOG1_INDEX="${INDEX}"
 			ALL_LOGS[${INDEX}]="${ALLSKY_PERIODIC_LOG}"
 			TMP_ZIP="${TEMP_DIR}/ALLSKY_PERIODIC_LOG.zip"
