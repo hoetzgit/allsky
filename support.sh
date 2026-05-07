@@ -372,9 +372,8 @@ function generate_support_info()
 	local TEMP_MY_MODULES="${TEMP_DIR}/${ALLSKY_MY_MODULES/${ALLSKY_HOME}}"
 
 	# Truncate or delete large files not needed for support.
-	local X="${TEMP_DIR_OVERLAY}/config/overlay/tmp/de421.bsp"
-	[[ -s ${X} ]] && truncate -s 0 "${X}"
 	rm -fr \
+		"${TEMP_DIR_OVERLAY}/config/overlay/tmp" \
 		"${TEMP_MY_MODULES}/moduledata/data/allsky_adsb/adsb_data" \
 		"${TEMP_MY_MODULES}/__pycache__"
 
