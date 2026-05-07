@@ -388,7 +388,7 @@ if false; then		# XXXXXXXXXX TODO: FIX
 		# shellcheck disable=SC2086,SC2291
 		X="$(
 #shellcheck disable=SC2116		# XXXXXXXXX temporary
-echo XXX		./install.sh ${DEBUG_ARG} --branch "${BRANCH}" ${SKIP} --doUpgrade
+echo XXX		./install.sh ${DEBUG_ARG} ${SKIP} --doUpgrade
 		)"
 		RET=$?
 		if [[ ${RET} -ne 0 ]]; then
@@ -399,7 +399,6 @@ echo XXX		./install.sh ${DEBUG_ARG} --branch "${BRANCH}" ${SKIP} --doUpgrade
 else	# XXXXXXXXXXX
 		display_msg --log progress "The first step of the upgrade is complete.\n"
 		MSG="cd ~/allsky; ./install.sh ${DEBUG_ARG} ${SKIP}"
-		[[ ${BRANCH} != "${ALLSKY_GITHUB_MAIN_BRANCH}" ]] && MSG+=" --branch ${BRANCH}"
 		display_msg --log note "Now run:" "   ${MSG}\n"
 fi
 	fi
