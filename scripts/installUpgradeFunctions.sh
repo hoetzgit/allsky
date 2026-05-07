@@ -2104,3 +2104,11 @@ function copy_repo_files()
 	cp  "${ALLSKY_REPO}/helpers.json.repo" "${ALLSKY_CONFIG}/helpers.json"
 	cp  "${ALLSKY_REPO}/helpers.md.repo" "${ALLSKY_CONFIG}/helpers.md"
 }
+
+
+# Log an action the user needs to take.
+add_to_post_actions()
+{
+	local MSG="${1}"
+	echo -e "\n\n========== ACTION NEEDED:\n${MSG}" >> "${ALLSKY_POST_INSTALL_ACTIONS}"
+}
