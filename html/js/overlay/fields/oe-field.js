@@ -49,7 +49,7 @@ class OEFIELD {
 		return Number.isFinite(Number(this.fieldData.zindex)) ? Number(this.fieldData.zindex) : 0;
 	}
 	set zindex(zindex) {
-		this.fieldData.zindex = zindex;
+		this.fieldData.zindex = Math.max(0, Number(zindex) || 0);
 		this.dirty = true;
 	}
 

@@ -3557,6 +3557,13 @@ label.el-checkbox {
     white-space: nowrap;
 }
 
+#oe-editor-toolbar .dropdown-menu a.disabled {
+    color: var(--bs3-text-muted);
+    cursor: not-allowed;
+    opacity: 0.55;
+    pointer-events: none;
+}
+
 .oe-field-context-menu {
     position: fixed;
     z-index: 3200;

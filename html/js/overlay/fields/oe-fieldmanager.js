@@ -306,7 +306,7 @@ class OEFIELDMANAGER {
                 continue;
             }
             newField.dirty = false;
-            newField.zindex = Number(index);
+            newField.zindex = layer.zindex;
             newField.dirty = false;
             layer.data.id = newField.id;
             this.#fields.set(newField.id, newField);
@@ -321,7 +321,16 @@ class OEFIELDMANAGER {
             }
         }
 
-        return (typeOrder * 1000000) + Number(index);
+        return typeOrder;
+    }
+
+    #getTopZIndex() {
+        const fields = Array.from(this.#fields.values());
+        if (fields.length === 0) {
+            return 0;
+        }
+
+        return Math.max(...fields.map((field) => field.zindex));
     }
 
     reorderFields(fieldIds, direction) {
@@ -331,43 +340,51 @@ class OEFIELDMANAGER {
         }
 
         const selected = new Set(selectedIds);
-        const entries = Array.from(this.#fields.entries());
-        const selectedEntries = entries.filter(([fieldId]) => selected.has(fieldId));
-        let reordered = entries.filter(([fieldId]) => !selected.has(fieldId));
+        const zIndexes = Array.from(this.#fields.values()).map((field) => field.zindex);
+        const minZIndex = Math.min(...zIndexes);
+        const maxZIndex = Math.max(...zIndexes);
 
         if (direction === 'front') {
-            reordered = reordered.concat(selectedEntries);
+            for (let [fieldName, field] of this.#fields.entries()) {
+                if (selected.has(fieldName)) {
+                    field.zindex = maxZIndex + 1;
+                }
+            }
         } else if (direction === 'back') {
-            reordered = selectedEntries.concat(reordered);
+            for (let [fieldName, field] of this.#fields.entries()) {
+                if (selected.has(fieldName)) {
+                    field.zindex = 0;
+                }
+            }
         } else if (direction === 'forward') {
-            for (let i = entries.length - 1; i >= 0; i--) {
-                if (selected.has(entries[i][0]) && i < entries.length - 1 && !selected.has(entries[i + 1][0])) {
-                    const tmp = entries[i + 1];
-                    entries[i + 1] = entries[i];
-                    entries[i] = tmp;
+            for (let [fieldName, field] of this.#fields.entries()) {
+                if (selected.has(fieldName)) {
+                    field.zindex = field.zindex + 1;
                 }
             }
-            reordered = entries;
         } else if (direction === 'backward') {
-            for (let i = 0; i < entries.length; i++) {
-                if (selected.has(entries[i][0]) && i > 0 && !selected.has(entries[i - 1][0])) {
-                    const tmp = entries[i - 1];
-                    entries[i - 1] = entries[i];
-                    entries[i] = tmp;
+            for (let [fieldName, field] of this.#fields.entries()) {
+                if (selected.has(fieldName)) {
+                    field.zindex = Math.max(0, field.zindex - 1);
                 }
             }
-            reordered = entries;
         } else {
             return false;
         }
 
-        this.#fields = new Map(reordered);
-        let zindex = 0;
-        for (let [fieldName, field] of this.#fields.entries()) {
-            field.zindex = zindex++;
-        }
         this.#fieldDeletedAddedDefaultsChanged = true;
         return true;
+    }
+
+    orderedFields() {
+        return Array.from(this.#fields.entries())
+            .map(([fieldName, field], index) => ({ fieldName, field, index }))
+            .sort((a, b) => {
+                if (a.field.zindex === b.field.zindex) {
+                    return a.index - b.index;
+                }
+                return a.field.zindex - b.field.zindex;
+            });
     }
 
     addField(type, fieldText = 'NEW FIELD', id, format = null, sample = null, image = 'missing',x = 0, y = 0, width = 0, height = 0) {
@@ -417,6 +434,10 @@ class OEFIELDMANAGER {
                 newField = new OERECTFIELD(field, id);
                 this.#fields.set(newField.id, newField);
                 break;
+        }
+
+        if (newField !== null && newField.fieldData.zindex === undefined) {
+            newField.zindex = this.#getTopZIndex();
         }
 
         // reset x and y for offset
@@ -508,7 +529,7 @@ class OEFIELDMANAGER {
 
         for (let [fieldName, field] of this.#fields.entries()) {
             fieldJson = field.getJSON();
-            fieldJson.zindex = fields.length + images.length + rects.length;
+            fieldJson.zindex = field.zindex;
 
             if (field instanceof OETEXTFIELD) {
                 fields.push(fieldJson);

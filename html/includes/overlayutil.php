@@ -241,12 +241,14 @@ class OVERLAYUTIL extends UTILBASE {
                 "selectfieldopacity" => 30,
                 "mousewheelzoom"     => false,
                 "backgroundopacity"  => 40,
+                "zindexfontsize"     => 56,
             ], JSON_UNESCAPED_SLASHES);
         }
 
         $config = json_decode($configStr, false) ?: (object)[];
         if (!isset($config->overlayErrors))     $config->overlayErrors = true;
         if (!isset($config->overlayErrorsText)) $config->overlayErrorsText = 'Error found; see the WebUI';
+        if (!isset($config->zindexfontsize))    $config->zindexfontsize = 56;
 
         if (!$returnResult) {
             $this->sendResponse(json_encode($config, JSON_UNESCAPED_SLASHES));

@@ -109,6 +109,8 @@ function DisplayOverlay($image_name)
                                         <li><a href="#" class="oe-zorder-action disabled" id="oe-move-front"><i class="fa-solid fa-angle-up"></i> Move Forward</a></li>
                                         <li><a href="#" class="oe-zorder-action disabled" id="oe-move-back"><i class="fa-solid fa-angle-down"></i> Move Back</a></li>
                                         <li><a href="#" class="oe-zorder-action disabled" id="oe-send-back"><i class="fa-solid fa-angles-down"></i> Send to Back</a></li>
+                                        <li role="separator" class="divider"></li>
+                                        <li><a href="#" id="oe-toggle-zindex"><i class="fa-solid fa-hashtag"></i> Show Z-Index</a></li>
                                     </ul>
                                 </li>
 
@@ -762,6 +764,18 @@ function DisplayOverlay($image_name)
                                                             <input type="checkbox" id="oe-app-options-mousewheel-zoom">
                                                             <span class="el-switch-style"></span>
                                                         </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="oe-app-options-zindex-font-size" class="col-xs-7 control-label">Z-Index Font Size</label>
+                                                <div class="col-xs-5">
+                                                    <div class="input-group">
+                                                        <input id="oe-app-options-zindex-font-size" name="oe-app-options-zindex-font-size" type="number" min="12" max="160" step="4" class="form-control">
                                                     </div>
                                                 </div>
                                             </div>

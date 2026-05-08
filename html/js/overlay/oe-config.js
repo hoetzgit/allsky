@@ -305,6 +305,14 @@ class OECONFIG {
         this.#appConfig.backgroundopacity = parseInt(opacity);
     }
 
+    get zIndexFontSize() {
+        const size = parseInt(this.#appConfig.zindexfontsize);
+        return Number.isFinite(size) && size > 0 ? size : 56;
+    }
+    set zIndexFontSize(size) {
+        this.#appConfig.zindexfontsize = parseInt(size);
+    }
+
     get allDataFields() {
         return this.#overlayDataFields.data;
     }

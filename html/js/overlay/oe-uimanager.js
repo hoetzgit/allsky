@@ -13,6 +13,7 @@ class OEUIMANAGER {
     #gridLayer = null;
     #backgroundLayer = null;
     #overlayLayer = null;
+    #zIndexLayer = null;
     #transformer = null;
     #movingField = null;
     #testMode = false;
@@ -55,6 +56,7 @@ class OEUIMANAGER {
     }
     #lastDragEndContext = null
     #lastTransformEndContext = null
+    #zIndexVisible = false
 
     #getFieldHelpDelay() {
         let delay = this.#configManager.settings?.fieldhelpdelay ?? 500;
@@ -118,10 +120,14 @@ class OEUIMANAGER {
 
         this.#gridLayer = new Konva.Layer();
         this.#overlayLayer = new Konva.Layer();
+        this.#zIndexLayer = new Konva.Layer({
+            listening: false
+        });
         this.#drawLayer = new Konva.Layer();
         this.#oeEditorStage.add(this.#drawLayer);
         this.#oeEditorStage.add(this.#overlayLayer);
         this.#oeEditorStage.add(this.#gridLayer);
+        this.#oeEditorStage.add(this.#zIndexLayer);
 
         this.#drawRect = new Konva.Rect({
             fill: 'rgba(0, 0, 0, 0.5)',
@@ -382,6 +388,7 @@ class OEUIMANAGER {
         $(document).off('click', '#oe-move-back');
         $(document).off('click', '#oe-move-front');
         $(document).off('click', '#oe-send-front');
+        $(document).off('click', '#oe-toggle-zindex');
         $(document).off('click', '#oe-align-menu.disabled');
         $(document).off('click', '#oe-left-align');
         $(document).off('click', '#oe-vertical-equal');
@@ -422,6 +429,7 @@ class OEUIMANAGER {
         this.resetFloatingToolbar();
 
         this.#overlayLayer.destroyChildren();
+        this.#zIndexLayer.destroyChildren();
         this.#transformer = new Konva.Transformer({
             resizeEnabled: false
         });
@@ -449,6 +457,7 @@ class OEUIMANAGER {
             this.setupFonts()
             this.#drawLayer.draw();
             this.#overlayLayer.draw();
+            this.#refreshZIndexLabels();
         });
 
     }
@@ -461,8 +470,7 @@ class OEUIMANAGER {
             let object = field.shape;
             this.#overlayLayer.add(object)
         }
-        this.#transformer.moveToTop()
-        this.#snapRectangle.moveToTop()
+        this.#syncCanvasZOrder()
     }
 
     buildUI() {
@@ -966,6 +974,14 @@ class OEUIMANAGER {
             this.#changeZOrder(event, 'front')
         })
 
+        $(document).on('click', '#oe-toggle-zindex', (event) => {
+            event.preventDefault()
+            if ($(event.currentTarget).hasClass('disabled')) {
+                return
+            }
+            this.#toggleZIndexLabels()
+        })
+
         $(document).on('click', '#oe-align-menu.disabled', (event) => {
             event.preventDefault()
             event.stopPropagation()
@@ -1285,13 +1301,79 @@ class OEUIMANAGER {
     }
 
     #syncCanvasZOrder() {
-        for (let [fieldName, field] of this.#fieldManager.fields.entries()) {
+        for (let layer of this.#fieldManager.orderedFields()) {
+            const field = layer.field
             field.shape.moveToTop()
         }
 
         this.#transformer.moveToTop()
         this.#snapRectangle.moveToTop()
         this.#overlayLayer.batchDraw()
+        this.#refreshZIndexLabels()
+    }
+
+    #toggleZIndexLabels() {
+        this.#zIndexVisible = !this.#zIndexVisible
+        $('#oe-toggle-zindex').toggleClass('active', this.#zIndexVisible)
+        $('#oe-toggle-zindex i').toggleClass('fa-hashtag', !this.#zIndexVisible)
+        $('#oe-toggle-zindex i').toggleClass('fa-eye-slash', this.#zIndexVisible)
+        $('#oe-toggle-zindex').contents().filter(function() {
+            return this.nodeType === 3
+        }).remove()
+        $('#oe-toggle-zindex').append(this.#zIndexVisible ? ' Hide Z-Index' : ' Show Z-Index')
+        this.#refreshZIndexLabels()
+    }
+
+    #refreshZIndexLabels() {
+        if (this.#zIndexLayer === null) {
+            return
+        }
+
+        this.#zIndexLayer.destroyChildren()
+
+        if (!this.#zIndexVisible) {
+            this.#zIndexLayer.draw()
+            return
+        }
+
+        const fontSize = this.#configManager.zIndexFontSize;
+        const padding = Math.max(4, Math.round(fontSize / 5));
+
+        for (let layer of this.#fieldManager.orderedFields()) {
+            const field = layer.field
+            const shape = field.shape
+            if (shape === null || shape === undefined) {
+                continue
+            }
+
+            const rect = shape.getClientRect({
+                relativeTo: this.#oeEditorStage
+            })
+
+            const label = new Konva.Label({
+                x: Math.max(0, rect.x),
+                y: Math.max(0, rect.y),
+                listening: false
+            })
+
+            label.add(new Konva.Tag({
+                fill: '#111827',
+                opacity: 0.85,
+                cornerRadius: 3
+            }))
+
+            label.add(new Konva.Text({
+                text: `z:${field.zindex}`,
+                fontSize: fontSize,
+                padding: padding,
+                fill: '#ffffff'
+            }))
+
+            this.#zIndexLayer.add(label)
+        }
+
+        this.#zIndexLayer.moveToTop()
+        this.#zIndexLayer.draw()
     }
 
     setupDragAndDrop() {
@@ -1577,6 +1659,7 @@ class OEUIMANAGER {
                     timestamp: new Date().toISOString()
                 };
                 this.updateToolbar();
+                this.#refreshZIndexLabels();
             }
 
         });
@@ -1935,6 +2018,7 @@ class OEUIMANAGER {
             $('#oe-app-options-select-field-opacity').val(this.#configManager.selectFieldOpacity);
             $('#oe-app-options-mousewheel-zoom').prop('checked', this.#configManager.mouseWheelZoom);
             $('#oe-app-options-background-opacity').val(this.#configManager.backgroundImageOpacity);
+            $('#oe-app-options-zindex-font-size').val(this.#configManager.zIndexFontSize);
             $('#oe-app-options-grid-colour').val(this.#configManager.gridColour);
 
             $('#oe-app-options-show-errors').prop('checked', this.#configManager.overlayErrors);
@@ -2045,6 +2129,7 @@ class OEUIMANAGER {
             this.#configManager.selectFieldOpacity = $('#oe-app-options-select-field-opacity').val() | 0;
             this.#configManager.mouseWheelZoom = $('#oe-app-options-mousewheel-zoom').prop('checked');
             this.#configManager.backgroundImageOpacity = $('#oe-app-options-background-opacity').val() | 0;
+            this.#configManager.zIndexFontSize = $('#oe-app-options-zindex-font-size').val() | 0;
             this.#configManager.confirmDelete = $('#oe-app-options-confirm-delete').prop('checked');
 
             this.#configManager.overlayErrors = $('#oe-app-options-show-error').prop('checked');
@@ -2053,6 +2138,7 @@ class OEUIMANAGER {
             this.#fieldManager.updateFieldDefaults();
             this.drawGrid();
             this.updateBackgroundImage();
+            this.#refreshZIndexLabels();
 
             this.#configManager.saveSettings();
             this.#fieldManager.defaultsModified();
@@ -2329,6 +2415,7 @@ class OEUIMANAGER {
 
         this.checkFields();
         this.updateToolbar();
+        this.#refreshZIndexLabels();
     }
 
     checkFieldstimer() {
@@ -2521,6 +2608,7 @@ class OEUIMANAGER {
         this.#selected = null
         this.setFieldOpacity(false)
         this.updateToolbar()
+        this.#refreshZIndexLabels()
     }
 
     #deleteField(event) {
@@ -2606,6 +2694,7 @@ class OEUIMANAGER {
     updateToolbar() {
 
         let selectedOverlay = this.#configManager.selectedOverlay;
+        const hasFieldSelection = this.#selected !== null || this.#transformer.nodes().length > 0;
         if (selectedOverlay.type === 'allsky' && !this.#debugMode)  {
             $('#oe-delete').addClass('disabled');
             $('#oe-zorder-menu').addClass('disabled');
@@ -2613,6 +2702,7 @@ class OEUIMANAGER {
             $('#oe-move-back').addClass('disabled');
             $('#oe-move-front').addClass('disabled');
             $('#oe-send-front').addClass('disabled');
+            $('#oe-toggle-zindex').addClass('disabled');
             $('#oe-align-menu').addClass('disabled');
             $('#oe-left-align').addClass('disabled');
             $('#oe-vertical-equal').addClass('disabled');
@@ -2637,6 +2727,7 @@ class OEUIMANAGER {
             $('#oe-move-back').removeClass('disabled');
             $('#oe-move-front').removeClass('disabled');
             $('#oe-send-front').removeClass('disabled');
+            $('#oe-toggle-zindex').removeClass('disabled');
             $('#oe-align-menu').removeClass('disabled');
             $('#oe-left-align').removeClass('disabled');
             $('#oe-vertical-equal').removeClass('disabled');
@@ -2656,10 +2747,9 @@ class OEUIMANAGER {
             $('#oe-show-image-manager').removeClass('disabled');
             $('#oe-options').removeClass('disabled');            
 
-            if (this.#selected === null && this.#transformer.nodes().length == 0 ) {
+            if (!hasFieldSelection) {
                 $('#oe-delete').addClass('disabled');
                 $('#oe-delete').removeClass('green');
-                $('#oe-zorder-menu').addClass('disabled');
                 $('#oe-send-back').addClass('disabled');
                 $('#oe-move-back').addClass('disabled');
                 $('#oe-move-front').addClass('disabled');
