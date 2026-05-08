@@ -416,7 +416,8 @@ elif [[ ${ACTION} == "doUpgrade" ]]; then
 		display_msg --logonly info "ENDING UPGRADE."
 		exit 0
 	else
-:
-	# XXXX TODO: add code
+		:
+		# TODO: Is there anything to do for ${METHOD_REPLACE_ALL}?
+		# I can't think of anything.
 	fi
 fi
