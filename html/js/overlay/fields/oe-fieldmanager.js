@@ -134,6 +134,30 @@ class OEFIELDMANAGER {
         }
     }
 
+    equalHorizontalSpaceFields(transformer) {
+        const nodes = Object.values(transformer.nodes())
+        if (nodes.length > 1) {
+
+            nodes.sort((a, b) => a.x() - b.x());
+
+            const leftNode = nodes[0];
+            const rightNode = nodes[nodes.length - 1];
+
+            const xStart = leftNode.x();
+            const xEnd = rightNode.x();
+            const middleCount = nodes.length - 2;
+
+            if (middleCount !== 0) {
+                const spacing = (xEnd - xStart) / (nodes.length - 1);
+
+                for (let i = 1; i < nodes.length - 1; i++) {
+                    let field = this.findField(nodes[i].id())
+                    field.x = xStart + i * spacing
+                }
+            }
+        }
+    }
+
     equalWidth(transformer) {
         const nodes = transformer.nodes();
         const firstRect = nodes[0]
@@ -233,29 +257,117 @@ class OEFIELDMANAGER {
     parseConfig() {
         this.#fields = new Map();
         let config = window.oedi.get('config');
-        let fields = config.getValue('fields', {});
+        let layers = [];
+
+        let fields = config.getValue('rects', {});
         for (let index in fields) {
-            let newField = new OETEXTFIELD(fields[index], this.#idcounter++);
-            newField.dirty = false;
-            fields[index].id = newField.id;
-            this.#fields.set(newField.id, newField);
+            layers.push({
+                type: 'rect',
+                data: fields[index],
+                zindex: this.#getLayerSortValue(fields[index], 0, index)
+            });
+        }
+
+        fields = config.getValue('fields', {});
+        for (let index in fields) {
+            layers.push({
+                type: 'text',
+                data: fields[index],
+                zindex: this.#getLayerSortValue(fields[index], 1, index)
+            });
         }
 
         fields = config.getValue('images', {});
         for (let index in fields) {
-            let newField = new OEIMAGEFIELD(fields[index], this.#idcounter++);
-            newField.dirty = false;
-            fields[index].id = newField.id;
-            this.#fields.set(newField.id, newField);
+            layers.push({
+                type: 'image',
+                data: fields[index],
+                zindex: this.#getLayerSortValue(fields[index], 2, index)
+            });
         }
 
-        fields = config.getValue('rects', {});
-        for (let index in fields) {
-            let newField = new OERECTFIELD(fields[index], this.#idcounter++);
+        layers.sort((a, b) => a.zindex - b.zindex);
+
+        for (let index in layers) {
+            const layer = layers[index];
+            let newField = null;
+
+            if (layer.type === 'text') {
+                newField = new OETEXTFIELD(layer.data, this.#idcounter++);
+            }
+            if (layer.type === 'image') {
+                newField = new OEIMAGEFIELD(layer.data, this.#idcounter++);
+            }
+            if (layer.type === 'rect') {
+                newField = new OERECTFIELD(layer.data, this.#idcounter++);
+            }
+
+            if (newField === null) {
+                continue;
+            }
             newField.dirty = false;
-            fields[index].id = newField.id;
+            newField.zindex = Number(index);
+            newField.dirty = false;
+            layer.data.id = newField.id;
             this.#fields.set(newField.id, newField);
         }
+    }
+
+    #getLayerSortValue(field, typeOrder, index) {
+        if (field !== null && field !== undefined && field.zindex !== undefined) {
+            const zindex = Number(field.zindex);
+            if (Number.isFinite(zindex)) {
+                return zindex;
+            }
+        }
+
+        return (typeOrder * 1000000) + Number(index);
+    }
+
+    reorderFields(fieldIds, direction) {
+        const selectedIds = fieldIds.filter((fieldId) => this.#fields.has(fieldId));
+        if (selectedIds.length === 0) {
+            return false;
+        }
+
+        const selected = new Set(selectedIds);
+        const entries = Array.from(this.#fields.entries());
+        const selectedEntries = entries.filter(([fieldId]) => selected.has(fieldId));
+        let reordered = entries.filter(([fieldId]) => !selected.has(fieldId));
+
+        if (direction === 'front') {
+            reordered = reordered.concat(selectedEntries);
+        } else if (direction === 'back') {
+            reordered = selectedEntries.concat(reordered);
+        } else if (direction === 'forward') {
+            for (let i = entries.length - 1; i >= 0; i--) {
+                if (selected.has(entries[i][0]) && i < entries.length - 1 && !selected.has(entries[i + 1][0])) {
+                    const tmp = entries[i + 1];
+                    entries[i + 1] = entries[i];
+                    entries[i] = tmp;
+                }
+            }
+            reordered = entries;
+        } else if (direction === 'backward') {
+            for (let i = 0; i < entries.length; i++) {
+                if (selected.has(entries[i][0]) && i > 0 && !selected.has(entries[i - 1][0])) {
+                    const tmp = entries[i - 1];
+                    entries[i - 1] = entries[i];
+                    entries[i] = tmp;
+                }
+            }
+            reordered = entries;
+        } else {
+            return false;
+        }
+
+        this.#fields = new Map(reordered);
+        let zindex = 0;
+        for (let [fieldName, field] of this.#fields.entries()) {
+            field.zindex = zindex++;
+        }
+        this.#fieldDeletedAddedDefaultsChanged = true;
+        return true;
     }
 
     addField(type, fieldText = 'NEW FIELD', id, format = null, sample = null, image = 'missing',x = 0, y = 0, width = 0, height = 0) {
@@ -396,6 +508,7 @@ class OEFIELDMANAGER {
 
         for (let [fieldName, field] of this.#fields.entries()) {
             fieldJson = field.getJSON();
+            fieldJson.zindex = fields.length + images.length + rects.length;
 
             if (field instanceof OETEXTFIELD) {
                 fields.push(fieldJson);

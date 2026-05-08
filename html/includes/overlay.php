@@ -100,6 +100,17 @@ function DisplayOverlay($image_name)
                                         <div class="btn navbar-btn oe-button disabled" id="oe-delete"><i class="fa-solid fa-xmark"></i></div>
                                     </div>
                                 </li>
+                                <li class="dropdown">
+                                    <div class="btn navbar-btn oe-button border-left dropdown-toggle disabled" id="oe-zorder-menu" data-toggle="dropdown" data-container="body" title="Layer Order">
+                                        <i class="fa-solid fa-layer-group"></i> <span class="caret"></span>
+                                    </div>
+                                    <ul class="dropdown-menu">
+                                        <li><a href="#" class="oe-zorder-action disabled" id="oe-send-front"><i class="fa-solid fa-angles-up"></i> Bring to Front</a></li>
+                                        <li><a href="#" class="oe-zorder-action disabled" id="oe-move-front"><i class="fa-solid fa-angle-up"></i> Move Forward</a></li>
+                                        <li><a href="#" class="oe-zorder-action disabled" id="oe-move-back"><i class="fa-solid fa-angle-down"></i> Move Back</a></li>
+                                        <li><a href="#" class="oe-zorder-action disabled" id="oe-send-back"><i class="fa-solid fa-angles-down"></i> Send to Back</a></li>
+                                    </ul>
+                                </li>
 
 <!--
                                 <li>
@@ -128,35 +139,38 @@ function DisplayOverlay($image_name)
                                     <div class="btn navbar-btn oe-button border-left" id="oe-snap-fields" data-toggle="tooltip" data-container="body" data-placement="top" title="Snap fields to grid"><i class="fa-solid fa-grip"></i></div>
                                 </li>
 
-                                <li>
-                                    <div class="btn navbar-btn oe-zoom oe-button border-left" id="oe-group" data-toggle="tooltip" data-container="body" data-placement="top" title="Group Fields"><i class="fa-solid fa-object-group"></i></div>
-                                </li>
-                                <li>
-                                    <div class="btn navbar-btn oe-zoom oe-button" id="oe-ungroup" data-toggle="tooltip" data-container="body" data-placement="top" title="Un Group Fields"><i class="fa-solid fa-object-ungroup"></i></div>
+                                <li class="dropdown">
+                                    <div class="btn navbar-btn oe-button border-left dropdown-toggle disabled" id="oe-group-menu" data-toggle="dropdown" data-container="body" title="Group">
+                                        <i class="fa-solid fa-object-group"></i> <span class="caret"></span>
+                                    </div>
+                                    <ul class="dropdown-menu">
+                                        <li><a href="#" class="oe-group-action disabled" id="oe-group"><i class="fa-solid fa-object-group"></i> Group Fields</a></li>
+                                        <li><a href="#" class="oe-group-action disabled" id="oe-ungroup"><i class="fa-solid fa-object-ungroup"></i> Un Group Fields</a></li>
+                                    </ul>
                                 </li>
 
                                 
-                                <li>
-                                    <div class="btn navbar-btn oe-zoom oe-button border-left" id="oe-left-align" data-toggle="tooltip" data-container="body" data-placement="top" title="Left Align"><i class="fa-solid fa-align-left"></i></div>
-                                </li>
-                                <li>
-                                    <div class="btn navbar-btn oe-zoom oe-button" id="oe-vertical-equal" data-toggle="tooltip" data-container="body" data-placement="top" title="Equal Spacing"><i class="fa-solid fa-arrows-up-down"></i></div>
-                                </li>
-                                <li>
-                                    <div class="btn navbar-btn oe-zoom oe-button" id="oe-equal-width" data-toggle="tooltip" data-container="body" data-placement="top" title="Equal Width"><i class="fa-solid fa-rotate-90 fa-arrows-up-down"></i></div>
+                                <li class="dropdown">
+                                    <div class="btn navbar-btn oe-button border-left dropdown-toggle disabled" id="oe-align-menu" data-toggle="dropdown" data-container="body" title="Align and Distribute">
+                                        <i class="fa-solid fa-align-left"></i> <span class="caret"></span>
+                                    </div>
+                                    <ul class="dropdown-menu">
+                                        <li><a href="#" class="oe-align-action disabled" id="oe-left-align"><i class="fa-solid fa-align-left"></i> Left Align</a></li>
+                                        <li><a href="#" class="oe-align-action disabled" id="oe-vertical-equal"><i class="fa-solid fa-arrows-up-down"></i> Equal Vertical Spacing</a></li>
+                                        <li><a href="#" class="oe-align-action disabled" id="oe-horizontal-equal"><i class="fa-solid fa-arrows-left-right"></i> Equal Horizontal Spacing</a></li>
+                                    </ul>
                                 </li>                                    
 
-                                <li>
-                                    <div class="btn navbar-btn oe-zoom oe-button border-left" id="oe-zoom-in" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
-                                </li>
-                                <li>
-                                    <div class="btn navbar-btn oe-zoom oe-button" id="oe-zoom-out" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus"></i></div>
-                                </li>
-                                <li>
-                                    <div class="btn navbar-btn oe-zoom oe-button" id="oe-zoom-full" data-toggle="tooltip" data-container="body" data-placement="top" title="View Full Size"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></div>
-                                </li>
-                                <li>
-                                    <div class="btn navbar-btn oe-zoom oe-button" id="oe-zoom-fit" data-toggle="tooltip" data-container="body" data-placement="top" title="Fit to Window"><i class="fa-solid fa-down-left-and-up-right-to-center"></i></div>
+                                <li class="dropdown">
+                                    <div class="btn navbar-btn oe-button border-left dropdown-toggle" id="oe-zoom-menu" data-toggle="dropdown" data-container="body" title="Zoom">
+                                        <i class="fa-solid fa-magnifying-glass-plus"></i> <span class="caret"></span>
+                                    </div>
+                                    <ul class="dropdown-menu oe-zoom-dropdown">
+                                        <li><a href="#" class="oe-zoom" id="oe-zoom-in"><i class="fa-solid fa-magnifying-glass-plus"></i><span class="oe-zoom-label">Zoom In</span><span class="text-muted oe-zoom-shortcut">Ctrl/&#x2318; +</span></a></li>
+                                        <li><a href="#" class="oe-zoom" id="oe-zoom-out"><i class="fa-solid fa-magnifying-glass-minus"></i><span class="oe-zoom-label">Zoom Out</span><span class="text-muted oe-zoom-shortcut">Ctrl/&#x2318; -</span></a></li>
+                                        <li><a href="#" class="oe-zoom" id="oe-zoom-full"><i class="fa-solid fa-up-right-and-down-left-from-center"></i><span class="oe-zoom-label">Maximise</span></a></li>
+                                        <li><a href="#" class="oe-zoom" id="oe-zoom-fit"><i class="fa-solid fa-down-left-and-up-right-to-center"></i><span class="oe-zoom-label">Fit to Window</span></a></li>
+                                    </ul>
                                 </li>
                                 <li>
                                     <div class="btn navbar-btn border-left" id="oe-show-overlay-manager" data-toggle="tooltip" data-container="body" data-placement="top" title="Overlay Manager"><i class="fa-solid fa-gears"></i></div>

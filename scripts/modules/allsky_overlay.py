@@ -300,20 +300,25 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		alpha = a
 		return bgr, alpha
 
-	def _add_rect(self):
-		if 'rects' in self._overlay_config:
-			for index, rectData in enumerate(self._overlay_config['rects']):
-				top_left = (int(rectData['x']), int(rectData['y']))
-				bottom_right = (int(rectData['x'] + rectData['width']), int(rectData['y'] + rectData['height']))
-				fill_colour, fill_opacity = self._rgba_to_bgr_alpha(rectData['fill'])
+	def _add_rect(self, rect_data=None):
+		rects = []
+		if rect_data is not None:
+			rects = [rect_data]
+		elif 'rects' in self._overlay_config:
+			rects = self._overlay_config['rects']
 
-				border_color = self._convert_RGB_to_BGR(rectData['stroke'], 1)
-				radius = int(rectData['cornerradius'])
-				thickness = int(rectData['strokewidth'])
+		for index, rectData in enumerate(rects):
+			top_left = (int(rectData['x']), int(rectData['y']))
+			bottom_right = (int(rectData['x'] + rectData['width']), int(rectData['y'] + rectData['height']))
+			fill_colour, fill_opacity = self._rgba_to_bgr_alpha(rectData['fill'])
+
+			border_color = self._convert_RGB_to_BGR(rectData['stroke'], 1)
+			radius = int(rectData['cornerradius'])
+			thickness = int(rectData['strokewidth'])
 	
-				self.draw_rounded_rect_fill_overlay(top_left, bottom_right, fill_colour, fill_opacity, radius)
-				if thickness > 0:
-					self.draw_rounded_rect_border(top_left, bottom_right, border_color, thickness, radius=radius)   
+			self.draw_rounded_rect_fill_overlay(top_left, bottom_right, fill_colour, fill_opacity, radius)
+			if thickness > 0:
+				self.draw_rounded_rect_border(top_left, bottom_right, border_color, thickness, radius=radius)
 
 	def draw_rounded_rect_fill_overlay(self, top_left, bottom_right, fill_color, fill_opacity, radius=20):
 		x1, y1 = top_left
@@ -368,9 +373,11 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		for center, angle in corners:
 			cv2.ellipse(self._image, center, (radius, radius), angle, 0, 90, border_color, thickness)
 
-	def _add_text(self):
+	def _add_text(self, fields=None):
 		pil_image = Image.fromarray(self._image)
-		for field_data in self._overlay_fields:
+		if fields is None:
+			fields = self._overlay_fields
+		for field_data in fields:
 
 			field_label = field_data['label']
 
@@ -557,20 +564,23 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		image.paste(im_txt, mask=im_txt)
 		return image
 
-	def _add_images(self):
-		for index, imageData in enumerate(self._overlay_config["images"]):
+	def _add_images(self, images=None, include_extra=True):
+		if images is None:
+			images = self._overlay_config["images"]
+		for index, imageData in enumerate(images):
 			self._do_add_image(imageData)
 
-		for index, extraFieldName in enumerate(self._extraData):
-			if self._extraData[extraFieldName]['image'] is not None:
-				imageData = {
-					'x': self._extraData[extraFieldName]['x'],
-					'y': self._extraData[extraFieldName]['y'],
-					'image': self._extraData[extraFieldName]['image'],
-					'scale': self._extraData[extraFieldName]['scale'],
-					'rotate': self._extraData[extraFieldName]['rotate']
-				}
-				self._do_add_image(imageData)
+		if include_extra:
+			for index, extraFieldName in enumerate(self._extraData):
+				if self._extraData[extraFieldName]['image'] is not None:
+					imageData = {
+						'x': self._extraData[extraFieldName]['x'],
+						'y': self._extraData[extraFieldName]['y'],
+						'image': self._extraData[extraFieldName]['image'],
+						'scale': self._extraData[extraFieldName]['scale'],
+						'rotate': self._extraData[extraFieldName]['rotate']
+					}
+					self._do_add_image(imageData)
 
 	def _do_add_image(self, imageData):
 		imageName = imageData["image"]
@@ -660,6 +670,49 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		result = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
 		return result
 
+	def _get_layer_sort_value(self, item, layer_type_order, index):
+		try:
+			return float(item['zindex'])
+		except (KeyError, TypeError, ValueError):
+			return (layer_type_order * 1000000) + index
+
+	def _add_overlay_layers(self):
+		layers = []
+
+		for index, rectData in enumerate(self._overlay_config.get('rects', [])):
+			layers.append({
+				'type': 'rect',
+				'data': rectData,
+				'zindex': self._get_layer_sort_value(rectData, 0, index)
+			})
+
+		configFields = self._overlay_config.get('fields', [])
+		for index, fieldData in enumerate(self._overlay_fields):
+			if index < len(configFields):
+				fieldData['zindex'] = configFields[index].get('zindex', fieldData.get('zindex'))
+			layers.append({
+				'type': 'text',
+				'data': fieldData,
+				'zindex': self._get_layer_sort_value(fieldData, 1, index)
+			})
+
+		for index, imageData in enumerate(self._overlay_config.get('images', [])):
+			layers.append({
+				'type': 'image',
+				'data': imageData,
+				'zindex': self._get_layer_sort_value(imageData, 2, index)
+			})
+
+		for layer in sorted(layers, key=lambda layer: layer['zindex']):
+			if layer['type'] == 'rect':
+				self._add_rect(layer['data'])
+			elif layer['type'] == 'text':
+				self._add_text([layer['data']])
+			elif layer['type'] == 'image':
+				self._add_images([layer['data']], include_extra=False)
+
+		self._add_images([], include_extra=True)
+
 	def _addErrors(self):
 		print(f'Errors = "{self._errors}"')
 		if self._errors != '':
@@ -681,12 +734,8 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 			self._timer("Loading Image")
 			if self._load_image_file():
 				self._timer("Loading Extra Data")
-				self._add_rect()
-				self._timer("Adding All Rectangles")
-				self._add_text()
-				self._timer("Adding All Text Fields")
-				self._add_images()
-				self._timer("Adding All Image Fields")
+				self._add_overlay_layers()
+				self._timer("Adding Overlay Layers")
 				self._save_image_file()
 				self._timer("Saving Final Image")
 				if self._debug:

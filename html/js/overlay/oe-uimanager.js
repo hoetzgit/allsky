@@ -359,6 +359,9 @@ class OEUIMANAGER {
         this.#overlayLayer.off('dragstart');
         this.#overlayLayer.off('dragmove');
         this.#overlayLayer.off('dragend');
+        this.#oeEditorStage.off('contextmenu');
+        $(this.#oeEditorStage.container()).off('contextmenu.oe-field-context-menu');
+        $(document).off('.oe-field-context-menu');
     
         $(document).off('dblclick', '.draggable');
         $(document).off('click', '#oe-item-list');
@@ -375,6 +378,17 @@ class OEUIMANAGER {
         $(document).off('click', '#oe-save');
         $(document).off('click', '#oe-test-mode');
         $(document).off('click', '#oe-delete');
+        $(document).off('click', '#oe-send-back');
+        $(document).off('click', '#oe-move-back');
+        $(document).off('click', '#oe-move-front');
+        $(document).off('click', '#oe-send-front');
+        $(document).off('click', '#oe-align-menu.disabled');
+        $(document).off('click', '#oe-left-align');
+        $(document).off('click', '#oe-vertical-equal');
+        $(document).off('click', '#oe-horizontal-equal');
+        $(document).off('click', '#oe-group-menu.disabled');
+        $(document).off('click', '#oe-group');
+        $(document).off('click', '#oe-ungroup');
         $(document).off('click', '#oe-add-text');
         $(document).off('click', '#oe-add-image');
         $(document).off('click', '#oe-options');
@@ -389,6 +403,7 @@ class OEUIMANAGER {
         $(document).off('click', '#oe-font-delete-dialog-do-delete');
         $('#oe-font-delete-dialog').off('hidden.bs.modal');
         $(document).off('click', '.oe-zoom');
+        $(document).off('keydown.oe-zoom-shortcuts');
         $(document).off('click', '#oe-show-image-manager');
         $(document).off('oe-imagemanager-add');
         $(document).off('click', '#oe-toobar-debug-button');
@@ -444,13 +459,10 @@ class OEUIMANAGER {
         let fields = this.#fieldManager.fields;
         for (let [fieldName, field] of fields.entries()) {
             let object = field.shape;
-
-            if (field.fieldType === 'rect') {
-                this.#drawLayer.add(object)
-            } else {
-                this.#overlayLayer.add(object)
-            }
+            this.#overlayLayer.add(object)
         }
+        this.#transformer.moveToTop()
+        this.#snapRectangle.moveToTop()
     }
 
     buildUI() {
@@ -933,26 +945,83 @@ class OEUIMANAGER {
     }
 
     setupToolbarEvents() {
+        $(document).on('click', '#oe-zorder-menu.disabled', (event) => {
+            event.preventDefault()
+            event.stopPropagation()
+        })
+
+        $(document).on('click', '#oe-send-back', (event) => {
+            this.#changeZOrder(event, 'back')
+        })
+
+        $(document).on('click', '#oe-move-back', (event) => {
+            this.#changeZOrder(event, 'backward')
+        })
+
+        $(document).on('click', '#oe-move-front', (event) => {
+            this.#changeZOrder(event, 'forward')
+        })
+
+        $(document).on('click', '#oe-send-front', (event) => {
+            this.#changeZOrder(event, 'front')
+        })
+
+        $(document).on('click', '#oe-align-menu.disabled', (event) => {
+            event.preventDefault()
+            event.stopPropagation()
+        })
+
         $(document).on('click', '#oe-left-align', (event) => {
+            event.preventDefault()
+            if ($(event.currentTarget).hasClass('disabled')) {
+                return
+            }
             this.#fieldManager.leftAlignFields(this.#transformer)
             this.#configManager.dirty = true
             this.updateToolbar()
         })
 
         $(document).on('click', '#oe-vertical-equal', (event) => {
+            event.preventDefault()
+            if ($(event.currentTarget).hasClass('disabled')) {
+                return
+            }
             this.#fieldManager.equalSpaceFields(this.#transformer)
             this.#configManager.dirty = true
             this.updateToolbar()
         })
 
+        $(document).on('click', '#oe-horizontal-equal', (event) => {
+            event.preventDefault()
+            if ($(event.currentTarget).hasClass('disabled')) {
+                return
+            }
+            this.#fieldManager.equalHorizontalSpaceFields(this.#transformer)
+            this.#configManager.dirty = true
+            this.updateToolbar()
+        })
+
+        $(document).on('click', '#oe-group-menu.disabled', (event) => {
+            event.preventDefault()
+            event.stopPropagation()
+        })
+
         
         $(document).on('click', '#oe-group', (event) => {
+            event.preventDefault()
+            if ($(event.currentTarget).hasClass('disabled')) {
+                return
+            }
             this.#fieldManager.groupFields(this.#transformer)
             this.#configManager.dirty = true
             this.updateToolbar()
         })
 
         $(document).on('click', '#oe-ungroup', (event) => {
+            event.preventDefault()
+            if ($(event.currentTarget).hasClass('disabled')) {
+                return
+            }
             this.#fieldManager.unGroupFields(this.#transformer)
             this.#transformer.nodes([])
             this.#configManager.dirty = true
@@ -979,7 +1048,33 @@ class OEUIMANAGER {
         })
 
         $(document).on('click', '.oe-zoom', (event) => {
+            event.preventDefault()
             this.setZoom(event.currentTarget.id)
+        })
+
+        $(document).on('keydown.oe-zoom-shortcuts', (event) => {
+            if (!event.ctrlKey && !event.metaKey) {
+                return
+            }
+
+            if (this.#isEditableShortcutTarget(event.target)) {
+                return
+            }
+
+            const key = event.key
+            let zoomType = null
+
+            if (key === '+' || key === '=' || key === 'Add') {
+                zoomType = 'oe-zoom-in'
+            } else if (key === '-' || key === '_' || key === 'Subtract') {
+                zoomType = 'oe-zoom-out'
+            }
+
+            if (zoomType !== null) {
+                event.preventDefault()
+                event.stopPropagation()
+                this.setZoom(zoomType)
+            }
         })
 
         $(document).on('click','#oe-show-overlay-manager', (e) => {
@@ -1159,6 +1254,46 @@ class OEUIMANAGER {
 
     }
 
+    #isEditableShortcutTarget(target) {
+        if (target === null || target === undefined) {
+            return false
+        }
+
+        const tagName = target.tagName ? target.tagName.toLowerCase() : ''
+        return target.isContentEditable || tagName === 'input' || tagName === 'textarea' || tagName === 'select'
+    }
+
+    #changeZOrder(event, direction) {
+        event.preventDefault()
+        event.stopPropagation()
+
+        if ($(event.currentTarget).hasClass('disabled')) {
+            return
+        }
+
+        const nodes = this.#transformer.nodes()
+        if (nodes.length === 0) {
+            return
+        }
+
+        const selectedIds = nodes.map((node) => node.id())
+        if (this.#fieldManager.reorderFields(selectedIds, direction)) {
+            this.#syncCanvasZOrder()
+            this.#configManager.dirty = true
+            this.updateToolbar()
+        }
+    }
+
+    #syncCanvasZOrder() {
+        for (let [fieldName, field] of this.#fieldManager.fields.entries()) {
+            field.shape.moveToTop()
+        }
+
+        this.#transformer.moveToTop()
+        this.#snapRectangle.moveToTop()
+        this.#overlayLayer.batchDraw()
+    }
+
     setupDragAndDrop() {
         $(this.#oeEditorStage.container()).on('mousedown', (e) => {
             if (e.shiftKey) {                
@@ -1253,7 +1388,9 @@ class OEUIMANAGER {
                 const newH = Math.abs(pos.y - this.#drawRectStartY)
               
                 const field = this.#fieldManager.addField('rect', '', null, null, null, null , newX, newY, newW, newH)
-                this.#drawLayer.add(field);
+                this.#overlayLayer.add(field);
+                this.#transformer.moveToTop()
+                this.#snapRectangle.moveToTop()
 
                 this.#drawStart = false
             }
@@ -1299,8 +1436,34 @@ class OEUIMANAGER {
             }
         });
 
+        $(this.#oeEditorStage.container()).on('contextmenu.oe-field-context-menu', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            this.#oeEditorStage.setPointersPositions(event.originalEvent);
+
+            const pointer = this.#oeEditorStage.getPointerPosition();
+            if (pointer === null) {
+                this.#hideFieldContextMenu();
+                return false;
+            }
+
+            const fields = this.#getFieldsAtPoint(pointer);
+            if (fields.length === 0) {
+                this.#hideFieldContextMenu();
+                return false;
+            }
+
+            this.#showFieldContextMenu(fields, event.originalEvent.clientX, event.originalEvent.clientY);
+            return false;
+        });
+
         this.#oeEditorStage.on('click tap', (event) => {
+            if (event.evt && event.evt.button === 2) {
+                return;
+            }
+
             let shape = event.target;
+            this.#hideFieldContextMenu();
 
             this.updateToolbar();
 
@@ -1320,57 +1483,7 @@ class OEUIMANAGER {
                 return;
             }
 
-            let shapes = this.#fieldManager.getGroupedFields(shape)
-
-            this.#transformer.resizeEnabled(false);
-            this.setTransformerState(shape);
-
-            if (event.target.getClassName() === 'Image') {
-                this.#transformer.resizeEnabled(true);
-                this.#transformer.keepRatio(true);
-                this.#transformer.enabledAnchors(['top-left', 'top-right', 'bottom-left', 'bottom-right']);
-            }
-
-            if (event.target.getClassName() === 'Rect') {
-                this.#transformer.resizeEnabled(true);
-                this.#transformer.keepRatio(false );
-                this.#transformer.enabledAnchors(['top-left', 'top-right', 'bottom-left', 'bottom-right']);
-            }
-
-            if (event.evt.shiftKey) {                
-                const transformerNodes = this.#transformer.nodes();
-                const index = transformerNodes.indexOf(shape);
-                
-                if (index !== -1) {
-                    transformerNodes.splice(index, 1);
-                } else {
-                    transformerNodes.push(shape);
-                }
-                this.#transformer.nodes(transformerNodes);
-            } else {
-                if (this.#transformer.nodes().length > 1) {
-                    this.#transformer.nodes([event.target]);
-                } else {
-                    this.#transformer.nodes(shapes);
-                }
-            }
-
-            this.#transformer.nodes().forEach((node) => {
-                const field = this.#fieldManager.findField(node.id())
-                field.shape.draggable(true)
-            })
-
-            this.#selected = this.#fieldManager.findField(shape);
-            this.setFieldOpacity(false);
-            this.setFieldOpacity(true, shape.id());
-
-            this.#snapRectangle.offset({x: shape.width()/2, y: shape.height()/2});
-
-            if (this.#transformer.nodes().length == 1) {
-                this.updatePropertyEditor();
-            }
-            this.updateDebugWindow();
-            this.updateToolbar();
+            this.#selectFieldShape(shape, event.evt.shiftKey, true);
         });
 
         this.#drawLayer.on('dblclick dbltap', (event) => {
@@ -1950,6 +2063,179 @@ class OEUIMANAGER {
         });
     }
 
+    #selectFieldShape(shape, shiftKey = false, includeGroup = false) {
+        let shapes = includeGroup ? this.#fieldManager.getGroupedFields(shape) : [shape]
+
+        this.#transformer.resizeEnabled(false);
+        this.setTransformerState(shape);
+
+        if (shape.getClassName() === 'Image') {
+            this.#transformer.resizeEnabled(true);
+            this.#transformer.keepRatio(true);
+            this.#transformer.enabledAnchors(['top-left', 'top-right', 'bottom-left', 'bottom-right']);
+        }
+
+        if (shape.getClassName() === 'Rect') {
+            this.#transformer.resizeEnabled(true);
+            this.#transformer.keepRatio(false);
+            this.#transformer.enabledAnchors(['top-left', 'top-right', 'bottom-left', 'bottom-right']);
+        }
+
+        if (shiftKey) {
+            const transformerNodes = this.#transformer.nodes();
+            const index = transformerNodes.indexOf(shape);
+
+            if (index !== -1) {
+                transformerNodes.splice(index, 1);
+            } else {
+                transformerNodes.push(shape);
+            }
+            this.#transformer.nodes(transformerNodes);
+        } else {
+            if (includeGroup && this.#transformer.nodes().length <= 1) {
+                this.#transformer.nodes(shapes);
+            } else {
+                this.#transformer.nodes([shape]);
+            }
+        }
+
+        this.#transformer.nodes().forEach((node) => {
+            const field = this.#fieldManager.findField(node.id())
+            field.shape.draggable(true)
+        })
+
+        this.#selected = this.#fieldManager.findField(shape);
+        this.setFieldOpacity(false);
+        this.setFieldOpacity(true, shape.id());
+
+        this.#snapRectangle.offset({x: shape.width()/2, y: shape.height()/2});
+
+        if (this.#transformer.nodes().length == 1) {
+            this.updatePropertyEditor();
+        }
+        this.updateDebugWindow();
+        this.updateToolbar();
+    }
+
+    #getFieldsAtPoint(pointer) {
+        const pointRect = {
+            x: pointer.x,
+            y: pointer.y,
+            width: 1,
+            height: 1
+        };
+
+        return Array.from(this.#fieldManager.fields.values())
+            .map((field) => field.shape)
+            .filter((shape) => shape !== null && shape !== undefined && shape.isVisible() && shape.hasName('field'))
+            .filter((shape) => Konva.Util.haveIntersection(pointRect, shape.getClientRect()))
+            .reverse();
+    }
+
+    #showFieldContextMenu(shapes, clientX, clientY) {
+        this.#hideFieldContextMenu();
+
+        const menu = $('<ul>', {
+            id: 'oe-field-context-menu',
+            class: 'dropdown-menu oe-field-context-menu'
+        });
+
+        shapes.forEach((shape) => {
+            const field = this.#fieldManager.findField(shape.id());
+            if (field === null) {
+                return;
+            }
+
+            $('<a>', {
+                href: '#',
+                text: this.#getFieldContextLabel(field),
+                'data-field-id': shape.id()
+            }).prepend($('<i>', {
+                class: this.#getFieldContextIcon(field)
+            })).appendTo($('<li>').appendTo(menu));
+        });
+
+        $('body').append(menu);
+        menu.css({
+            display: 'block',
+            left: clientX,
+            top: clientY
+        });
+
+        const maxLeft = Math.max(10, $(window).width() - menu.outerWidth() - 10);
+        const maxTop = Math.max(10, $(window).height() - menu.outerHeight() - 10);
+        menu.css({
+            left: Math.min(clientX, maxLeft),
+            top: Math.min(clientY, maxTop)
+        });
+
+        menu.on('click.oe-field-context-menu', 'a', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const field = this.#fieldManager.findField($(event.currentTarget).data('field-id'));
+            if (field !== null) {
+                this.#selectFieldShape(field.shape, false, false);
+            }
+            this.#hideFieldContextMenu();
+        });
+
+        setTimeout(() => {
+            $(document).off('mousedown.oe-field-context-menu keydown.oe-field-context-menu');
+            $(document).on('mousedown.oe-field-context-menu', (event) => {
+                if (event.button !== 0) {
+                    return;
+                }
+
+                if ($(event.target).closest('#oe-field-context-menu').length === 0) {
+                    this.#hideFieldContextMenu();
+                }
+            });
+            $(document).on('keydown.oe-field-context-menu', (event) => {
+                if (event.key === 'Escape') {
+                    this.#hideFieldContextMenu();
+                }
+            });
+        }, 0);
+    }
+
+    #hideFieldContextMenu() {
+        $('#oe-field-context-menu').remove();
+        $(document).off('mousedown.oe-field-context-menu keydown.oe-field-context-menu');
+    }
+
+    #getFieldContextLabel(field) {
+        if (field instanceof OETEXTFIELD) {
+            return ` Text: ${field.label || field.id}`;
+        }
+
+        if (field instanceof OEIMAGEFIELD) {
+            return ` Image: ${field.image || field.id}`;
+        }
+
+        if (field instanceof OERECTFIELD) {
+            return ` Rectangle: ${field.id}`;
+        }
+
+        return ` Field: ${field.id}`;
+    }
+
+    #getFieldContextIcon(field) {
+        if (field instanceof OETEXTFIELD) {
+            return 'fa-solid fa-font';
+        }
+
+        if (field instanceof OEIMAGEFIELD) {
+            return 'fa-regular fa-image';
+        }
+
+        if (field instanceof OERECTFIELD) {
+            return 'fa-regular fa-square';
+        }
+
+        return 'fa-solid fa-location-dot';
+    }
+
     #dragStart(event) {
         let shape = event.target;
 
@@ -2322,6 +2608,18 @@ class OEUIMANAGER {
         let selectedOverlay = this.#configManager.selectedOverlay;
         if (selectedOverlay.type === 'allsky' && !this.#debugMode)  {
             $('#oe-delete').addClass('disabled');
+            $('#oe-zorder-menu').addClass('disabled');
+            $('#oe-send-back').addClass('disabled');
+            $('#oe-move-back').addClass('disabled');
+            $('#oe-move-front').addClass('disabled');
+            $('#oe-send-front').addClass('disabled');
+            $('#oe-align-menu').addClass('disabled');
+            $('#oe-left-align').addClass('disabled');
+            $('#oe-vertical-equal').addClass('disabled');
+            $('#oe-horizontal-equal').addClass('disabled');
+            $('#oe-group-menu').addClass('disabled');
+            $('#oe-group').addClass('disabled');
+            $('#oe-ungroup').addClass('disabled');
             $('#oe-save').addClass('disabled');
             $('#oe-add-text').addClass('disabled');
             $('#oe-add-image').addClass('disabled');
@@ -2334,6 +2632,18 @@ class OEUIMANAGER {
             $('#oe-options').addClass('disabled');            
         } else {        
             $('#oe-delete').removeClass('disabled');
+            $('#oe-zorder-menu').removeClass('disabled');
+            $('#oe-send-back').removeClass('disabled');
+            $('#oe-move-back').removeClass('disabled');
+            $('#oe-move-front').removeClass('disabled');
+            $('#oe-send-front').removeClass('disabled');
+            $('#oe-align-menu').removeClass('disabled');
+            $('#oe-left-align').removeClass('disabled');
+            $('#oe-vertical-equal').removeClass('disabled');
+            $('#oe-horizontal-equal').removeClass('disabled');
+            $('#oe-group-menu').removeClass('disabled');
+            $('#oe-group').removeClass('disabled');
+            $('#oe-ungroup').removeClass('disabled');
             $('#oe-save').removeClass('disabled');
             $('#oe-add-text').removeClass('disabled');
             $('#oe-add-image').removeClass('disabled');
@@ -2349,9 +2659,26 @@ class OEUIMANAGER {
             if (this.#selected === null && this.#transformer.nodes().length == 0 ) {
                 $('#oe-delete').addClass('disabled');
                 $('#oe-delete').removeClass('green');
+                $('#oe-zorder-menu').addClass('disabled');
+                $('#oe-send-back').addClass('disabled');
+                $('#oe-move-back').addClass('disabled');
+                $('#oe-move-front').addClass('disabled');
+                $('#oe-send-front').addClass('disabled');
+                $('#oe-align-menu').addClass('disabled');
+                $('#oe-left-align').addClass('disabled');
+                $('#oe-vertical-equal').addClass('disabled');
+                $('#oe-horizontal-equal').addClass('disabled');
+                $('#oe-group-menu').addClass('disabled');
+                $('#oe-group').addClass('disabled');
+                $('#oe-ungroup').addClass('disabled');
             } else {
                 $('#oe-delete').removeClass('disabled');
                 $('#oe-delete').addClass('green');
+                $('#oe-zorder-menu').removeClass('disabled');
+                $('#oe-send-back').removeClass('disabled');
+                $('#oe-move-back').removeClass('disabled');
+                $('#oe-move-front').removeClass('disabled');
+                $('#oe-send-front').removeClass('disabled');
 
                 if (this.#selected !== null) {
                     if (this.#selected.fieldType === 'fields') {                
@@ -2385,21 +2712,21 @@ class OEUIMANAGER {
             }
 
             if (this.#transformer.nodes().length > 1) {
+                $('#oe-group-menu').removeClass('disabled');
                 $('#oe-group').removeClass('disabled');                
                 $('#oe-ungroup').removeClass('disabled');
+                $('#oe-align-menu').removeClass('disabled');
                 $('#oe-left-align').removeClass('disabled');
                 $('#oe-vertical-equal').removeClass('disabled');
+                $('#oe-horizontal-equal').removeClass('disabled');
             } else {
+                $('#oe-group-menu').addClass('disabled');
                 $('#oe-group').addClass('disabled');
                 $('#oe-ungroup').addClass('disabled');
+                $('#oe-align-menu').addClass('disabled');
                 $('#oe-left-align').addClass('disabled');
                 $('#oe-vertical-equal').addClass('disabled');
-            }
-
-            if (this.#fieldManager.allRects(this.#transformer)) {
-                $('#oe-equal-width').removeClass('disabled');    
-            } else {
-                $('#oe-equal-width').addClass('disabled');
+                $('#oe-horizontal-equal').addClass('disabled');
             }
         }
     }
