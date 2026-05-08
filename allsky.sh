@@ -296,6 +296,7 @@ if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 else	# RPi
 	# "true" means use doExit() on error
 	RPi_COMMAND_TO_USE="$( determineCommandToUse "true" "${ERROR_MSG_PREFIX}" "false" )"
+	[[ -n ${RPi_COMMAND_TO_USE} ]] && RPi_COMMAND_TO_USE="--cmd ${RPi_COMMAND_TO_USE}"
 fi
 
 # "true" means ignore errors
@@ -423,9 +424,10 @@ set_allsky_status "${ALLSKY_STATUS_STARTING}"
 
 # Run the camera-specific capture program - this is the main attraction...
 CAMERA_NUMBER="${S_cameranumber:-0}"		# default
+# shellcheck disable=SC2086
 "${ALLSKY_BIN}/${CAPTURE}" \
 	-debuglevel "${ALLSKY_DEBUG_LEVEL}" \
-	-cmd "${RPi_COMMAND_TO_USE}" \
+	${RPi_COMMAND_TO_USE} \
 	-cameramodel "${CAMERA_MODEL}" \
 	-cameranumber "${CAMERA_NUMBER}" \
 	-locale "${S_locale}" \
