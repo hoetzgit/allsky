@@ -94,7 +94,9 @@ function check_for_oldest()
 		MSG2+=" or rename it to something else, then re-run this upgrade."
 		dialog --title "${TITLE}" --msgbox "${MSG}${MSG2}" 25 "${T_WIDTH}" 3>&1 1>&2 2>&3
 		clear
-		display_msg --log info "${MSG}"
+		echo
+		display_msg --log info "${MSG}"  "  Remove or rename it to continue."
+		echo
 		exit 2
 	fi
 
