@@ -93,6 +93,7 @@ function check_for_oldest()
 		local MSG2="\n\nIf you want to upgrade to the newest release, either remove '${OLDEST_DIR}'"
 		MSG2+=" or rename it to something else, then re-run this upgrade."
 		dialog --title "${TITLE}" --msgbox "${MSG}${MSG2}" 25 "${T_WIDTH}" 3>&1 1>&2 2>&3
+		clear
 		display_msg --log info "${MSG}"
 		exit 2
 	fi
