@@ -2770,8 +2770,18 @@ do_restore()
 
 		ITEM="${SPACE}${SPACE}${ALLSKY_MYFILES_NAME}"
 		if [[ -d ${ALLSKY_WEBSITE_MYFILES_DIR} ]]; then
-			display_msg --log progress "${ITEM} (moving back)"
-			mv "${ALLSKY_WEBSITE_MYFILES_DIR}"   "${PRIOR_WEBSITE_DIR}"
+			# If the prior directory exists, move the FILES in the current directory there,
+			# but don't move the whole directory or else we'll get a "mv" error.
+			D="${PRIOR_WEBSITE_DIR}/${ALLSKY_MYFILES_NAME}"
+			if [[ -d ${D} ]]; then
+				display_msg --log progress "${ITEM} (moving contents back)"
+				(shopt -s dotglob
+			 		mv "${D}"/*   "${ALLSKY_WEBSITE_MYFILES_DIR}" 2>/dev/null
+	 			)
+			else
+				display_msg --log progress "${ITEM} (moving directory back)"
+				mv "${ALLSKY_WEBSITE_MYFILES_DIR}"   "${PRIOR_WEBSITE_DIR}"
+			fi
 		else
 			display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
 		fi
