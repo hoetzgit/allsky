@@ -412,7 +412,7 @@ elif [[ ${ACTION} == "doUpgrade" ]]; then
 			exit 1
 		fi
 		display_msg --log progress "Allsky updated."  "  Go to the WebUI to restart Allsky.\n"
-		display_msg --logonly info "Updated files:\n${X}"
+		display_msg --logonly info "Recreated files:\n${X}"
 		display_msg --logonly info "ENDING UPGRADE."
 		exit 0
 	else
