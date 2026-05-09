@@ -306,9 +306,9 @@ if [[ ${ACTION} == "upgrade" ]]; then
 				FILES="$( echo -e "${X}" | grep "^	" )"	# TAB
 				MSG="You have un-checked out files, cannot continue:\n${FILES}"
 			else
-				MSG="Unable to get new files: ${X}"
+				MSG="Unable to get new files:\n${X}"
 			fi
-			display_msg --log error "${MSG}" "Contact the Allsky Team"
+			display_msg --log error "${MSG}" "Contact the Allsky Team if needed."
 			exit "${ALLSKY_EXIT_ERROR_STOP}"
 		fi
 
