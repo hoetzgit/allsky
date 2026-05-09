@@ -150,7 +150,11 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 
 	# Log-related information.
 	ALLSKY_LOGS="${ALLSKY_CONFIG}/logs"
-	ALLSKY_POST_INSTALL_ACTIONS="${ALLSKY_LOGS}/post-installation_actions.txt"
+	ALLSKY_WEB_LOGS="${ALLSKY_LOGS}/weblogs"	# logs the web browser can get to
+	ALLSKY_WEB_LOGS_URL="/$( basename "${ALLSKY_WEB_LOGS}" )"
+	P="post-installation_actions.txt"
+	ALLSKY_POST_INSTALL_ACTIONS="${ALLSKY_WEB_LOGS}/${P}"
+	ALLSKY_POST_INSTALL_ACTIONS_URL="${ALLSKY_WEB_LOGS_URL}/${P}"
 	ALLSKY_OLD_REMINDER="${ALLSKY_LOGS}/allsky-OLD_reminder.txt"
 	ALLSKY_CHECK_LOG="${ALLSKY_LOGS}/checkAllsky.html"
 
