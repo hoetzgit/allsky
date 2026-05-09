@@ -373,14 +373,14 @@ function generate_support_info()
 
 	# Truncate or delete large files not needed for support.
 	rm -fr \
-		"${TEMP_DIR_OVERLAY}/overlay/tmp" \
-		"${TEMP_DIR_OVERLAY}/myFiles/allsky.db" \
+		"${TEMP_DIR_OVERLAY}/config/tmp" \
 		"${TEMP_MY_MODULES}/moduledata/data/allsky_adsb/adsb_data" \
 		"${TEMP_MY_MODULES}/__pycache__"
 
 	X="${TEMP_DIR_OVERLAY}/system_fonts"
 	Y="${TEMP_DIR_OVERLAY}/fonts"
-	[[ -d ${X} ]] && find "${X}" "${Y}" -type f -exec truncate -s 0 {} + 2> /dev/null
+	Z="${TEMP_DIR}/config/myFiles/allsky.db"
+	[[ -d ${X} ]] && find "${X}" "${Y}" "${Z}" -type f -exec truncate -s 0 {} + 2> /dev/null
 
 	cd "${TEMP_DIR}" || exit 1
 
