@@ -33,19 +33,26 @@ else
 fi
 
 ############################################## main
+
 echo "* Updating variables.json file."
 create_variables_json ""	# Should come first so other steps get the newest variables.
+
 
 echo "* Updating sudoers file."
 create_sudoers
 
+
 echo "* Updating options file."
 create_options_file --no-settings-file
+
 
 echo "* Updating config_repo files."
 update_repo_files
 
+
+echo "* Recreating links."
 create_links "allsky-config"
+
 
 echo "* Updating variables used by C programs and running 'make' if needed."
 # "true" means run "make" if needed.
@@ -53,6 +60,7 @@ X="$( update_allsky_common "${FILES_DOWNLOADED_FILE}" 2>&1 )"
 if [[ $? -ne 0 ]]; then
 	W_ "WARNING: ${X}" >&2
 fi
+
 
 echo "* Updating lighttpd config file and restarting the service."
 create_lighttpd_config_file ""
@@ -64,6 +72,7 @@ else
 	truncate -s 0 "${LIGHTTPD_LOG_FILE}"
 fi
 
+
 echo "* Updating list of RPi supported cameras."
 # true == ignore errors.  ${CMD} will be "" if no command found.
 CMD="$( determineCommandToUse "false" "" "true" 2> /dev/null )"
@@ -71,6 +80,7 @@ RET=$?		# return of 2 means no command was found
 [[ ${RET} -ne 0 ]] && CMD=""
 # Will create full file is CMD == "".  "true" is to force creation.
 setup_rpi_supported_cameras "${CMD}" "true"
+
 
 echo "* Copying some ${ALLSKY_REPO} files to ${ALLSKY_CONFIG}."
 copy_repo_files
