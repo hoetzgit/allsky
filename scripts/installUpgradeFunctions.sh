@@ -22,16 +22,10 @@ export ALLSKY_REPO="${ALLSKY_HOME}/config_repo"
 export REPO_WEBCONFIG_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo"
 export REPO_SUDOERS_FILE="${ALLSKY_REPO}/sudoers.repo"
 export REPO_LIGHTTPD_FILE="${ALLSKY_REPO}/lighttpd.conf.repo"
-export REPO_AVI_FILE="${ALLSKY_REPO}/avahi-daemon.conf.repo"
+export REPO_AVAHI_FILE="${ALLSKY_REPO}/avahi-daemon.conf.repo"
 export REPO_OPTIONS_FILE="${ALLSKY_REPO}/$( basename "${ALLSKY_OPTIONS_FILE}" ).repo"
 export REPO_ENV_FILE="${ALLSKY_REPO}/$( basename "${ALLSKY_ENV}" ).repo"
 export REPO_WEBSITE_CONFIGURATION_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo"
-
-##### Information on prior Allsky versions and files.
-	# Location of old-style WebUI and Website.
-# TODO: delete these two in v2025.xx.xx
-export OLD_WEBUI_LOCATION="/var/www/html"
-export OLD_WEBSITE_LOCATION="${OLD_WEBUI_LOCATION}/allsky"
 
 	# Directory of prior version of Allsky, if it exists.
 export ALLSKY_PRIOR_DIR="$( dirname "${ALLSKY_HOME}" )/${ALLSKY_INSTALL_DIR}-OLD"
@@ -49,7 +43,7 @@ export WEBSITE_CONFIG_VERSION="ConfigVersion"
 export WEBSITE_ALLSKY_VERSION="config.AllskyVersion"
 
 	# Location of prior files varies by release; this is most recent location.
-# TODO: delete these two in v2025.xx.xx
+# TODO: delete these two in release after v2026...
 export PRIOR_CONFIG_FILE="${PRIOR_CONFIG_DIR}/config.sh"
 export PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"
 
@@ -822,6 +816,7 @@ function create_lighttpd_config_file()
 		-e "s;XX_ALLSKY_CURRENT_DIR_XX;${ALLSKY_CURRENT_DIR};g" \
 		-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};g" \
 		-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};g" \
+		-e "s;XX_ALLSKY_WEB_LOGS_XX;${ALLSKY_WEB_LOGS};g" \
 		-e "s;XX_ALLSKY_DOCUMENTATION_XX;${ALLSKY_DOCUMENTATION};g" \
 		-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};g" \
 		-e "s;XX_ALLSKY_MY_OVERLAY_TEMPLATES_XX;${ALLSKY_MY_OVERLAY_TEMPLATES};g" \
