@@ -3613,8 +3613,8 @@ do_done()
 		do_allsky_status "${ALLSKY_STATUS_NOT_RUNNING}"
 		display_image --custom "lime" "Allsky is\nready to start"
 		MSG="\nInstallation is done."
-		MSG2="  To start Allsky, go to the WebUI's 'System' page."
-		display_msg --log progress "${MSG}"  "${MSG2}"
+		MSG2="  To start Allsky, go to the WebUI's 'System -> System' page."
+		[[ ${DO_UPGRADE} == "false" ]] && display_msg --log progress "${MSG}"  "${MSG2}"
 		MSG2+="  You can then clear this message."
 		"${ALLSKY_SCRIPTS}/addMessage.sh" --type info --msg "${MSG2}"
 
@@ -3641,7 +3641,7 @@ do_done()
 		exit_installation 0 "${CONFIGURATION_NEEDED}" ""
 	fi
 
-	display_msg progress "\nEnjoy Allsky!\n"
+	[[ ${DO_UPGRADE} == "false" ]] && display_msg progress "\nEnjoy Allsky!\n"
 }
 
 do_legacy_password_conversion()
