@@ -30,11 +30,12 @@ while [[ $# -gt 0 ]]; do
 done
 
 GIT_FILE="${ALLSKY_GITHUB_RAW_ROOT}/${ALLSKY_GITHUB_ALLSKY_REPO}/${BRANCH}/version"
-if ! NEWEST_VERSION_FILE="$( curl --show-error --silent "${GIT_FILE}" 2>&1 )" ; then
-	echo "${ME}: ERROR: Unable to get newest Allsky version: ${NEWEST_VERSION}."
+NEWEST_VERSION_FILE="$( curl --show-error --silent "${GIT_FILE}" 2>&1 )"
+RET=$?
+if [[ ${RET} -ne 0 ]]; then
+	echo "${ME}: ERROR: Unable to get newest Allsky version, RET=${RET}: ${NEWEST_VERSION}."
 	exit 1
 fi
-
 NEWEST_VERSION="$( echo "${NEWEST_VERSION_FILE}" | head -1 )"
 NEWEST_NOTE="$( echo "${NEWEST_VERSION_FILE}" | tail -1 )"
 if [[ ${NEWEST_VERSION:0:1} != "v" ||
