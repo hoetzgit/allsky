@@ -216,7 +216,7 @@ if [[ ! -d ${ALLSKY_CONFIG} ]]; then
 	exit 2
 fi
 
-if [[ "${ACTION}" != "upgrade" ]]; then
+if [[ "${ACTION}" != "upgrade" && ${DEBUG} == "true" ]]; then
 	# we're continuing where we left off, so don't welcome again.
 	display_msg --log progress "Continuing the upgrade..."
 fi
@@ -386,13 +386,10 @@ fi
 		# change messages to say "upgrade", not "install", etc.
 if false; then		# XXXXXXXXXX TODO: FIX
 		MSG="The first step of the upgrade is complete.\n"
-		display_msg --log progress "${MSG}" "  Running install.sh"
+		display_msg progress "${MSG}" "  Running install.sh"
 		display_msg --logonly info "ENDING UPGRADE; calling install.sh"
 		# shellcheck disable=SC2086,SC2291
-		X="$(
-#shellcheck disable=SC2116		# XXXXXXXXX temporary
-echo XXX		./install.sh ${DEBUG_ARG} ${SKIP} --doUpgrade
-		)"
+		X="$( ./install.sh ${DEBUG_ARG} ${SKIP} --doUpgrade )"
 		RET=$?
 		if [[ ${RET} -ne 0 ]]; then
 			display_msg --log warning "install.sh failed."  "Contact the Allsky Team"
@@ -410,11 +407,11 @@ elif [[ ${ACTION} == "doUpgrade" ]]; then
 	if [[ ${CHOSEN_METHOD} == "${METHOD_IN_PLACE}" ]]; then
 		X="$( "${ALLSKY_UTILITIES}/allsky-config.sh" recreate_files "${FILES_DOWNLOADED_FILE}" 2>&1 )"
 		if [[ $? -ne 0 ]]; then
-			MSG="Unable to update files: ${X}"
+			MSG="Unable to recreate files: ${X}"
 			display_msg --log error "${MSG}" "Contact the Allsky Team"
 			exit 1
 		fi
-		display_msg --log progress "Allsky updated."  "  Go to the WebUI to restart Allsky.\n"
+		display_msg --log progress "Allsky upgraded."  "  Go to the WebUI to restart Allsky.\n"
 		display_msg --logonly info "Recreated files:\n${X}"
 		display_msg --logonly info "ENDING UPGRADE."
 		exit 0
