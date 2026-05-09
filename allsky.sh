@@ -220,9 +220,8 @@ if [[ -f ${ALLSKY_POST_INSTALL_ACTIONS} ]]; then
 		"${ALLSKY_SCRIPTS}/addMessage.sh" --id AM_POST --delete
 
 		MSG="Reminder: Click here to see the action(s) that need to be performed."
-		PIA="${ALLSKY_POST_INSTALL_ACTIONS/${ALLSKY_HOME}/}"
 		"${ALLSKY_SCRIPTS}/addMessage.sh" --id AM_RM_POST --type warning \
-			--msg "${MSG}" --url "${PIA}" \
+			--msg "${MSG}" --url "${ALLSKY_POST_INSTALL_ACTIONS_URL}" \
 			--cmd "\nOnce you perform them, click here to remove this message."
 	fi
 fi
