@@ -134,6 +134,9 @@ if [[ ${DELETE} == "false" && (-z ${TYPE} || -z ${MESSAGE}) ]]; then
 	usage_and_exit 1
 fi
 
+# In case it doesn't exist, like if Allsky isn't installed yet.
+mkdir -p "$( dirname "${ALLSKY_MESSAGES}" )"
+
 if [[ ${DELETE} == "true" ]]; then
 	[[ ! -f ${ALLSKY_MESSAGES} ]] && exit 0
 	if [[ -z ${ID} ]]; then
