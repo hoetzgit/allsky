@@ -379,10 +379,11 @@ function generate_support_info()
 		"${TEMP_MY_MODULES}/moduledata/data/allsky_adsb/adsb_data" \
 		"${TEMP_MY_MODULES}/__pycache__"
 
-	X="${TEMP_DIR_OVERLAY}/system_fonts"
-	Y="${TEMP_DIR_OVERLAY}/fonts"
-	Z="${TEMP_DIR}/config/myFiles/allsky.db"
-	[[ -d ${X} ]] && find "${X}" "${Y}" "${Z}" -type f -exec truncate -s 0 {} + 2> /dev/null
+	A="${TEMP_DIR_OVERLAY}/system_fonts"
+	B="${TEMP_DIR_OVERLAY}/fonts"
+	C="${TEMP_DIR}/config/myFiles/allsky.db"
+	C="${TEMP_DIR}/config/myFiles/secrets.db"
+	find "${A}" "${B}" "${C}" "${D}" -type f -exec truncate -s 0 {} + 2> /dev/null
 
 	cd "${TEMP_DIR}" || exit 1
 
