@@ -398,7 +398,8 @@ elif [[ ${ACTION} == "doUpgrade" ]]; then
 			display_msg --log error "${MSG}" "Contact the Allsky Team"
 			exit 1
 		fi
-		display_msg --log progress "Allsky upgraded."  "  Go to the WebUI to restart Allsky.\n"
+		MSG2="  To start Allsky, go to the WebUI's 'System -> System' page.\n"
+		display_msg --log progress "Allsky upgraded."  "${MSG2}"
 		display_msg --logonly info "Recreated files:\n${X}"
 		display_msg --logonly info "ENDING UPGRADE."
 		exit 0
