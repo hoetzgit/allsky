@@ -370,6 +370,7 @@ function generate_support_info()
 
 	local TEMP_DIR_OVERLAY="${TEMP_DIR}/${ALLSKY_OVERLAY/${ALLSKY_HOME}}"
 	local TEMP_MY_MODULES="${TEMP_DIR}/${ALLSKY_MY_MODULES/${ALLSKY_HOME}}"
+	display_msg --logonly info "TEMP_DIR_OVERLAY=${TEMP_DIR_OVERLAY}, TEMP_MY_MODULES=${TEMP_MY_MODULES}"
 
 	# Truncate or delete large files not needed for support.
 	rm -fr \
