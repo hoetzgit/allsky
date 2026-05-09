@@ -373,6 +373,7 @@ function generate_support_info()
 
 	# Truncate or delete large files not needed for support.
 	rm -fr \
+		"${TEMP_DIR_OVERLAY}/tmp" \
 		"${TEMP_DIR_OVERLAY}/config/tmp" \
 		"${TEMP_MY_MODULES}/moduledata/data/allsky_adsb/adsb_data" \
 		"${TEMP_MY_MODULES}/__pycache__"
