@@ -12,12 +12,6 @@ source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
-#############  TODO: Changes to install.sh needed:
-#	- Don't prompt for camera
-#	- Don't prompt to reboot
-#	- Don't prompt other things ??
-#
-
 # shellcheck disable=SC2034
 DISPLAY_MSG_LOG="${ALLSKY_LOGS}/upgrade.log"	# send log entries here
 
@@ -384,7 +378,6 @@ fi
 
 		# --doUpgrade tells it to use prior version without asking and to not display header,
 		# change messages to say "upgrade", not "install", etc.
-if false; then		# XXXXXXXXXX TODO: FIX
 		MSG="The first step of the upgrade is complete.\n"
 		display_msg progress "${MSG}" "  Running install.sh"
 		display_msg --logonly info "ENDING UPGRADE; calling install.sh"
@@ -396,12 +389,7 @@ if false; then		# XXXXXXXXXX TODO: FIX
 			exit "${RET}"
 		fi
 		display_msg --log progress "The upgrade is complete."  "  Go to the WebUI to restart Allsky.\n"
-else	# XXXXXXXXXXX
-		display_msg --log progress "The first step of the upgrade is complete.\n"
-		MSG="cd ~/allsky; ./install.sh ${DEBUG_ARG} ${SKIP}"
-		display_msg --log note "Now run:" "   ${MSG}\n"
-fi
-	fi
+		exit 0
 
 elif [[ ${ACTION} == "doUpgrade" ]]; then
 	if [[ ${CHOSEN_METHOD} == "${METHOD_IN_PLACE}" ]]; then
