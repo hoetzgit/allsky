@@ -220,7 +220,6 @@ T_WIDTH="$( calc_wt_size )"
 
 SHORT_TITLE="Allsky Upgrader"
 TITLE="${SHORT_TITLE} - ${ALLSKY_VERSION}"
-OLDEST_DIR="${ALLSKY_PRIOR_DIR/OLD/OLDEST}"
 
 if [[ ${ACTION} == "upgrade" ]]; then
 
