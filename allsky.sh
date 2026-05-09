@@ -295,7 +295,7 @@ if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 else	# RPi
 	# "true" means use doExit() on error
 	RPi_COMMAND_TO_USE="$( determineCommandToUse "true" "${ERROR_MSG_PREFIX}" "false" )"
-	[[ -n ${RPi_COMMAND_TO_USE} ]] && RPi_COMMAND_TO_USE="--cmd ${RPi_COMMAND_TO_USE}"
+	[[ -n ${RPi_COMMAND_TO_USE} ]] && RPi_COMMAND_TO_USE="-cmd ${RPi_COMMAND_TO_USE}"
 fi
 
 # "true" means ignore errors
