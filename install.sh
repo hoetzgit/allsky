@@ -1617,8 +1617,8 @@ install_dependencies_etc()
 	display_msg --logonly info "   Running 'make'."
 	TMP="${ALLSKY_LOGS}/make_all.log"
 	{
-		echo "===== make src"
-		sudo make -C src && echo -e "\n\n===== make all" && make -C src all
+		echo "===== make src"		# The "make -C src" does an "all"
+		sudo make -C src			#    && echo -e "\n\n===== make all" && make -C src all
 	} > "${TMP}" 2>&1
 	check_success $? "Compile failed" "${TMP}" "${DEBUG}" ||
 		exit_with_image 1 "${STATUS_ERROR}" "compile failed"
@@ -2634,7 +2634,7 @@ do_restore()
 		OK="false"
 	fi
 
-	if [[ ! -d ${ALLSKY_CONFIG} ]]; then
+	if [[ ! -d ${ALLSKY_BIN} ]]; then
 		MSG+="Allsky isn't installed."
 		OK="false"
 	elif [[ ! -d ${ALLSKY_PRIOR_DIR} ]]; then
