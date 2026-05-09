@@ -1,13 +1,11 @@
 #!/bin/bash
 # shellcheck disable=SC2154,SC2024		# referenced but not assigned, sudo redirects 
 
-unset ALLSKY_VARIABLE_SET		# To force variables.sh to be read
-
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )" )"
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh" --force			|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
@@ -87,14 +85,11 @@ PRIOR_CAMERA_NUMBER=""
 # Holds status of installation if we need to exit and get back in.
 STATUS_FILE="${ALLSKY_LOGS}/install_status.txt"
 declare -r STATUS_FILE_TEMP="${ALLSKY_TMP}/temp_status.txt"	# holds intermediate status
-# status of rebooting due to locale change
 declare -r STATUS_LOCALE_REBOOT="Rebooting to change locale"
 declare -r STATUS_FINISH_REBOOT="Rebooting to finish installation"
 declare -r STATUS_NO_FINISH_REBOOT="Did not reboot to finish installation"
 declare -r STATUS_NO_REBOOT="User elected not to reboot"
-# exiting due to desired locale not installed
 declare -r STATUS_NO_LOCALE="Desired locale not found"
-# status of exiting due to no camera found
 declare -r STATUS_NO_CAMERA="No camera found"
 declare -r STATUS_NO_LAT_LONG="Latitude and/or Longitude not entered"
 declare -r STATUS_OK="OK"										# Installation was completed.
@@ -519,47 +514,23 @@ select_camera_type()
 	# CAMERA_TYPE and NUM_CONNECTED_CAMERAS are global
 
 	if [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
-		# bash doesn't have ">=" so we have to use "! ... < "
-		if [[ ! ${PRIOR_ALLSKY_VERSION} < "${FIRST_CAMERA_TYPE_BASE_VERSION}" ]]; then
-			# New style Allsky using ${CAMERA_TYPE}.
-			CAMERA_TYPE="${PRIOR_CAMERA_TYPE}"
-
-			if [[ -n ${CAMERA_TYPE} ]]; then
-				MSG="Using Camera Type '${CAMERA_TYPE}' from prior Allsky; not prompting user."
-				display_msg --logonly info "${MSG}"
-				STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
-				if [[ -n ${CAMERA_MODEL} ]]; then
-					STATUS_VARIABLES+=("CAMERA_MODEL='${CAMERA_MODEL}'\n")
-				fi
-				if [[ -n ${CAMERA_NUMBER} ]]; then
-					STATUS_VARIABLES+=("CAMERA_NUMBER='${CAMERA_NUMBER}'\n")
-				fi
-				STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
-				return
-			else
-				MSG="Camera Type not in prior new-style settings file."
-				display_msg --log error "${MSG}"
-				exit_installation 2 "${STATUS_NO_CAMERA}" "${MSG}"
+		CAMERA_TYPE="${PRIOR_CAMERA_TYPE}"
+		if [[ -n ${CAMERA_TYPE} ]]; then
+			MSG="Using Camera Type '${CAMERA_TYPE}' from prior Allsky; not prompting user."
+			display_msg --logonly info "${MSG}"
+			STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
+			if [[ -n ${CAMERA_MODEL} ]]; then
+				STATUS_VARIABLES+=("CAMERA_MODEL='${CAMERA_MODEL}'\n")
 			fi
+			if [[ -n ${CAMERA_NUMBER} ]]; then
+				STATUS_VARIABLES+=("CAMERA_NUMBER='${CAMERA_NUMBER}'\n")
+			fi
+			STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+			return
 		else
-			# Older style using ${CAMERA}
-			CAMERA="$( get_variable "CAMERA" "${PRIOR_CONFIG_FILE}" )"
-			if [[ -n ${CAMERA} ]]; then
-				CAMERA_TYPE="$( CAMERA_to_CAMERA_TYPE "${CAMERA}" )"
-				if [[ ${CAMERA} != "${CAMERA_TYPE}" ]]; then
-					NEW=" (now called ${CAMERA_TYPE})"
-				else
-					NEW=""
-				fi
-				display_msg --log progress "Using prior ${CAMERA} camera${NEW}."
-				STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
-				# Old style doesn't have CAMERA_MODEL or CAMERA_NUMBER.
-				STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
-				return
-			else
-				MSG="CAMERA not in old-style '${PRIOR_CONFIG_FILE}'.sh."
-				display_msg --log warning "${MSG}"
-			fi
+			MSG="Camera Type not in prior settings file."
+			display_msg --log error "${MSG}"
+			exit_installation 2 "${STATUS_NO_CAMERA}" "${MSG}"
 		fi
 	fi
 
@@ -1189,7 +1160,7 @@ get_desired_locale()
 	# If they had a locale from the prior Allsky and it's still here, use it; no need to prompt.
 	# Ditto if the prior locale == current locale.
 	if [[ -n ${DESIRED_LOCALE} ]]; then
-		echo "${INSTALLED_LOCALES}" | grep --silent "${DESIRED_LOCALE}"
+		echo "${INSTALLED_LOCALES}" | grep -m 1 --silent "${DESIRED_LOCALE}"
 		local STILL_HERE=$?
 		if [[ ( ${DESIRED_LOCALE} == "${CURRENT_LOCALE}" ) || ${STILL_HERE} -eq 0 ]]; then
 			STATUS_VARIABLES+=("DESIRED_LOCALE='${DESIRED_LOCALE}'\n")
@@ -1408,7 +1379,13 @@ does_prior_Allsky_exist()
 	# See if it's there, and if so, it's valid.
 
 	if [[ ! -d ${ALLSKY_PRIOR_DIR} ]]; then
-		display_msg --logonly info "No prior Allsky found at '${ALLSKY_PRIOR_DIR}'."
+		MSG="No prior Allsky found at ${ALLSKY_PRIOR_DIR}."
+		if [[ ${DO_UPGRADE} == "true" ]]; then
+			# This shouldn't happen...
+			whiptail --title "${TITLE}" --msgbox "${MSG}" 20 "${WT_WIDTH}"  3>&1 1>&2 2>&3
+			exit_installation 1 "${MSG}" "It must be there during an upgrade."
+		fi
+		display_msg --logonly info "${MSG}"
 		USE_PRIOR_ALLSKY="false"
 		return 1
 	fi
@@ -1465,9 +1442,15 @@ does_prior_Allsky_exist()
 		fi
 	else
 		# This shouldn't happen...
-		PRIOR_SETTINGS_FILE=""
-		MSG="No prior new style settings file (${PRIOR_SETTINGS_FILE}) found!"
-		display_msg --log warning "${MSG}"
+		MSG="No prior settings file (${PRIOR_SETTINGS_FILE}) found!"
+		if [[ ${DO_UPGRADE} == "true" ]]; then
+			display_msg --log error "${MSG}"  "It must exist during an upgrade."
+			exit_installation 1 "${MSG}"
+		fi
+		else
+			display_msg --log warning "${MSG}"
+			PRIOR_SETTINGS_FILE=""
+		fi
 	fi
 
 	# Check for prior ALLSKY_USER_VARIABLES file.
@@ -1514,16 +1497,19 @@ prompt_for_prior_Allsky()
 		local MSG  M
 
 		if [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
-			MSG="You have a prior version of Allsky in ${ALLSKY_PRIOR_DIR}."
-			if [[ ${ALLSKY_IMAGES_MOVED} == "true" ]]; then
-				M=""
-			else
-				M=" images and other "
+			if [[ ${DO_UPGRADE} == "false" ]]; then
+				MSG="You have a prior version of Allsky in ${ALLSKY_PRIOR_DIR}."
+				if [[ ${ALLSKY_IMAGES_MOVED} == "true" ]]; then
+					M=""
+				else
+					M=" images and other "
+				fi
+				MSG+="\n\nDo you want to restore the prior ${M}files you've changed?"
+				MSG+="\nIf so, your prior settings will be restored as well."
 			fi
-			MSG+="\n\nDo you want to restore the prior ${M}files you've changed?"
-			MSG+="\nIf so, your prior settings will be restored as well."
 
-			if whiptail --title "${TITLE}" --yesno "${MSG}" 20 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
+			if [[ ${DO_UPGRADE} == "true" ]] ||
+					whiptail --title "${TITLE}" --yesno "${MSG}" 20 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
 				# Set the prior camera type to the new, default camera type.
 				CAMERA_TYPE="${PRIOR_CAMERA_TYPE}"
 				CAMERA_MODEL="${PRIOR_CAMERA_MODEL}"
@@ -1602,23 +1588,21 @@ install_dependencies_etc()
 			exit_with_image 1 "${STATUS_ERROR}" "dependency installation failed"
 
 		TMP="${ALLSKY_LOGS}/allsky_deps.log"
-		# shellcheck disable=SC2086
 		run_aptGet libopencv-dev libusb-dev libusb-1.0-0-dev > "${TMP}" 2>&1
-		check_success $? "Allsky dependency installation failed" "${TMP}" "${DEBUG}" ||
+		check_success $? "Allsky deps installation failed" "${TMP}" "${DEBUG}" ||
 			exit_with_image 1 "${STATUS_ERROR}" "dependency installation failed"
 	fi
 
 	update_allsky_common ""
 	update_repo_files
 
-	# "make -C src deps" may need to install some packages, so needs "sudo".
 	display_msg --log progress "Creating Allsky commands."
 
 	display_msg --logonly info "   Running 'make'."
 	TMP="${ALLSKY_LOGS}/make_all.log"
 	{
 		echo "===== make src"		# The "make -C src" does an "all"
-		sudo make -C src			#    && echo -e "\n\n===== make all" && make -C src all
+		make -C src			# TODO: FIX: Remove:    && echo -e "\n\n===== make all" && make -C src all
 	} > "${TMP}" 2>&1
 	check_success $? "Compile failed" "${TMP}" "${DEBUG}" ||
 		exit_with_image 1 "${STATUS_ERROR}" "compile failed"
@@ -1642,7 +1626,7 @@ create_allsky_logs()
 
 	display_msg --logonly progress "Setting permissions on ${ALLSKY_LOG} and ${ALLSKY_PERIODIC_LOG}."
 
-	if [[ ${DO_ALL} == "true" ]]; then
+	if [[ ${DO_ALL} == "true" && ${DO_UPGRADE} == "false" && ${SKIP} == "false" && ${SKIP2} == "false" ]]; then
 		sudo systemctl stop rsyslog 2> /dev/null
 
 		TMP="${ALLSKY_LOGS}/rsyslog.log"
@@ -2431,7 +2415,7 @@ restore_prior_files()
 		STATUS_VARIABLES+=( "COPIED_PRIOR_CONFIG_SH='${COPIED_PRIOR_CONFIG_SH}'\n" )
 
 # TODO: Remove when LAST_SUPPORTED_UPGRADE_VERSION is v2024.12.06
-		# ftp-settings.sh no longer exists, but if a prior one exists copy its contents to the settings file.
+		# ftp-settings.sh no longer exists, but if a PRIOR one exists copy its contents to the settings file.
 		# Get the current and prior (if any) file version.
 		if [[ -s ${PRIOR_FTP_FILE} ]]; then			# allsky/config version
 			# Version ${FIRST_CAMERA_TYPE_BASE_VERSION}
@@ -2552,17 +2536,14 @@ restore_prior_website_files()
 		fi
 	fi
 
-	ITEM="${SPACE}${SPACE}'${ALLSKY_MYFILES_NAME}' directory"
+	ITEM="${SPACE}${SPACE}Website '${ALLSKY_MYFILES_NAME}' directory"
 	D="${PRIOR_WEBSITE_DIR}/${ALLSKY_MYFILES_NAME}"
 	if [[ -d ${D} ]]; then
 		display_msg --log progress "${ITEM} (moving)"
-		if [[ -d ${ALLSKY_WEBSITE_MYFILES_DIR} ]]; then
-			(shopt -s dotglob
-			 mv "${D}"/*   "${ALLSKY_WEBSITE_MYFILES_DIR}" 2>/dev/null
-	 		)
-		else
-			mv "${D}"   "${ALLSKY_WEBSITE_MYFILES_DIR}"
-		fi
+		(shopt -s dotglob
+		 display_msg --logonly info "Moving contents of ${D} to ${ALLSKY_WEBSITE_MYFILES_DIR}"
+		 mv "${D}"/*   "${ALLSKY_WEBSITE_MYFILES_DIR}" 2>/dev/null
+	 	)
 	else
 		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
 	fi
@@ -2743,6 +2724,7 @@ do_restore()
 			D="${PRIOR_WEBSITE_DIR}/${ALLSKY_MYFILES_NAME}"
 			if [[ -d ${D} ]]; then
 				display_msg --log progress "${ITEM} (moving contents back)"
+				display_msg --logonly info "${ITEM} contents: $( ls "${D}"/* )"
 				(shopt -s dotglob
 			 		mv "${D}"/*   "${ALLSKY_WEBSITE_MYFILES_DIR}" 2>/dev/null
 	 			)
@@ -2989,7 +2971,7 @@ install_Python()
 
 	NUM_TO_INSTALL=$( wc -l < "${REQUIREMENTS_FILE}" )
 
-	if [[ ${SKIP} != "true" && ${SKIP2} != "true" ]]; then
+	if [[ ${SKIP} == "false" && ${SKIP2} == "false" ]]; then
 		PKGs="python3-pip python3-full libgfortran5 libopenblas0-pthread"
 		display_msg --logonly progress "Installing ${PKGs}."
 		TMP="${ALLSKY_LOGS}/python3-full.log"
@@ -3797,6 +3779,7 @@ fi
 
 ##### Does a prior Allsky exist? If so, set some PRIOR_* variables.
 # Re-run every time in case the directory was removed.
+# If a prior Allsky doesn't exist during an upgrade, it exits.
 does_prior_Allsky_exist
 
 [[ ${RESTORE} == "true" ]] && do_restore		# does not return
