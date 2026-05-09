@@ -25,14 +25,18 @@ source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERR
 # Output from this script goes either to the log file or a tty,
 # so can't use "w*" colors.
 
-if [[ ! -d ${ALLSKY_CONFIG} ]]; then
+if [[ ! -d ${ALLSKY_BIN} ]]; then
+	MSG2="Allsky needs to be installed.  Run:  cd ~/allsky; ./install.sh"
 	MSG="*** ====="
-	MSG+="\nAllsky needs to be installed.  Run:  cd ~/allsky; ./install.sh"
+	MSG+="${MSG2}"
 	MSG+="\n*** ====="
 	E_ "${MSG}" >&2
 
-	# Can't call addMessage.sh or copyNotificationImage.sh or almost anything
-	# since they use ${ALLSKY_CONIG} and/or ${ALLSKY_TMP} which don't exist yet.
+	# Can't call copyNotificationImage.sh or almost anything
+	# since they use files and directories which may not yet exist.
+	# However, addMessage.sh may work, so try it.
+	"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${MSG2}" > /dev/null 2>&1
+
 	set_allsky_status "${ALLSKY_STATUS_NEVER_RUN}"
 	doExit "${ALLSKY_EXIT_ERROR_STOP}" "no-image" "" ""
 fi
