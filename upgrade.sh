@@ -241,7 +241,6 @@ if [[ ${ACTION} == "upgrade" ]]; then
 	check_for_current
 
 	# Ask user how they want to upgrade.
-if true; then
 	MSG="\n"
 	MSG+="There are two ways to upgrade Allsky:"
 	MSG+="\n"
@@ -274,7 +273,6 @@ if true; then
 		display_msg --log progress "\nNo changes made.\n"
 		exit 0
 	fi
-fi
 
 	X="$( dialog \
 		--title "${SHORT_TITLE}" \
@@ -390,6 +388,7 @@ fi
 		fi
 		display_msg --log progress "The upgrade is complete."  "  Go to the WebUI to restart Allsky.\n"
 		exit 0
+	fi
 
 elif [[ ${ACTION} == "doUpgrade" ]]; then
 	if [[ ${CHOSEN_METHOD} == "${METHOD_IN_PLACE}" ]]; then
