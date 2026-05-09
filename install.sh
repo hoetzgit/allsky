@@ -113,7 +113,7 @@ STATUS_VARIABLES=()								# Holds the variables and values to save
 # PRIOR_CONFIG_FILE, PRIOR_FTP_FILE
 # PRIOR_PYTHON_VENV
 # WEBSITE_CONFIG_VERSION, WEBSITE_ALLSKY_VERSION
-# REPO_SUDOERS_FILE, REPO_LIGHTTPD_FILE, REPO_AVI_FILE, REPO_OPTIONS_FILE
+# REPO_SUDOERS_FILE, REPO_AVAHI_FILE, REPO_OPTIONS_FILE
 # LIGHTTPD_LOG_DIR, LIGHTTPD_LOG_FILE, LIGHTTPD_ALLSKY_STRING
 # INSTALLED_LOCALES
 # Plus others I probably forgot about...
@@ -978,15 +978,15 @@ prompt_for_hostname()
 	fi
 
 	# Set up the avahi daemon if needed.
-	FINAL_AVI_FILE="/etc/avahi/avahi-daemon.conf"
-	[[ -f ${FINAL_AVI_FILE} ]] && grep -i --quiet "host-name=${NEW_HOST_NAME}" "${FINAL_AVI_FILE}"
+	FINAL_AVAHI_FILE="/etc/avahi/avahi-daemon.conf"
+	[[ -f ${FINAL_AVAHI_FILE} ]] && grep -i --quiet "host-name=${NEW_HOST_NAME}" "${FINAL_AVAHI_FILE}"
 	if [[ $? -ne 0 ]]; then
 		# New NEW_HOST_NAME is not found in the file, or the file doesn't exist,
 		# so need to configure it.
 		display_msg --log progress "Configuring avahi-daemon."
 
-		sed "s/XX_HOST_NAME_XX/${NEW_HOST_NAME}/g" "${REPO_AVI_FILE}" > "${TMP_FILE}"
-		sudo install -m 0644 "${TMP_FILE}" "${FINAL_AVI_FILE}" && rm -f "${TMP_FILE}"
+		sed "s/XX_HOST_NAME_XX/${NEW_HOST_NAME}/g" "${REPO_AVAHI_FILE}" > "${TMP_FILE}"
+		sudo install -m 0644 "${TMP_FILE}" "${FINAL_AVAHI_FILE}" && rm -f "${TMP_FILE}"
 	fi
 
 	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
@@ -1091,9 +1091,8 @@ set_permissions()
 
 # XXX TODO: Remove check_old_WebUI_files() in the next major release after v2026...
 
-# If the old WebUI location is there but it wasn't when the installation started,
-# that means the installation created it so remove it.
-# Let the user know if there's an old WebUI, or something unknown there.
+# If the old WebUI location exists let the user know.
+# Ditto for OLD_RASPAP_DIR.
 check_old_WebUI_files()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
@@ -1106,43 +1105,12 @@ check_old_WebUI_files()
 		add_to_post_actions "${MSG}"
 	fi
 
+	local OLD_WEBUI_LOCATION="/var/www/html"
 	[[ ! -d ${OLD_WEBUI_LOCATION} ]] && return
-
-	if [[ ${OLD_WEBUI_LOCATION_EXISTS_AT_START} == "false" ]]; then
-		# Installation created the directory so get rid of it.
-		sudo rm -fr "${OLD_WEBUI_LOCATION}"
-		return
-	fi
 
 	local MSG
 
-	MSG="Checking old WebUI location at ${OLD_WEBUI_LOCATION}."
-	display_msg --log progress "${MSG}"
-
-	# ${OLD_WEBUI_LOCATION}.  It just says "No files yet...", so delete it.
-	sudo rm -f "${OLD_WEBUI_LOCATION}/index.lighttpd.html"
-
-	# The installation of the web server often creates a file in
-	if [[ ! -d ${OLD_WEBUI_LOCATION}/includes ]]; then
-		local COUNT=$( find "${OLD_WEBUI_LOCATION}" | wc -l )
-		if [[ ${COUNT} -eq 1 ]]; then
-			# This is often true after a clean install of the OS.
-			sudo rmdir "${OLD_WEBUI_LOCATION}"
-			display_msg --logonly info "Deleted empty '${OLD_WEBUI_LOCATION}'."
-		else
-			MSG="The old WebUI location '${OLD_WEBUI_LOCATION}' exists"
-			MSG+=" but doesn't contain a valid WebUI."
-			MSG+="\nPlease check it out after installation - if there's nothing you"
-			MSG+=" want in it, remove it:  sudo rm -fr '${OLD_WEBUI_LOCATION}'"
-			whiptail --title "${TITLE}" --msgbox "${MSG}" 15 "${WT_WIDTH}"   3>&1 1>&2 2>&3
-			display_msg --log notice "${MSG}"
-
-			add_to_post_actions "${MSG}"
-		fi
-		return
-	fi
-
-	MSG="An old version of the WebUI was found in ${OLD_WEBUI_LOCATION};"
+	MSG="A very old version of the WebUI was found in ${OLD_WEBUI_LOCATION};"
 	MSG+=" it is no longer being used so you may remove it after intallation."
 	MSG+="\n\nWARNING: if you have any other web sites in that directory,"
 	MSG+="\n\n they will no longer be accessible via the web server."
