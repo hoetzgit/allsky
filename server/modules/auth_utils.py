@@ -226,6 +226,7 @@ def init_auth_db():
         full_perms = {
             "gpio": ["create", "read", "update", "delete"],
             "allsky": ["create", "read", "update", "delete"],
+            "lightning": ["create", "read", "update", "delete"],
         }
         cur.execute(
             """

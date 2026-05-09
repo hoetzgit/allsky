@@ -11,6 +11,7 @@ from modules.i2c import i2c_bp
 from modules.serial import serial_bp
 from modules.system import system_bp
 from modules.allsky import allsky_bp
+from modules.lightning import lightning_bp, restore_lightning_monitor
 from modules.auth import auth_bp
 from modules.dashboard import dashboard_bp
 from modules.webauth import webauth_bp, SimpleUser
@@ -70,7 +71,10 @@ app.register_blueprint(i2c_bp, url_prefix='/i2c')
 app.register_blueprint(serial_bp, url_prefix='/serial')
 app.register_blueprint(allsky_bp, url_prefix='/allsky')
 app.register_blueprint(system_bp, url_prefix='/system')
+app.register_blueprint(lightning_bp, url_prefix='/lightning')
 #app.register_blueprint(focuser_bp, url_prefix="/focuser")
+
+restore_lightning_monitor()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8090, debug=True)
