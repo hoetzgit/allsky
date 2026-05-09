@@ -3709,6 +3709,9 @@ done
 [[ ${OK} == "false" ]] && usage_and_exit 1
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 
+# Output a blank line so the first "real" line is easier to see.
+echo
+
 IorR="INSTALLATION"		# Installation (default) or Restoration
 
 if [[ -n ${FUNCTION} || ${FIX} == "true" ]]; then
