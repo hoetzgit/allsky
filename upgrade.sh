@@ -379,8 +379,11 @@ if [[ ${ACTION} == "upgrade" ]]; then
 		display_msg progress "${MSG}" "  Running install.sh"
 		display_msg --logonly info "ENDING UPGRADE; calling install.sh"
 
-		# shellcheck disable=SC2086,SC2291
-		./install.sh ${DEBUG_ARG} ${SKIP} --doUpgrade
+		(
+			unset DISPLAY_MSG_LOG	# so install.sh writes to its own log file
+			# shellcheck disable=SC2086,SC2291
+			./install.sh ${DEBUG_ARG} ${SKIP} --doUpgrade
+		)
 		RET=$?
 		if [[ ${RET} -ne 0 ]]; then
 			display_msg --log warning "install.sh failed."  "Contact the Allsky Team"
