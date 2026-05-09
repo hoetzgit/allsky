@@ -406,7 +406,8 @@ function generate_support_info()
 	{
 		local ZIP_FILE="${1}"
 		local SOURCE="${2}"
-		zip -r "${ZIP_FILE}" "${SOURCE}" > /dev/null 2>&1
+		# shellcheck disable=SC2086
+		zip -r "${ZIP_FILE}" ${SOURCE} > /dev/null 2>&1
 		get_mb "${ZIP_FILE}"
 		rm -f "${ZIP_FILE}"
 	}
