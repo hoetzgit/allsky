@@ -475,6 +475,19 @@ int main(int argc, char *argv[])
 		exit(EXIT_ERROR_STOP);
 	}
 
+	if (CG.cmdToUse == NULL) {
+		// We can't do anything if we don't know how to control the camera.
+		char command[200];
+		snprintf(command, sizeof(command)-1, "%s/addMessage.sh --type error --msg '%s: %s'",
+			CG.allskyScripts,
+			CG.ME,
+			"Unknown command to control RPi camera; contact Allsky Support.");
+		Log(4, "Executing %s\n", command);
+		(void) system(command);
+
+		exit(EXIT_ERROR_STOP);
+	}
+
 	char bufTemp[1024]			= { 0 };
 	char const *bayer[]			= { "RG", "BG", "GR", "GB" };
 	bool justTransitioned		= false;
