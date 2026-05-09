@@ -1446,7 +1446,6 @@ does_prior_Allsky_exist()
 		if [[ ${DO_UPGRADE} == "true" ]]; then
 			display_msg --log error "${MSG}"  "It must exist during an upgrade."
 			exit_installation 1 "${MSG}"
-		fi
 		else
 			display_msg --log warning "${MSG}"
 			PRIOR_SETTINGS_FILE=""
