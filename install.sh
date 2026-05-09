@@ -868,6 +868,7 @@ do_sudoers()
 
 	display_msg --logonly info "Creating/updating sudoers file."
 	sed \
+		-e "s;XX_ALLSKY_OWNER_XX;${ALLSKY_OWNER};" \
 		-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
 		-e "s;XX_ALLSKY_UTILITIES_XX;${ALLSKY_UTILITIES};" \
 		"${REPO_SUDOERS_FILE}"  >  "${TMP_FILE}"
