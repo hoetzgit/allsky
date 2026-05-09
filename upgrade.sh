@@ -389,7 +389,8 @@ if [[ ${ACTION} == "upgrade" ]]; then
 			display_msg --log warning "install.sh failed."  "Contact the Allsky Team"
 			exit "${RET}"
 		fi
-		display_msg --log progress "The upgrade is complete."  "  Go to the WebUI to restart Allsky.\n"
+		MSG2="  To start Allsky, go to the WebUI's 'System -> System' page.\n"
+		display_msg --log progress "The upgrade is complete."  "${MSG2}"
 		exit 0
 	fi
 
