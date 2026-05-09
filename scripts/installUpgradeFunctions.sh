@@ -2013,9 +2013,9 @@ function update_allsky_common()
 		grep --silent -E "^src/.*\.cpp|^src/.*\.c|^src/.*\.h" "${FILES_DOWNLOADED_FILE}" ; then
 
 		# At least one file in the "src" directory changed, so re-run make.
+		# TODO: FIX: No longer needed, "deps" done in install.sh:		sudo make -C src deps &&
 		local X="$(
 			cd "${ALLSKY_HOME}" &&
-			sudo make -C src deps &&
 			make -C src all &&
 			sudo make install
 		)"
@@ -2061,9 +2061,9 @@ function setup_rpi_supported_cameras()
 {
 	local CMD="${1}"
 	local FORCE="${2}"
-	local notCMD
 
 	if [[ ! -f ${ALLSKY_RPi_SUPPORTED_CAMERAS} || ${FORCE} == "true" ]]; then
+		local notCMD
 		local B="$( basename "${ALLSKY_RPi_SUPPORTED_CAMERAS}" )"
 
 		# "libcamera" is the only software packages supported as of 2025,
