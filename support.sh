@@ -420,6 +420,7 @@ function generate_support_info()
 	# is over the limit.  If so, get the actual compressed size.
 
 	local GIT_HUB_LIMIT_MB=25
+	(( GIT_HUB_LIMIT_MB -= 3 ))		# Add a cushion in case our numbers are off a little
 	local COMPRESSION_RATIO=0.3		# Normally the logs compress to around 10%, but be very conservative
 	declare -a ALL_LOGS=()
 	local INDEX=-1
