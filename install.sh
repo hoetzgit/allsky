@@ -2539,7 +2539,7 @@ restore_prior_website_files()
 	D="${PRIOR_WEBSITE_DIR}/${ALLSKY_MYFILES_NAME}"
 	if [[ -d ${D} ]]; then
 		display_msg --log progress "${ITEM} (moving contents)"
-display_msg --logonly info "${ITEM} contents: $( ls "${D}"/* )"		# For debugging
+display_msg --logonly info "${ITEM} contents: $( ls "${D}"/* 2>/dev/null )"		# For debugging
 		(shopt -s dotglob
 		 mv "${D}"/*   "${ALLSKY_WEBSITE_MYFILES_DIR}" 2>/dev/null
 	 	)
@@ -2723,7 +2723,7 @@ do_restore()
 			D="${PRIOR_WEBSITE_DIR}/${ALLSKY_MYFILES_NAME}"
 			if [[ -d ${D} ]]; then
 				display_msg --log progress "${ITEM} (moving contents back)"
-display_msg --logonly info "${ITEM} contents: $( ls "${ALLSKY_WEBSITE_MYFILES_DIR}"/* )"		# For debugging
+display_msg --logonly info "${ITEM} contents: $( ls "${ALLSKY_WEBSITE_MYFILES_DIR}"/* 2>/dev/null )"		# For debugging
 				(shopt -s dotglob
 			 		mv "${ALLSKY_WEBSITE_MYFILES_DIR}"/*  "${D}" 2>/dev/null
 	 			)
