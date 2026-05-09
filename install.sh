@@ -2723,7 +2723,7 @@ do_restore()
 			D="${PRIOR_WEBSITE_DIR}/${ALLSKY_MYFILES_NAME}"
 			if [[ -d ${D} ]]; then
 				display_msg --log progress "${ITEM} (moving contents back)"
-display_msg --logonly info "${ITEM} contents: $( ls "${D}"/* )"		# For debugging
+display_msg --logonly info "${ITEM} contents: $( ls "${ALLSKY_WEBSITE_MYFILES_DIR}"/* )"		# For debugging
 				(shopt -s dotglob
 			 		mv "${ALLSKY_WEBSITE_MYFILES_DIR}"/*  "${D}" 2>/dev/null
 	 			)
@@ -3301,6 +3301,11 @@ remind_old_version()
 	if [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
 		MSG="When you are sure everything is working with the new Allsky release,"
 		MSG+=" remove your old version in '${ALLSKY_PRIOR_DIR}' to save disk space."
+
+		if [[ ${DO_UPGRADE} == "true" && -d ${OLDEST_DIR} ]]; then
+			MSG+="\nYou can also remove '${OLDEST_DIR}'."
+		fi
+
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 		display_msg --logonly info "Displayed message about removing '${ALLSKY_PRIOR_DIR}'."
 	fi
