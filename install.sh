@@ -3904,7 +3904,6 @@ restore_prior_files
 restore_prior_website_files
 
 ##### Set permissions.  Want this at the end so we make sure we get all files.
-# Re-run every time in case permissions changed.
 set_permissions
 
 ##### Convert the legacy password format if required
