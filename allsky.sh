@@ -93,6 +93,11 @@ fi
 # Make it easy to find the beginning of this run in the log file.
 echo "     ***** Starting Allsky *****"
 
+if [[ ! -d ${ALLSKY_IMAGES} ]]; then
+	echo ">>> Creating '${ALLSKY_IMAGES}' <<<"
+	mkdir "${ALLSKY_IMAGES}"
+fi
+
 # Make sure ${CAMERA_TYPE} is valid; if not, exit with a message.
 verify_CAMERA_TYPE "${CAMERA_TYPE}"
 
