@@ -29,6 +29,7 @@ export REPO_WEBSITE_CONFIGURATION_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGUR
 
 	# Directory of prior version of Allsky, if it exists.
 export ALLSKY_PRIOR_DIR="$( dirname "${ALLSKY_HOME}" )/${ALLSKY_INSTALL_DIR}-OLD"
+export OLDEST_DIR="${ALLSKY_PRIOR_DIR/OLD/OLDEST}"
 	# Prior "config" directory, if it exists.
 export PRIOR_CONFIG_DIR="${ALLSKY_PRIOR_DIR}/$( basename "${ALLSKY_CONFIG}" )"
 export PRIOR_WEBSITE_DIR="${ALLSKY_PRIOR_DIR}${ALLSKY_WEBSITE/${ALLSKY_HOME}/}"
