@@ -2538,9 +2538,9 @@ restore_prior_website_files()
 	ITEM="${SPACE}${SPACE}Website '${ALLSKY_MYFILES_NAME}' directory"
 	D="${PRIOR_WEBSITE_DIR}/${ALLSKY_MYFILES_NAME}"
 	if [[ -d ${D} ]]; then
-		display_msg --log progress "${ITEM} (moving)"
+		display_msg --log progress "${ITEM} (moving contents)"
+display_msg --logonly info "${ITEM} contents: $( ls "${D}"/* )"		# For debugging
 		(shopt -s dotglob
-		 display_msg --logonly info "Moving contents of ${D} to ${ALLSKY_WEBSITE_MYFILES_DIR}"
 		 mv "${D}"/*   "${ALLSKY_WEBSITE_MYFILES_DIR}" 2>/dev/null
 	 	)
 	else
@@ -2723,13 +2723,12 @@ do_restore()
 			D="${PRIOR_WEBSITE_DIR}/${ALLSKY_MYFILES_NAME}"
 			if [[ -d ${D} ]]; then
 				display_msg --log progress "${ITEM} (moving contents back)"
-				display_msg --logonly info "${ITEM} contents: $( ls "${D}"/* )"
+display_msg --logonly info "${ITEM} contents: $( ls "${D}"/* )"		# For debugging
 				(shopt -s dotglob
-			 		mv "${D}"/*   "${ALLSKY_WEBSITE_MYFILES_DIR}" 2>/dev/null
+			 		mv "${ALLSKY_WEBSITE_MYFILES_DIR}"/*  "${D}" 2>/dev/null
 	 			)
 			else
-				display_msg --log progress "${ITEM} (moving directory back)"
-				mv "${ALLSKY_WEBSITE_MYFILES_DIR}"   "${PRIOR_WEBSITE_DIR}"
+				display_msg --logonly info "${ITEM}: NO PRIOR DIRECTORY"
 			fi
 		else
 			display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
