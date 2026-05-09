@@ -3,7 +3,7 @@ This module allows data from Allsky to be published to a variety of destinations
   - **[Redis](https://redis.io){ target="_blank" rel="noopener" .external }** - an in-memory, key–value data store designed for extreme speed, used both as a cache and as a primary database for real-time applications. Unlike traditional relational databases, Redis stores data structures directly—such as strings, lists, sets, sorted sets, hashes, bitmaps, streams, and geospatial indexes—allowing efficient operations with minimal latency. It supports persistence to disk, replication, clustering, and high-availability configurations, making it suitable for large-scale systems. Because Redis operations are atomic and single-threaded per shard, it provides predictable performance while avoiding complex locking. Its combination of speed, versatile data structures, and robust ecosystem makes Redis popular for caching, session storage, message queues, real-time analytics, and pub/sub systems.
 
   - **[MQTT](https://mqtt.org){ target="_blank" rel="noopener" .external  }** - (Message Queuing Telemetry Transport) is a lightweight, publish–subscribe messaging protocol designed for reliable communication over constrained networks, making it ideal for IoT devices, sensors, and low-bandwidth or high-latency environments. Instead of devices talking directly to each other, all messages flow through a central broker, which routes published messages to subscribers based on topic filters. The protocol is extremely efficient, using small packet sizes and persistent TCP connections, and it supports quality-of-service levels to ensure messages are delivered as reliably as the application requires. With built-in features like retained messages, last-will notifications, and secure transport via TLS, MQTT provides a flexible and scalable foundation for real-time, event-driven systems across everything from home automation to industrial telemetry.
-  - **[REST](https://en.wikipedia.org/wiki/REST){ target="_blank" rel="noopener" .external  }** - (Representational State Transfer) is an architectural style for building web services that communicate over HTTP using simple, stateless operations. In REST, resources—such as users, orders, or images—are identified by URLs, and clients interact with them using standard HTTP methods like GET, POST, PUT, and DELETE. Because each request contains all the information needed to process it, the server does not maintain client session state, making REST systems highly scalable and easy to distribute. Responses typically use lightweight formats such as JSON, and REST’s uniform interface simplifies integration across diverse platforms. Its simplicity, predictability, and compatibility with existing web infrastructure make REST one of the most widely used approaches for modern APIs.
+  - **[REST](https://en.wikipedia.org/wiki/REST){ target="_blank" rel="noopener" .external  }** - (Representational State Transfer) is an architectural style for building web services that communicate over HTTP using simple, stateless operations. In REST, resources—such as users, orders, or images—are identified by URLs, and clients interact with them using standard HTTP methods like GET, POST, PUT, and DELETE. Because each request contains all the information needed to process it, the server does not maintain client session state, making REST systems highly scalable and easy to distribute. Responyses typically use lightweight formats such as JSON, and REST’s uniform interface simplifies integration across diverse platforms. Its simplicity, predictability, and compatibility with existing web infrastructure make REST one of the most widely used approaches for modern APIs.
   - **[InfluxDB](https://www.influxdata.com){ target="_blank" rel="noopener" .external  }** - is a high-performance, open-source time series database designed specifically for storing and querying timestamped data such as metrics, events, and IoT sensor readings. It organizes data into measurements, tags, fields, and timestamps, enabling efficient indexing and fast retrieval even at very high ingest rates. InfluxDB supports powerful time-based queries, downsampling, and data retention policies that automatically manage storage over time. With its SQL-like query language (InfluxQL) or the more advanced Flux language, it provides flexible analytics capabilities. Optimized for real-time monitoring, observability, and IoT workloads, InfluxDB delivers a scalable and performant foundation for applications that must handle large volumes of chronological data.
 
 
@@ -45,12 +45,18 @@ This module allows data from Allsky to be published to a variety of destinations
 
 ### MQTT { data-toc-label="MQTT" }
 
+!!! info  "Home Assistant"
+
+    If publishing to HomeAssistant then please ensure that the HA discovery option is enabled
+
 | Setting | Description |
 |--------|-------------|
 | Publish to MQTT | Enable to publish data to the MQTT server |
-| USe Secure Connection | If enabled TLS will be used to connect to the MQTT server |
+| Enable HA Discovery | If publishing to Home Assistant then enable this |
+| Use SSL | If enabled SSL will be used to connect to the MQTT server |
+| Self Signed Certs | If enabled SSL will use self signed Certificates |
+| Path to PEM | Only visible if self signed certs are being used. This is the path to your PEM file |
 | MQTT Host | The MQTT host and port number |
-| Loop Delay | The loop delay, only increase this if you experience issues with messages missing in the broker |
 | MQTT Topic | The MQTT topic to publish data to |
 | Username | The Username used to access the MQTT Server |
 | Password | The password to use for the above username |
