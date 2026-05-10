@@ -968,6 +968,12 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 					unlink(savedImage.c_str());
 				}
 
+				// See if we should exit.
+				if (CG.maxImages > 0 && numExposures >= CG.maxImages) {
+					Log(1, "Stopping after %d image%s.", CG.maxImages, CG.maxImages == 1 ? "" : "s");
+					closeUp(EXIT_STOP);
+				}
+
 				std::string s;
 				if (CG.currentAutoExposure)
 					s = "auto";
