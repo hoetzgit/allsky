@@ -216,7 +216,7 @@ $(document).ready(function () {
     selector: 'a',
     plugins: [lgZoom, lgThumbnail],
 		mode: 'lg-slide-circular',
-    speed: 400,
+    speed: 0,
     download: false,
     thumbnail: true
   });
