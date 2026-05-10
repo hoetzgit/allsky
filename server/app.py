@@ -76,5 +76,13 @@ app.register_blueprint(lightning_bp, url_prefix='/lightning')
 
 restore_lightning_monitor()
 
+
+def env_flag(name: str, default: bool = False) -> bool:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8090, debug=True)
+    app.run(host='127.0.0.1', port=8090, debug=env_flag('ALLSKY_DEV_SERVER_DEBUG'))
