@@ -10,7 +10,6 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
         return [
             'Entries' => ['get'],
             'BrowseFiles' => ['get'],
-            'BrowseCommandFiles' => ['get'],
             'RunCommand' => ['post'],
             'RunButton' => ['post'],
             'SaveEntries' => ['post'],
@@ -101,29 +100,6 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
 
         if (!$this->isWithinConfigDirectory($realPath)) {
             $this->send403('You can only browse files in ~/allsky/config/myFiles.');
-        }
-
-        return $realPath;
-    }
-
-    private function normalizeCommandDirectory(string $path): string
-    {
-        $path = trim($path);
-        if ($path === '') {
-            $path = '/home/pi';
-        }
-
-        if ($path[0] !== '/') {
-            $this->send400('Enter an absolute directory path.');
-        }
-
-        $realPath = realpath($path);
-        if ($realPath === false || !is_dir($realPath)) {
-            $this->send400('The selected directory does not exist.');
-        }
-
-        if (!is_readable($realPath)) {
-            $this->send403('The selected directory is not readable.');
         }
 
         return $realPath;
@@ -688,7 +664,6 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
             if ($realPath === false) {
                 continue;
             }
-
             if (is_dir($realPath)) {
                 $directories[] = [
                     'name' => $item,
@@ -715,69 +690,6 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
             'path' => $path,
             'entries' => array_merge($entries, $directories, $files),
             'configDir' => ALLSKY_MYFILES_DIR,
-        ]);
-    }
-
-    public function getBrowseCommandFiles(): void
-    {
-        $path = $this->normalizeCommandDirectory((string)($_GET['path'] ?? '/home/pi'));
-        $entries = [];
-
-        $parent = dirname($path);
-        if ($parent !== $path) {
-            $entries[] = [
-                'name' => '..',
-                'path' => $parent,
-                'type' => 'directory',
-            ];
-        }
-
-        $items = @scandir($path);
-        if (!is_array($items)) {
-            $this->send500('Unable to browse the selected directory.');
-        }
-
-        $directories = [];
-        $files = [];
-        foreach ($items as $item) {
-            if ($item === '.' || $item === '..') {
-                continue;
-            }
-            if (strpos($item, '.') === 0) {
-                continue;
-            }
-
-            $itemPath = $path . '/' . $item;
-            $realPath = realpath($itemPath);
-            if ($realPath === false) {
-                continue;
-            }
-
-            if (is_dir($realPath)) {
-                $directories[] = [
-                    'name' => $item,
-                    'path' => $realPath,
-                    'type' => 'directory',
-                ];
-            } elseif (is_file($realPath)) {
-                $files[] = [
-                    'name' => $item,
-                    'path' => $realPath,
-                    'type' => 'file',
-                ];
-            }
-        }
-
-        usort($directories, static function ($a, $b) {
-            return strcasecmp($a['name'], $b['name']);
-        });
-        usort($files, static function ($a, $b) {
-            return strcasecmp($a['name'], $b['name']);
-        });
-
-        $this->sendResponse([
-            'path' => $path,
-            'entries' => array_merge($entries, $directories, $files),
         ]);
     }
 

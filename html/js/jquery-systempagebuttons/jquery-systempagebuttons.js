@@ -23,7 +23,6 @@
             this.$errorModal = null;
             this.$resultModal = null;
             this.$iconPickerModal = null;
-            this.$commandBrowserModal = null;
             this.fontAwesomeIcons = [];
             this.fontAwesomeIconsLoaded = false;
             this.fontAwesomeIconStyleData = null;
@@ -488,7 +487,6 @@
             this.ensureErrorModal();
             this.ensureResultModal();
             this.ensureIconPickerModal();
-            this.ensureCommandBrowserModal();
 
             this.$newPathInput = this.$browserModal.find("#as-system-entries-new-path");
             this.$tableBody = this.$modal.find("#as-system-entries-table-body");
@@ -896,78 +894,6 @@
             });
         }
 
-        ensureCommandBrowserModal() {
-            if (this.$commandBrowserModal) {
-                return;
-            }
-
-            const html = `
-                <div class="modal fade" id="as-system-command-browser-modal" tabindex="-1" role="dialog" aria-labelledby="as-system-command-browser-title">
-                    <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                <h4 class="modal-title" id="as-system-command-browser-title">Select Command File</h4>
-                            </div>
-                            <div class="modal-body">
-                                <div class="form-group">
-                                    <div class="row">
-                                        <div class="col-sm-8">
-                                            <label>Browse Filesystem</label>
-                                            <div class="help-block" id="as-system-command-browser-root" style="margin-top: 0; margin-bottom: 0;"></div>
-                                        </div>
-                                        <div class="col-sm-4 text-right" style="padding-top: 22px;">
-                                            <button type="button" class="btn btn-default" id="as-system-command-browser-refresh"><i class="fa fa-refresh"></i> Refresh</button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div id="as-system-command-browser-list" class="list-group as-system-entries-browser-list"></div>
-                                <div class="form-group" style="margin-top: 15px; margin-bottom: 0;">
-                                    <label>Selected File</label>
-                                    <div class="well well-sm" id="as-system-command-browser-selected" style="margin-bottom: 0;">No file selected.</div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <button type="button" class="btn btn-primary" id="as-system-command-browser-open-footer"><i class="fa fa-check"></i> Use File</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            this.$commandBrowserModal = $(html);
-            $("body").append(this.$commandBrowserModal);
-
-            this.$commandBrowserModal.on("click", "#as-system-command-browser-refresh", () => {
-                this.browseCommandDirectory(this.$commandBrowserModal.attr("data-current-dir") || "/home/pi");
-            });
-            this.$commandBrowserModal.on("click", ".as-system-command-browser-entry", (event) => {
-                event.preventDefault();
-                const $item = $(event.currentTarget);
-                const type = $item.attr("data-type") || "";
-                const path = $item.attr("data-path") || "";
-
-                if (type === "directory") {
-                    this.browseCommandDirectory(path);
-                    return;
-                }
-
-                if (type === "file" && path !== "") {
-                    this.setSelectedCommandFile(path);
-                }
-            });
-            this.$commandBrowserModal.on("click", "#as-system-command-browser-open-footer", () => {
-                const path = $.trim(this.$commandBrowserModal.attr("data-selected-file") || "");
-                if (path === "") {
-                    this.showError("Select a file to use as the button command.");
-                    return;
-                }
-                this.$entryModal.find("#as-system-entry-command").val(path);
-                this.$commandBrowserModal.modal("hide");
-            });
-        }
-
         loadConfiguredFiles() {
             this.setMessage("Loading configured files...");
             $.ajax({
@@ -997,70 +923,24 @@
         }
 
         openCommandBrowser() {
-            this.ensureCommandBrowserModal();
             const currentCommand = $.trim(this.$entryModal.find("#as-system-entry-command").val() || "");
-            let browsePath = "/home/pi";
+            let browsePath = "";
 
             if (currentCommand !== "" && currentCommand.charAt(0) === "/") {
                 browsePath = currentCommand.replace(/\/[^/]*$/, "") || "/";
             }
 
-            this.setSelectedCommandFile(currentCommand !== "" && currentCommand.charAt(0) === "/" ? currentCommand : "");
-            this.$commandBrowserModal.modal("show");
-            this.browseCommandDirectory(browsePath);
-        }
-
-        browseCommandDirectory(path) {
-            const browsePath = $.trim(path || "/home/pi");
-            const $list = this.$commandBrowserModal.find("#as-system-command-browser-list");
-            $list.html('<div class="list-group-item text-muted">Loading...</div>');
-
-            $.ajax({
-                url: "includes/systembuttonsutil.php?request=BrowseCommandFiles",
-                method: "GET",
-                dataType: "json",
-                cache: false,
-                data: {
-                    path: browsePath
+            $.allskyFileBrowser({
+                url: "includes/uiutil.php?request=BrowseCommandFiles",
+                startPath: browsePath,
+                selected: currentCommand !== "" && currentCommand.charAt(0) === "/" ? currentCommand : "",
+                requireExecutable: true,
+                selectErrorText: "Select a file to use as the button command.",
+                onSelect: (path) => {
+                    this.$entryModal.find("#as-system-entry-command").val(path);
+                    this.updateEntryTestButtonState();
                 }
-            }).done((result) => {
-                const currentPath = result.path || browsePath;
-                const entries = Array.isArray(result.entries) ? result.entries : [];
-                this.$commandBrowserModal.attr("data-current-dir", currentPath);
-                this.$commandBrowserModal.find("#as-system-command-browser-root").text(currentPath);
-                $list.empty();
-
-                if (entries.length === 0) {
-                    $list.html('<div class="list-group-item text-muted">No files or directories found.</div>');
-                    return;
-                }
-
-                entries.forEach((entry) => {
-                    const iconClass = entry.type === "directory" ? "fa-folder-open" : "fa-file-text-o";
-                    const actionText = entry.type === "directory" ? "Open" : "Select";
-                    $list.append(`
-                        <a href="#" class="list-group-item as-system-command-browser-entry" data-type="${this.escapeHtml(entry.type || "")}" data-path="${this.escapeHtml(entry.path || "")}">
-                            <span class="badge">${actionText}</span>
-                            <i class="fa ${iconClass} fa-fw"></i> ${this.escapeHtml(entry.name || "")}
-                        </a>
-                    `);
-                });
-            }).fail((xhr) => {
-                $list.html(`<div class="list-group-item text-danger">${this.escapeHtml(xhr.responseJSON?.message || "Unable to browse the selected directory.")}</div>`);
-            });
-        }
-
-        setSelectedCommandFile(path) {
-            const selectedPath = $.trim(path || "");
-            const $selected = this.$commandBrowserModal.find("#as-system-command-browser-selected");
-            this.$commandBrowserModal.attr("data-selected-file", selectedPath);
-
-            if (selectedPath === "") {
-                $selected.text("No file selected.");
-                return;
-            }
-
-            $selected.text(selectedPath);
+            }).open();
         }
 
         renderConfiguredFileList() {

@@ -753,6 +753,7 @@ function DisplaySystem()
 			'js/watchdog.js',
 			'js/system-logs.js',
 			'js/system-backups.js',
+			'js/jquery-filebrowser/jquery-filebrowser.js',
 			'js/jquery-systempagebuttons/jquery-systempagebuttons.js',
 			'js/system.js'
 		]);

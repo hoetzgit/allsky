@@ -4235,21 +4235,47 @@ body.dark #oe-module-editor-navbar .navbar-right .navbar-btn:focus {
     padding-top: var(--as-content-padding-y);
 }
 
-.as-system-entries-browser-list {
+.as-system-entries-browser-list,
+.as-file-browser-list {
     max-height: 280px;
     overflow-y: auto;
     overflow-x: hidden;
 }
 
-body.dark .as-system-entries-browser-list .list-group-item {
+body.dark .as-system-entries-browser-list .list-group-item,
+body.dark .as-file-browser-list .list-group-item {
     color: var(--bs3-body-color);
     background-color: var(--bs3-list-group-bg);
     border-color: var(--bs3-list-group-border);
 }
 
-body.dark .as-system-entries-browser-list .list-group-item .badge {
+body.dark .as-system-entries-browser-list .list-group-item .badge,
+body.dark .as-file-browser-list .list-group-item .badge {
     color: var(--bs3-badge-text);
     background-color: var(--bs3-badge-bg);
+}
+
+.as-file-browser-list .as-file-browser-entry-executable {
+    border-left: 4px solid var(--el-success);
+    font-weight: 600;
+}
+
+.as-file-browser-list .as-file-browser-entry-disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.as-file-browser-list .as-file-browser-entry-wrong-owner {
+    border-left: 4px solid var(--el-warning);
+    cursor: not-allowed;
+}
+
+.as-file-browser-list .as-file-browser-entry-wrong-owner .badge {
+    background-color: var(--el-warning);
+}
+
+.as-file-browser-list .as-file-browser-entry-disabled .badge {
+    background-color: var(--bs3-text-muted);
 }
 
 .system-user-actions-body .btn {

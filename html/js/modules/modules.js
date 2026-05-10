@@ -903,6 +903,7 @@ class MODULESEDITOR {
 
 				let inputHTML = ''
 				let fieldPostHTML = ''
+				let fieldValueColumnClass = null;
 				if (fieldType === null || fieldType == 'text') {
 					let fieldBaseType = 'text'
 					if ('secret' in fieldData) {
@@ -977,6 +978,50 @@ class MODULESEDITOR {
 								showMaskCreation: true,
 								allowDoubleClick: true
 							});
+						});
+					}
+
+					if (fieldType == 'commandfile') {
+						let commandFileTitle = fieldTypeData.title || fieldTypeData.selectorTitle || fieldTypeData.selectortitle || 'Select Script';
+						let commandFileRequireExecutable = true;
+						if (Object.prototype.hasOwnProperty.call(fieldTypeData, 'requireExecutable')) {
+							commandFileRequireExecutable = this.#convertBool(fieldTypeData.requireExecutable);
+						} else if (Object.prototype.hasOwnProperty.call(fieldTypeData, 'executableOnly')) {
+							commandFileRequireExecutable = this.#convertBool(fieldTypeData.executableOnly);
+						}
+						let commandFileRootPath = fieldTypeData.rootPath || fieldTypeData.root || '';
+						inputHTML = '<input ' + disabled + ' id="' + key + '" name="' + key + '" class="form-control" value="' + fieldValue + '"' + required + fieldDescription + '>';
+						extraClass = 'input-group';
+						fieldValueColumnClass = 'col-xs-9';
+						inputHTML = '\
+							' + inputHTML + '\
+							<span class="input-group-btn">\
+									<button type="button" class="btn btn-primary" id="open-commandfile-' + key + '" data-source="' + key + '" ' + disabled + '>...</button>\
+							</span>\
+						';
+
+						$(document).off('click', '#open-commandfile-' + key)
+						$(document).on('click', '#open-commandfile-' + key, (event) => {
+							let el = $(event.currentTarget).data('source');
+							let currentValue = $.trim($('#' + el).val() || '');
+							let browsePath = '';
+
+							if (currentValue !== '' && currentValue.charAt(0) === '/') {
+								browsePath = currentValue.replace(/\/[^/]*$/, '') || '/';
+							}
+
+							$.allskyFileBrowser({
+								title: commandFileTitle,
+								url: 'includes/uiutil.php?request=BrowseCommandFiles',
+								startPath: browsePath,
+								rootPath: commandFileRootPath,
+								selected: currentValue !== '' && currentValue.charAt(0) === '/' ? currentValue : '',
+								requireExecutable: commandFileRequireExecutable,
+								selectErrorText: 'Select a file to use for this module setting.',
+								onSelect: function (path) {
+									$('#' + el).val(path).trigger('change');
+								}
+							}).open();
 						});
 					}
 
@@ -1684,7 +1729,12 @@ class MODULESEDITOR {
 							</div>\
 						'
 					} else {
-						const valueColumnClass = (fieldType === 'select' || fieldType === 'dependentselect' || fieldType === 'ajaxselect') ? 'col-xs-4' : 'col-xs-8';
+						const valueColumnClass = fieldValueColumnClass || ((fieldType === 'select' || fieldType === 'dependentselect' || fieldType === 'ajaxselect') ? 'col-xs-4' : 'col-xs-8');
+						const postColumnHTML = fieldPostHTML !== '' ? '\
+								<div class="col-xs-1">\
+								' + fieldPostHTML + '\
+								</div>\
+						' : '';
 						fieldHTML = '\
 							<div class="form-group" id="' + key + '-wrapper">\
 								<label for="' + key + '" class="control-label col-xs-3">' + fieldData.description + ' ' + helpToggle + '</label>\
@@ -1693,9 +1743,7 @@ class MODULESEDITOR {
 										' + inputHTML + '\
 									</div>\
 								</div>\
-								<div class="col-xs-1">\
-								' + fieldPostHTML + '\
-								</div>\
+								' + postColumnHTML + '\
 							</div>\
 						'
 					}
@@ -2633,7 +2681,7 @@ class MODULESEDITOR {
 		} else {
 			if (typeof value === 'string') {
 				value = value.toLowerCase();
-				if (value === 'true') {
+				if (value === 'true' || value === '1' || value === 'yes' || value === 'checked') {
 					result = true;
 				}
 			}

@@ -52,6 +52,7 @@ class UIUTIL extends UTILBASE {
             'CPULoad'        => ['get'],
             'CPUTemp'        => ['get'],
             'DayNightStatus' => ['get'],
+            'BrowseCommandFiles' => ['get'],
             'DirectoryBrowserList' => ['get'],
             'ListFileTypeContent' => ['get'],
             'MemoryUsed'     => ['get'],
@@ -89,6 +90,231 @@ class UIUTIL extends UTILBASE {
         $val = getVariableOrDefault($settings_array, $name, 'overlay.json');
         if ($swapSpaces !== '') $val = str_replace(' ', $swapSpaces, (string)$val);
         return $val;
+    }
+
+    private function isWithinDirectory(string $path, string $directory): bool
+    {
+        return $path === $directory || strpos($path, rtrim($directory, '/') . '/') === 0;
+    }
+
+    private function normalizeBrowserRoot(string $path): string
+    {
+        $path = trim($path);
+        if ($path === '') {
+            $path = defined('ALLSKY_MYFILES_DIR') ? ALLSKY_MYFILES_DIR : '/home/pi';
+        }
+
+        if ($path[0] !== '/') {
+            $this->send400('Enter an absolute root directory path.');
+        }
+
+        $realPath = realpath($path);
+        if ($realPath === false || !is_dir($realPath)) {
+            $this->send400('The root directory does not exist.');
+        }
+
+        if (!is_readable($realPath)) {
+            $this->send403('The root directory is not readable.');
+        }
+
+        return rtrim($realPath, '/');
+    }
+
+    private function normalizeBrowserDirectory(string $path, string $rootPath): string
+    {
+        $path = trim($path);
+        if ($path === '') {
+            $path = $rootPath;
+        }
+
+        if ($path[0] !== '/') {
+            $this->send400('Enter an absolute directory path.');
+        }
+
+        $realPath = realpath($path);
+        if ($realPath === false || !is_dir($realPath)) {
+            $this->send400('The selected directory does not exist.');
+        }
+
+        if (!is_readable($realPath)) {
+            $this->send403('The selected directory is not readable.');
+        }
+
+        if (!$this->isWithinDirectory($realPath, $rootPath)) {
+            $this->send403('You cannot browse above the configured root directory.');
+        }
+
+        return $realPath;
+    }
+
+    private function getExecutableCheckOwner(): string
+    {
+        $owner = defined('ALLSKY_OWNER') ? trim((string)ALLSKY_OWNER) : '';
+        if ($owner !== '') {
+            return $owner;
+        }
+
+        $user = @posix_getpwuid((int)@posix_geteuid());
+        return is_array($user) && !empty($user['name']) ? (string)$user['name'] : '';
+    }
+
+    private function getUserIdentity(string $userName): ?array
+    {
+        if ($userName === '' || !function_exists('posix_getpwnam')) {
+            return null;
+        }
+
+        $user = @posix_getpwnam($userName);
+        if (!is_array($user) || !isset($user['uid'], $user['gid'])) {
+            return null;
+        }
+
+        $groupIds = [(int)$user['gid']];
+        $groupLines = @file('/etc/group', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if (is_array($groupLines)) {
+            foreach ($groupLines as $line) {
+                $parts = explode(':', (string)$line);
+                if (count($parts) < 4) {
+                    continue;
+                }
+
+                $members = array_map('trim', explode(',', $parts[3]));
+                if (in_array($userName, $members, true)) {
+                    $groupIds[] = (int)$parts[2];
+                }
+            }
+        }
+
+        return [
+            'uid' => (int)$user['uid'],
+            'gids' => array_values(array_unique($groupIds)),
+        ];
+    }
+
+    private function userHasModeBit(string $path, array $identity, int $ownerBit, int $groupBit, int $otherBit): bool
+    {
+        $stat = @stat($path);
+        if (!is_array($stat) || !isset($stat['mode'], $stat['uid'], $stat['gid'])) {
+            return false;
+        }
+
+        $mode = (int)$stat['mode'];
+        if ((int)$stat['uid'] === $identity['uid']) {
+            return ($mode & $ownerBit) !== 0;
+        }
+
+        if (in_array((int)$stat['gid'], $identity['gids'], true)) {
+            return ($mode & $groupBit) !== 0;
+        }
+
+        return ($mode & $otherBit) !== 0;
+    }
+
+    private function isExecutableByAllskyOwner(string $path): bool
+    {
+        if (!is_file($path)) {
+            return false;
+        }
+
+        $identity = $this->getUserIdentity($this->getExecutableCheckOwner());
+        if ($identity === null) {
+            return false;
+        }
+
+        if (!$this->userHasModeBit($path, $identity, 0100, 0010, 0001)) {
+            return false;
+        }
+
+        $currentPath = dirname($path);
+        while ($currentPath !== '' && $currentPath !== '/' && $currentPath !== '.') {
+            if (!$this->userHasModeBit($currentPath, $identity, 0100, 0010, 0001)) {
+                return false;
+            }
+
+            $parent = dirname($currentPath);
+            if ($parent === $currentPath) {
+                break;
+            }
+            $currentPath = $parent;
+        }
+
+        return true;
+    }
+
+    private function hasAnyExecuteBit(string $path): bool
+    {
+        $stat = @stat($path);
+        if (!is_array($stat) || !isset($stat['mode'])) {
+            return false;
+        }
+
+        return (((int)$stat['mode']) & 0111) !== 0;
+    }
+
+    public function getBrowseCommandFiles(): void
+    {
+        $rootPath = $this->normalizeBrowserRoot((string)($_GET['root'] ?? ''));
+        $path = $this->normalizeBrowserDirectory((string)($_GET['path'] ?? ''), $rootPath);
+        $entries = [];
+
+        $parent = dirname($path);
+        if ($parent !== $path && $this->isWithinDirectory($parent, $rootPath)) {
+            $entries[] = [
+                'name' => '..',
+                'path' => $parent,
+                'type' => 'directory',
+            ];
+        }
+
+        $items = @scandir($path);
+        if (!is_array($items)) {
+            $this->send500('Unable to browse the selected directory.');
+        }
+
+        $directories = [];
+        $files = [];
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..' || strpos($item, '.') === 0) {
+                continue;
+            }
+
+            $realPath = realpath($path . '/' . $item);
+            if ($realPath === false || !$this->isWithinDirectory($realPath, $rootPath)) {
+                continue;
+            }
+
+            if (is_dir($realPath)) {
+                $directories[] = [
+                    'name' => $item,
+                    'path' => $realPath,
+                    'type' => 'directory',
+                ];
+            } elseif (is_file($realPath)) {
+                $executableByOwner = $this->isExecutableByAllskyOwner($realPath);
+                $files[] = [
+                    'name' => $item,
+                    'path' => $realPath,
+                    'type' => 'file',
+                    'executable' => $executableByOwner,
+                    'executableByOwner' => $executableByOwner,
+                    'executableAny' => $this->hasAnyExecuteBit($realPath),
+                ];
+            }
+        }
+
+        usort($directories, static function ($a, $b) {
+            return strcasecmp($a['name'], $b['name']);
+        });
+        usort($files, static function ($a, $b) {
+            return strcasecmp($a['name'], $b['name']);
+        });
+
+        $this->sendResponse([
+            'path' => $path,
+            'root' => $rootPath,
+            'executableOwner' => $this->getExecutableCheckOwner(),
+            'entries' => array_merge($entries, $directories, $files),
+        ]);
     }
 
     /**

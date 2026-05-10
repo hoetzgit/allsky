@@ -43,6 +43,7 @@ function DisplayModule()
         '/js/leaflet/leaflet.js',
         '/js/jquery-position/jquery-position.js',
         '/js/jquery-urlcheck/jquery-urlcheck.css',
+        '/js/jquery-filebrowser/jquery-filebrowser.js',
         '/js/jquery-devicemanager/jquery-devicemanager.js',
         '/js/highcharts/code/highcharts.js',
         '/js/highcharts/code/highcharts-more.js',
