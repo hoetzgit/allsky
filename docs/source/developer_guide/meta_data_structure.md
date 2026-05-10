@@ -92,11 +92,72 @@ The following keys are available on all fields
 |help	|Help text displayed under the field|
 |tab	|The tab the field is displayed on|
 |secret	|This indicates that the value in this field will contain sensitive information. Any details entered into a ‘secret’ field are stored in a separate file away from the pipeline json files. If the field is a text type field then the value will not be visible in the module manager. A button is displayed allowing the field value to be displayed or hidden|
+|layout	|(Optional) Controls how fields are arranged in the module settings dialog. This can be used to display multiple related fields on the same row|
+
+#### Displaying fields in multiple columns { data-toc-label="Displaying fields in multiple columns" }
+
+By default each field is displayed on its own row and uses the full width of the module settings dialog.
+
+To display fields in multiple columns add a `layout` section to each field that should appear on the same row. Fields are grouped together when they have the same `layout.row` value and appear next to each other in the order they are defined in `argumentdetails`.
+
+The `layout.width` value uses a 12-column grid:
+
+|Width	|Result|
+|-----|------|
+|12	|Full width|
+|6	|Half width, allowing two fields on one row|
+|4	|One third width, allowing three fields on one row|
+|3	|One quarter width, allowing four fields on one row|
+
+The total width of fields in a row should normally add up to 12. On small screens the fields will stack vertically.
+
+In this example `latitude` and `longitude` are displayed side by side:
+
+```
+"argumentdetails": {
+    "latitude": {
+        "required": "true",
+        "description": "Latitude",
+        "help": "Latitude of the observer.",
+        "tab": "Location",
+        "layout": {
+            "row": "observer_location",
+            "width": 6
+        },
+        "type": {
+            "fieldtype": "spinner"
+        }
+    },
+    "longitude": {
+        "required": "true",
+        "description": "Longitude",
+        "help": "Longitude of the observer.",
+        "tab": "Location",
+        "layout": {
+            "row": "observer_location",
+            "width": 6
+        },
+        "type": {
+            "fieldtype": "spinner"
+        }
+    }
+}
+```
+
+An optional `layout.title` can be added to the first field in a row group when the row should have a shared label:
+
+```
+"layout": {
+    "row": "observer_location",
+    "title": "Observer Location",
+    "width": 6
+}
+```
 
 #### Filtering { data-toc-label="Filtering" }
 Filtering allows fields to be displayed or hidden based upon the value of another field. A good example of this is when selecting a sensor in the Environment module. Each sensor has different settings so rather than display all of them, which would make the modules dialog large and confusing only those relevant to the sensor are displayed.
 
-To utilise this feature add the ‘filters’ section to a field. The filters section contains the following values
+To utilise this feature add the ‘filters’ section to a field. For a single condition the filters section contains the following values
 
 **filter** – The field that controls the filter
 
@@ -128,6 +189,71 @@ So in the example below the ‘input’ field will be shown if the ‘type’ fi
 ```
 
 This is a very powerful feature and developer are encouraged to use it to keep the user interface easier for the end user.
+
+Filters can also be applied at multiple levels by defining `filters` as a list. Each entry in the list uses the same `filter`, `filtertype` and `values` fields shown above. All filters in the list must match before the field is displayed.
+
+This is useful when a setting depends on more than one earlier choice. In this example `serialport` is only shown when `type` is set to `Serial` and `serialenabled` is checked:
+
+```
+"serialport": {
+    "required": "false",
+    "description": "Serial Port",
+    "help": "The serial port used by the sensor.",
+    "tab": "Core",
+    "type": {
+        "fieldtype": "text"
+    },
+    "filters": [
+        {
+            "filter": "type",
+            "filtertype": "show",
+            "values": [
+                "Serial"
+            ]
+        },
+        {
+            "filter": "serialenabled",
+            "filtertype": "show",
+            "values": [
+                "true"
+            ]
+        }
+    ]
+}
+```
+
+When creating a chain of dependent fields, include the higher-level filters on lower-level fields as well. A field that depends only on a hidden parent field may still match the hidden parent's stored value, so repeating the parent filter keeps the whole chain hidden correctly.
+
+For example, if `i2caddress` depends on `sensormodel`, and `sensormodel` depends on `type`, add both filters to `i2caddress`:
+
+```
+"i2caddress": {
+    "required": "false",
+    "description": "I²C Address",
+    "help": "The I²C address used by this sensor.",
+    "tab": "Core",
+    "type": {
+        "fieldtype": "text"
+    },
+    "filters": [
+        {
+            "filter": "type",
+            "filtertype": "show",
+            "values": [
+                "I²C"
+            ]
+        },
+        {
+            "filter": "sensormodel",
+            "filtertype": "show",
+            "values": [
+                "BME280",
+                "BMP280"
+            ]
+        }
+    ]
+}
+```
 
 
 ## The ‘businfo’ section { data-toc-label="The ‘businfo’ section" }

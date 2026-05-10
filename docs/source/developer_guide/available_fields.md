@@ -145,6 +145,26 @@ This allows the user to select or upload an image. Typically this would be used 
 The image selection dialog
 ///
 
+## Command File Field { data-toc-label="Command File Field" }
+This allows the user to browse the filesystem and select a command or script file. The selected absolute path is stored in the module argument.
+
+```
+"command": {
+    "required": "false",
+    "description": "Command",
+    "help": "Select the command or script this module should use.",
+    "tab": "Field Types 2",
+    "type": {
+        "fieldtype": "commandfile",
+        "title": "Select Script",
+        "requireExecutable": true
+    }
+}
+```
+
+The `title` option is optional. If omitted, the selector title defaults to `Select Script`.
+The `rootPath` option is optional and must be an absolute path. If omitted, browsing is limited to `ALLSKY_MYFILES_DIR` from `variables.json`.
+The `requireExecutable` option is optional. If set to `true`, all files are still shown, but only files executable by `ALLSKY_OWNER` from `variables.json` can be selected.
 
 ## Region of Interest (ROI) Field { data-toc-label="Region Interest (ROI)" }
 This allows the user to select a region Of Interest (ROI) in the image. This will then be available to the module. Typically, this would be used for things like sky brightness detection where you only want to run the calculation on a portion of the image.

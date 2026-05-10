@@ -276,6 +276,9 @@ nav:
       - Run Script: allsky_modules/extra/run_script.md
       - Solar System: allsky_modules/extra/solar_system.md
       - Sky Quality: allsky_modules/extra/sky_quality.md
+      - Space Weather: allsky_modules/extra/space_weather.md
+      - Telescope Marker: allsky_modules/extra/telescope_marker.md
+      - Weather Underground: allsky_modules/extra/weather_underground.md
       - Deprecated Modules:
         - INA3221: allsky_modules/extra/ina3221.md
         - MQTT Subscribe: allsky_modules/extra/mqtt_subscribe.md    

@@ -1,7 +1,11 @@
 # Introduction
 
+!!! danger  "This is an Advanced User section"
+
+    This section of the documentail details how you can extend Allsky. Most of the subjest covered require an understanding of development using Python.
+
 The Allsky system is designed to be modular, extensible, and developer-friendly — allowing you to add new capabilities without modifying the core software.
-Modules are self-contained units that integrate seamlessly with the Allsky environment, providing everything from hardware drivers (I²C sensors, focusers, LED displays) to data processors (star counting, meteor detection, image overlays, AI classification) and even UI extensions for the Allsky Web Portal.
+Modules are self-contained units that integrate seamlessly with the Allsky environment, providing everything from hardware drivers (I²C sensors, focusers etc) to data processors (star counting, meteor detection, image overlays, AI classification).
 
 By developing modules, you can easily:
 

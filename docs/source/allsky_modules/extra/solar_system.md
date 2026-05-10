@@ -165,6 +165,68 @@ Several blocks are provide to make adding data to the overlays easier. These can
 Several charts are available that display Moon related information. These can be found in the Chart Manager
 
 
+## How to use the module { data-toc-label="How to use the module" }
+
+Add the Solar System module to the Periodic pipeline, then open the module settings and configure the tabs you need. Only enable the objects you want to use; calculating unnecessary satellite or pass data can slow the module down.
+
+After changing the settings, save the module configuration. Use the module test button to check that the expected values are being generated before adding them to overlays, blocks, or charts.
+
+### General tab { data-toc-label="General tab" }
+
+Use the **General** tab to set the observer elevation in metres above sea level. The module uses the latitude, longitude and timezone from the main Allsky settings, and this elevation value completes the observer location used for the calculations.
+
+Set this as accurately as practical for your site. A rough value is normally enough for overlay information, but a better value improves rise, set, elevation and satellite pass calculations.
+
+### Moon tab { data-toc-label="Moon tab" }
+
+Use the **Moon** tab to enable Moon calculations.
+
+Enable **Enable the Moon** if you want Moon position, illumination, phase symbol, rise time, set time, next new Moon, next full Moon, or Moon visibility variables. Set **Minimum elevation** to the elevation above the horizon where the Moon should be treated as visible.
+
+For example, use a higher minimum elevation if trees, buildings or your camera housing block the low horizon.
+
+### Sun tab { data-toc-label="Sun tab" }
+
+Use the **Sun** tab to enable Sun calculations.
+
+Enable **Enable the Sun** if you want dawn, sunrise, noon, sunset, dusk, Sun azimuth, or Sun elevation variables. These values are useful for overlays and for checking the current solar position against the image.
+
+### Planets tab { data-toc-label="Planets tab" }
+
+Use the **Planets** tab to choose which planets are calculated.
+
+Enable only the planets you want to display or record. The **Minimum elevation** setting is shared by the enabled planets and controls when each planet is considered visible.
+
+The generated variable names use the planet name, for example `AS_Mercury_VISIBLE`, `AS_Mercury_AZ`, and `AS_Mercury_DISTANCE_KM`.
+
+### ISS tab { data-toc-label="ISS tab" }
+
+Use the **ISS** tab for International Space Station calculations. Do not add the ISS NORAD ID to the Satellites tab.
+
+Enable **Enable ISS** to calculate ISS position and pass information. Use **Visible Only** if you only want passes that should be visible from your location. Set **Pass Days** to control how far ahead the module searches, and **Number Of Passes** to limit how many passes are returned.
+
+Use **AOS/LOS Elevation** to set the elevation used for acquisition and loss of signal times, and **Min Elevation** to ignore passes whose maximum elevation is too low to be useful. Keep **Pass Days** modest, typically 5 to 15 days, because pass calculations take time and TLE accuracy decreases further into the future.
+
+Enable **Debug Passes** only while testing or diagnosing pass calculations. It adds pass details to the test output and is not normally needed.
+
+### Satellites tab { data-toc-label="Satellites tab" }
+
+!!! danger  "ISS Warning"
+
+    Do not add ISS using this tab. Instead use the dedicated ISS tab to calculate data for ISS
+
+!!! info  "Initial run"
+
+    When the satellite picker is run for the first time it will download all of the required data, this can take upto a minute depending upon your connection
+
+Use the **Satellites** tab for satellites other than ISS.
+
+Add satellites using their NORAD IDs. You can enter multiple IDs as a comma-separated list, or use the satellite picker if available. Satellite IDs can be found on the Celestrak website.
+
+Set **Minimum Elevation** to the elevation above which each satellite should be treated as visible. Satellites are only classed as visible if they are above this elevation and sunlit.
+
+Avoid adding large numbers of satellites unless you need them. Each satellite increases the amount of work the module performs.
+
 ## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
