@@ -3,9 +3,13 @@ import os
 import secrets
 import bcrypt
 import json
+from datetime import datetime, timezone
 from flask_jwt_extended import get_jwt_identity, get_jwt, verify_jwt_in_request
 from functools import wraps
 from flask import jsonify, request
+
+DEFAULT_AUTH_USERNAME = "local"
+INITIAL_PASSWORD_FILENAME = "allsky_server_initial_password.txt"
 
 def is_local_request():
     client_ip = request.remote_addr or ""
@@ -173,14 +177,87 @@ def permission_required(module, action):
     return decorator
 
 
-def get_db_path():
+def get_myfiles_path():
+    myfiles_path = os.environ.get("ALLSKY_MYFILES_DIR")
+    if myfiles_path:
+        return myfiles_path
+
     base_path = os.environ.get("ALLSKY_HOME")
     if not base_path:
-        raise EnvironmentError("ALLSKY_HOME environment variable is not set")
+        raise EnvironmentError("ALLSKY_MYFILES_DIR or ALLSKY_HOME environment variable is not set")
 
-    db_path = os.path.join(base_path, "config", "myFiles", "secrets.db")
+    return os.path.join(base_path, "config", "myFiles")
 
-    return db_path
+
+def get_db_path():
+    return os.path.join(get_myfiles_path(), "secrets.db")
+
+
+def get_initial_password_path():
+    return os.path.join(get_myfiles_path(), INITIAL_PASSWORD_FILENAME)
+
+
+def write_initial_password_file(username, password):
+    password_path = get_initial_password_path()
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    contents = (
+        "Allsky Server initial API login\n"
+        f"Generated: {now}\n"
+        f"Username: {username}\n"
+        f"Password: {password}\n\n"
+    )
+
+    with open(password_path, "w", encoding="utf-8") as f:
+        f.write(contents)
+    os.chmod(password_path, 0o600)
+
+
+def get_full_permissions():
+    return {
+        "gpio": ["create", "read", "update", "delete"],
+        "allsky": ["create", "read", "update", "delete"],
+        "lightning": ["create", "read", "update", "delete"],
+    }
+
+
+def create_or_rotate_bootstrap_user(cur):
+    cur.execute("SELECT password FROM users WHERE username = ?", (DEFAULT_AUTH_USERNAME,))
+    row = cur.fetchone()
+
+    if row:
+        try:
+            has_static_default = bcrypt.checkpw("local".encode(), row[0].encode())
+        except Exception:
+            has_static_default = False
+
+        if not has_static_default:
+            return
+    else:
+        has_static_default = False
+
+    password = secrets.token_urlsafe(24)
+    hashed_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    permissions = json.dumps(get_full_permissions())
+
+    if has_static_default:
+        cur.execute(
+            """
+            UPDATE users
+            SET password = ?, permissions = ?
+            WHERE username = ?
+            """,
+            (hashed_pw, permissions, DEFAULT_AUTH_USERNAME),
+        )
+    else:
+        cur.execute(
+            """
+            INSERT INTO users (username, password, permissions)
+            VALUES (?, ?, ?)
+            """,
+            (DEFAULT_AUTH_USERNAME, hashed_pw, permissions),
+        )
+
+    write_initial_password_file(DEFAULT_AUTH_USERNAME, password)
 
 
 def init_auth_db():
@@ -218,21 +295,7 @@ def init_auth_db():
         secret = secrets.token_urlsafe(64)
         cur.execute("INSERT INTO jwt_secret (id, secret) VALUES (1, ?)", (secret,))
 
-    cur.execute("SELECT username FROM users WHERE username = ?", ("local",))
-    if not cur.fetchone():
-        hashed_pw = bcrypt.hashpw("local".encode(), bcrypt.gensalt()).decode()
-        full_perms = {
-            "gpio": ["create", "read", "update", "delete"],
-            "allsky": ["create", "read", "update", "delete"],
-            "lightning": ["create", "read", "update", "delete"],
-        }
-        cur.execute(
-            """
-            INSERT INTO users (username, password, permissions)
-            VALUES (?, ?, ?)
-        """,
-            ("local", hashed_pw, json.dumps(full_perms)),
-        )
+    create_or_rotate_bootstrap_user(cur)
 
     conn.commit()
     conn.close()
