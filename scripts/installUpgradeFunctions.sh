@@ -258,6 +258,10 @@ function display_msg()
 	if [[ ! -f ${DISPLAY_MSG_LOG} ]]; then
 		mkdir -p "$( dirname "${DISPLAY_MSG_LOG}" )"
 		touch "${DISPLAY_MSG_LOG}"
+	elif [[ ! -w ${DISPLAY_MSG_LOG} ]]; then
+		# A user had a problem where the log file was owned by the web server,
+		# so make sure it's owned by the user.
+		sudo chown "${ALLSKY_OWNER}:${ALLSKY_GROUP}" "${DISPLAY_MSG_LOG}"
 	fi
 
 	# Assume if GREEN isn't defined then no colors are defined.
@@ -2005,6 +2009,7 @@ function update_allsky_common()
 		-e "s;XX_EXIT_RESET_USB_XX;${ALLSKY_EXIT_RESET_USB};" \
 		-e "s;XX_EXIT_ERROR_STOP_XX;${ALLSKY_EXIT_ERROR_STOP};" \
 		-e "s;XX_EXIT_NO_CAMERA_XX;${ALLSKY_EXIT_NO_CAMERA};" \
+		-e "s;XX_EXIT_STOP_XX;${ALLSKY_EXIT_STOP};" \
 		"${DOT_H}.repo" \
 	> "${DOT_H}"
 

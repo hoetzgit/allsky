@@ -74,6 +74,7 @@
 #define EXIT_RESET_USB				XX_EXIT_RESET_USB_XX	// Need to reset USB bus; cannot continue
 #define EXIT_ERROR_STOP				XX_EXIT_ERROR_STOP_XX	// Got an unrecoverable ERROR
 #define EXIT_NO_CAMERA				XX_EXIT_NO_CAMERA_XX	// Could not find a camera - is unrecoverable
+#define EXIT_STOP					XX_EXIT_STOP_XX			// Stop services with no error
 
 enum extType {
 	isJPG,
@@ -280,6 +281,7 @@ struct config {			// for configuration variables
 	char const *ASIversion				= "UNKNOWN";		// calculated value
 	bool videoOffBetweenImages			= true;
 	ZWOexposure ZWOexposureType			= ZWOsnap;
+	int maxImages						= 0;				// Exit after this many exposure if > 0.
 
 	struct myModeMeanSetting myModeMeanSetting;
 	struct HB HB;							// Histogram Box, ZWO only

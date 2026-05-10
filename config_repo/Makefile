@@ -6,7 +6,7 @@ VENVDIR = ${HOMEDIR}/venv
 SCRIPTSDIR = ${HOMEDIR}/scripts
 UTILITIESDIR = ${SCRIPTSDIR}/utilities
 # TODO: get from variables.sh
-NORESTARTCODES = 100 101
+NORESTARTCODES = 100 101 102
 LIBSYSTEMDIR = /lib/systemd/system
 
 .DEFAULT_GOAL := all
