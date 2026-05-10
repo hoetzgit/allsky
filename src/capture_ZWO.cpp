@@ -1923,6 +1923,12 @@ long saved_newExposure_us = newExposure_us;
 				}
 			}
 
+			// See if we should exit.
+			if (CG.maxImages > 0 && numExposures >= CG.maxImages) {
+				Log(1, "Stopping after %d image%s.", CG.maxImages, CG.maxImages == 1 ? "" : "s");
+				closeUp(EXIT_STOP);
+			}
+
 			std::string s;
 			if (CG.currentAutoExposure)
 			{
