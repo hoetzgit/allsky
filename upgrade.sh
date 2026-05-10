@@ -320,13 +320,14 @@ if [[ ${ACTION} == "upgrade" ]]; then
 			exit 0
 		fi
 
-		systemctl is-active allsky > /dev/null 2>&1
+		X="$( systemctl is-active allsky )"
 		if [[ $? -eq 0 ]]; then
-			ALLSKY_RUNNING="true"
-			display_msg --log progress "Stopping Allsky"
+			RESTART_ALLSKY="true"
+			display_msg --log progress "Allsky is ${X}; stopping it."
 			stop_Allsky
 		else
-			ALLSKY_RUNNING="false"
+			display_msg --log progress "Allsky is ${X}; no need to stop it."
+			RESTART_ALLSKY="false"
 		fi
 
 		# Get a list of all files downloaded.  They have a " | " in their line.
