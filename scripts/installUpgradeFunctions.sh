@@ -2009,6 +2009,7 @@ function update_allsky_common()
 		-e "s;XX_EXIT_RESET_USB_XX;${ALLSKY_EXIT_RESET_USB};" \
 		-e "s;XX_EXIT_ERROR_STOP_XX;${ALLSKY_EXIT_ERROR_STOP};" \
 		-e "s;XX_EXIT_NO_CAMERA_XX;${ALLSKY_EXIT_NO_CAMERA};" \
+		-e "s;XX_EXIT_STOP_XX;${ALLSKY_EXIT_STOP};" \
 		"${DOT_H}.repo" \
 	> "${DOT_H}"
 
