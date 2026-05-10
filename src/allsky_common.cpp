@@ -752,7 +752,7 @@ void displayHelp(config cg)
 	printf(" -%-*s - 'true' enables saving of daytime images [%s].\n", n, "savedaytimeimages b", yesNo(cg.daytimeSave));
 	printf(" -%-*s - 'true' enables daytime auto-exposure [%s].\n", n, "dayautoexposure b", yesNo(cg.dayAutoExposure));
 	printf(" -%-*s - Maximum daytime auto-exposure in ms.\n", n, "daymaxexposure n");
-	printf(" -%-*s - Daytime exposure in us [%'ld].\n", n, "dayexposure n", cg.dayExposure_us);
+	printf(" -%-*s - Daytime exposure in ms [%'ld].\n", n, "dayexposure n", cg.dayExposure_us / 1000);
 	printf(" -%-*s - Daytime mean target brightness [%.2f].\n", n, "daymean", cg.myModeMeanSetting.dayMean);
 	printf(" -%-*s - Daytime mean target threshold [%.2f].\n", n, "daymeanthreshold n", cg.myModeMeanSetting.dayMean_threshold);
 	if (cg.ct == ctRPi) {
@@ -781,7 +781,7 @@ void displayHelp(config cg)
 	printf(" -%-*s - 'true' enables saving of nighttime images [%s].\n", n, "savenighttimeimages b", yesNo(cg.nighttimeSave));
 	printf(" -%-*s - 'true' enables nighttime auto-exposure [%s].\n", n, "nightautoexposure b", yesNo(cg.nightAutoExposure));
 	printf(" -%-*s - Maximum nighttime auto-exposure in ms.\n", n, "nightmaxexposure n");
-	printf(" -%-*s - Nighttime exposure in us [%'ld].\n", n, "nightexposure n", cg.nightExposure_us);
+	printf(" -%-*s - Nighttime exposure in ms [%'ld].\n", n, "nightexposure n", cg.nightExposure_us / 1000);
 	printf(" -%-*s - Nighttime mean target brightness [%.2f].\n", n, "nightmean n", cg.myModeMeanSetting.nightMean);
 	if (cg.ct == ctRPi) {
 		printf("  %-*s   NOTE: Enable nighttime auto-gain and auto-exposure for best results.\n", n, "");
@@ -880,6 +880,7 @@ void displayHelp(config cg)
 		printf("  %-*s     Bullseye:           libcamera-still\n", n, "");
 		printf("  %-*s     Bookworm and newer: rpicam-still\n", n, "");
 	}
+	printf(" -%-*s - Max images to take before exiting (0 takes all) [%d].\n", n, "maximages n", cg.maxImages);
 /* These are too advanced for anyone other than developers.
 	printf(" -%-*s - Be careful changing these values, ExposureChange (Steps) = p0 + (p1*diff) + (p2*diff)^2 [%.1f].\n", n, "mean-p0 n", cg.myModeMeanSetting.dayMean_threshold);
 	printf(" -%-*s - [%.1f].\n", n, "mean-p1 n", cg.myModeMeanSetting.mean_p1);
@@ -1002,6 +1003,9 @@ void displaySettings(config cg)
 		printf("   ZWO Exposure Type: %s\n", getZWOexposureType(cg.ZWOexposureType));
 	}
 	printf("   Preview: %s\n", yesNo(cg.preview));
+	if (cg.maxImages > 0) {
+		printf("   Maximum images to take before exiting: %d\n", cg.maxImages);
+	}
 	printf("   Focus mode: %s\n", yesNo(cg.focusMode));
 	printf("   Calculate focus metric: %s\n", yesNo(cg.determineFocus));
 	printf("   Taking Dark Frames: %s\n", yesNo(cg.takeDarkFrames));
@@ -1275,6 +1279,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[], bool readConfig
 	{
 		char *a = argv[i];
 		if (*a == '-') a++;		// skip leading "-"
+		if (*a == '-') a++;		// skip second leading "-"
 
 		Log(4, "%s >>> Parameter [%-*s]  Value: [%s]\n", b, n, a, argv[i+1]);
 
@@ -1292,7 +1297,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[], bool readConfig
 				return(false);
 			}
 		}
-		else if (strcmp(a, "-help") == 0)
+		else if (strcmp(a, "help") == 0)
 		{
 			cg->help = true;
 			cg->quietExit = true;	// we display the help message and quit
@@ -1336,6 +1341,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[], bool readConfig
 		else if (strcmp(a, "preview") == 0)
 		{
 			cg->preview = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "maximages") == 0)
+		{
+			cg->maxImages = atoi(argv[++i]);
 		}
 
 		// daytime settings
