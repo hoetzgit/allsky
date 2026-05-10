@@ -14,6 +14,7 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
             'RunButton' => ['post'],
             'SaveEntries' => ['post'],
             'UpdateWebUiDataFile' => ['post'],
+            'ValidateCommand' => ['post'],
         ];
     }
 
@@ -33,14 +34,16 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
         return array_values(array_unique($files));
     }
 
-    private function getSettingsFile(): string
-    {
-        return rtrim(ALLSKY_CONFIG, '/') . '/settings.json';
-    }
-
     private function isWithinConfigDirectory(string $path): bool
     {
-        return $path === ALLSKY_MYFILES_DIR || strpos($path, ALLSKY_MYFILES_DIR . '/') === 0;
+        $myFilesDir = rtrim((string)ALLSKY_MYFILES_DIR, '/');
+        return $path === $myFilesDir || strpos($path, $myFilesDir . '/') === 0;
+    }
+
+    private function getMyFilesDirDisplay(): string
+    {
+        $realPath = realpath((string)ALLSKY_MYFILES_DIR);
+        return $realPath !== false ? $realPath : (string)ALLSKY_MYFILES_DIR;
     }
 
     private function sanitizeField(string $value): string
@@ -62,6 +65,9 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
 
         $realPath = realpath($path);
         if ($realPath !== false) {
+            if (!$this->isWithinConfigDirectory($realPath)) {
+                $this->send400('System Page Additions files must be stored in ' . $this->getMyFilesDirDisplay() . '.');
+            }
             return $realPath;
         }
 
@@ -72,7 +78,7 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
 
         $normalizedPath = rtrim($directory, '/') . '/' . basename($path);
         if (!$this->isWithinConfigDirectory($normalizedPath)) {
-            $this->send400('System Page Additions files must be stored in ~/allsky/config/myFiles.');
+            $this->send400('System Page Additions files must be stored in ' . $this->getMyFilesDirDisplay() . '.');
         }
 
         return $normalizedPath;
@@ -164,9 +170,10 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
     private function buildWritableError(string $path, string $targetType): string
     {
         return sprintf(
-            '%s "%s" is not writable by the WebUI user. System Page Additions files must be stored in the ~/allsky/config/myFiles folder.',
+            '%s "%s" is not writable by the WebUI user. System Page Additions files must be stored in %s.',
             ucfirst($targetType),
-            $path
+            $path,
+            $this->getMyFilesDirDisplay()
         );
     }
 
@@ -259,11 +266,11 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
         if ($interpreterCommand === '') {
             return [
                 'ok' => false,
-                'output' => sprintf('The script "%s" has an empty shebang line.', $path),
+                'output' => sprintf('The script "%s" does not say which programme should run it.', $path),
                 'code' => 126,
                 'suggestions' => [
-                    $this->buildCommandHelpLine('Show the first line of the script so you can see its shebang:', 'head -n 1 ' . $this->shellQuote($path)),
-                    'Add a valid interpreter path to the shebang, for example #!/usr/bin/env python3.',
+                    'Ask the script author to add a valid first line, such as #!/usr/bin/env python3 for a Python script.',
+                    'After the script is corrected, select it again and try the button once more.',
                 ],
             ];
         }
@@ -272,11 +279,11 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
         if ($interpreterToken === '') {
             return [
                 'ok' => false,
-                'output' => sprintf('The script "%s" has a shebang that could not be parsed: %s', $path, $firstLine),
+                'output' => sprintf('The first line of "%s" is not in a format Allsky can recognise: %s', $path, $firstLine),
                 'code' => 126,
                 'suggestions' => [
-                    $this->buildCommandHelpLine('Show the first line of the script so you can inspect its shebang:', 'head -n 1 ' . $this->shellQuote($path)),
-                    'Check the shebang line and make sure it points to a valid interpreter.',
+                    'Ask the script author to check the first line of the file.',
+                    'The first line should point to the programme that runs the script, for example #!/usr/bin/env python3.',
                 ],
             ];
         }
@@ -287,11 +294,11 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
             if ($targetInterpreter === '') {
                 return [
                     'ok' => false,
-                    'output' => sprintf('The script "%s" uses /usr/bin/env but does not specify an interpreter.', $path),
+                    'output' => sprintf('The script "%s" does not say which programme should run it.', $path),
                     'code' => 126,
                     'suggestions' => [
-                        $this->buildCommandHelpLine('Show the first line of the script so you can inspect its shebang:', 'head -n 1 ' . $this->shellQuote($path)),
-                        'Use a shebang such as #!/usr/bin/env python3.',
+                        'Ask the script author to update the first line of the script.',
+                        'For example, a Python script normally starts with #!/usr/bin/env python3.',
                     ],
                 ];
             }
@@ -300,11 +307,11 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
             if ($resolvedInterpreter === '') {
                 return [
                     'ok' => false,
-                    'output' => sprintf('The script "%s" references "%s" in its shebang, but that interpreter is not installed.', $path, $targetInterpreter),
+                    'output' => sprintf('The script "%s" needs "%s", but that programme is not installed on this Pi.', $path, $targetInterpreter),
                     'code' => 127,
                     'suggestions' => [
-                        $this->buildCommandHelpLine('Check whether that interpreter is installed on this system:', 'command -v ' . $this->shellQuote($targetInterpreter)),
-                        'Install the required interpreter or update the shebang to point to one that exists on this system.',
+                        'Install the required programme, or ask the script author to change the script so it uses one that is already installed.',
+                        'After that has been fixed, try the button again.',
                     ],
                 ];
             }
@@ -315,12 +322,11 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
         if ($interpreterToken[0] === '/' && !file_exists($interpreterToken)) {
             return [
                 'ok' => false,
-                'output' => sprintf('The script "%s" references missing interpreter "%s" in its shebang.', $path, $interpreterToken),
+                'output' => sprintf('The script "%s" needs "%s", but Allsky cannot find it on this Pi.', $path, $interpreterToken),
                 'code' => 127,
                 'suggestions' => [
-                    $this->buildCommandHelpLine('Show the first line of the script so you can inspect its shebang:', 'head -n 1 ' . $this->shellQuote($path)),
-                    $this->buildCommandHelpLine('Check whether the interpreter file exists:', 'ls -l ' . $this->shellQuote($interpreterToken)),
-                    'Fix the shebang to point to an installed interpreter, or install the missing interpreter.',
+                    'Install the missing programme, or ask the script author to update the first line of the script.',
+                    'The script was not run because it cannot start without that programme.',
                 ],
             ];
         }
@@ -367,19 +373,18 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
         $command = trim($command);
         if ($command === '') {
             return $this->buildCommandCheckFailure(
-                'The button command is empty.',
-                ['Enter a single command or script name, for example ls or my_script.py.'],
+                'No script has been selected for this button.',
+                ['Choose a script from ' . $this->getMyFilesDirDisplay() . ' and save the button again.'],
                 127
             );
         }
 
         if (preg_match('/\s/', $command) === 1) {
             return $this->buildCommandCheckFailure(
-                sprintf('The button command "%s" is not allowed because it includes arguments or multiple parts.', $command),
+                sprintf('The button is trying to run more than one thing: "%s".', $command),
                 [
-                    'Button commands must be a single command only.',
-                    'Allowed examples: ls, fred.py, fred.sh, fred.php.',
-                    'Not allowed: ls /root, cat /etc/passwd, python3 script.py.',
+                    'Edit the button and choose one script file only.',
+                    'The script must be stored inside ' . $this->getMyFilesDirDisplay() . '.',
                 ],
                 126
             );
@@ -387,10 +392,10 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
 
         if (preg_match('/[;&|<>`$()]/', $command) === 1) {
             return $this->buildCommandCheckFailure(
-                sprintf('The button command "%s" is not allowed because it contains shell control characters.', $command),
+                sprintf('The button command "%s" contains characters Allsky does not allow in a button action.', $command),
                 [
-                    'Button commands must be a single executable name or script path only.',
-                    'Remove shell operators such as ; | & < > ` $ ( ).',
+                    'Edit the button and select a single script file instead of typing a command.',
+                    'If the script needs to do several things, put those steps inside the script itself.',
                 ],
                 126
             );
@@ -399,16 +404,68 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
         return null;
     }
 
+    private function resolveCommandScriptPath(string $path): array
+    {
+        $myFilesDir = realpath((string)ALLSKY_MYFILES_DIR);
+        if ($myFilesDir === false || !is_dir($myFilesDir)) {
+            return $this->buildCommandCheckFailure(
+                sprintf('The configured scripts directory "%s" is not a valid directory.', $this->getMyFilesDirDisplay()),
+                ['Check the path in variables.json and make sure that folder exists.'],
+                126
+            );
+        }
+
+        if ($path === '' || $path[0] !== '/') {
+            return $this->buildCommandCheckFailure(
+                sprintf('The selected script "%s" is not a full file path.', $path),
+                ['Choose the script again from ' . $myFilesDir . ' so Allsky can save the full path.'],
+                126
+            );
+        }
+
+        $realPath = realpath($path);
+        if ($realPath === false) {
+            return $this->buildCommandCheckFailure(
+                sprintf('Allsky cannot find the selected script: "%s".', $path),
+                [
+                    'The script may have been deleted, renamed, or moved.',
+                    'Put the script in ' . $myFilesDir . ' and select it again.',
+                ],
+                127
+            );
+        }
+
+        if (!$this->isWithinDirectory($realPath, $myFilesDir)) {
+            return $this->buildCommandCheckFailure(
+                sprintf('The selected script "%s" is outside the allowed scripts folder.', $path),
+                ['Move the script to ' . $myFilesDir . ' and select it from there.'],
+                126
+            );
+        }
+
+        return ['ok' => true, 'path' => $realPath];
+    }
+
+    private function isWithinDirectory(string $path, string $directory): bool
+    {
+        $directory = rtrim($directory, '/');
+        return $path === $directory || strpos($path, $directory . '/') === 0;
+    }
+
     private function checkCommandPath(string $path): ?array
     {
-        $webUiUser = $this->getWebUiUserName();
+        $scriptPathCheck = $this->resolveCommandScriptPath($path);
+        if (!($scriptPathCheck['ok'] ?? false)) {
+            return $scriptPathCheck;
+        }
+        $path = (string)$scriptPathCheck['path'];
 
         if (!file_exists($path)) {
             return $this->buildCommandCheckFailure(
-                sprintf('The script or command "%s" does not exist.', $path),
+                sprintf('Allsky cannot find the selected script: "%s".', $path),
                 [
-                    $this->buildCommandHelpLine('Check whether the file is really present at that exact path:', 'ls -l ' . $this->shellQuote($path)),
-                    'Move the script to the expected location or update the command to point to the right file.',
+                    'The script may have been deleted, renamed, or moved.',
+                    'Put the script in ' . $this->getMyFilesDirDisplay() . ' and select it again.',
                 ],
                 127
             );
@@ -416,30 +473,29 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
 
         if (!is_file($path)) {
             return $this->buildCommandCheckFailure(
-                sprintf('The command path "%s" exists but is not a file.', $path),
+                sprintf('The selected path "%s" is a folder, not a script file.', $path),
                 [
-                    $this->buildCommandHelpLine('Check what exists at that path right now:', 'ls -ld ' . $this->shellQuote($path)),
-                    'Point the command to an executable file or script.',
+                    'Edit the button and select a script file inside that folder.',
                 ]
             );
         }
 
         if (!is_readable($path)) {
             return $this->buildCommandCheckFailure(
-                sprintf('The script "%s" exists but %s cannot read it.', $path, $webUiUser),
+                sprintf('The selected script "%s" exists, but Allsky cannot read it.', $path),
                 [
-                    $this->buildCommandHelpLine('Show the file access details. The permission string should allow the WebUI user to read the file, for example -rw-r--r-- or better:', 'ls -l ' . $this->shellQuote($path)),
-                    $this->buildCommandHelpLine('If the file is not readable, give it read access:', 'sudo chmod a+r ' . $this->shellQuote($path)),
+                    'Check the file permissions for the script.',
+                    'Allsky needs permission to read the script before it can run it.',
                 ]
             );
         }
 
         if (!is_executable($path)) {
             return $this->buildCommandCheckFailure(
-                sprintf('The script "%s" exists but is not marked as executable.', $path),
+                sprintf('The selected script "%s" exists, but it is not marked as executable.', $path),
                 [
-                    $this->buildCommandHelpLine('Show the file access details. Look for an x in the permission string, for example -rwxr-xr-x. If there is no x, the script cannot be run directly:', 'ls -l ' . $this->shellQuote($path)),
-                    $this->buildCommandHelpLine('If there is no execute bit, mark the script as executable:', 'sudo chmod +x ' . $this->shellQuote($path)),
+                    'Mark the script as executable, then try the button again.',
+                    'If you are not sure how to do this, ask whoever supplied the script to check its permissions.',
                 ]
             );
         }
@@ -452,10 +508,10 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
 
             if (!is_executable($currentPath)) {
                 return $this->buildCommandCheckFailure(
-                    sprintf('The script "%s" is executable, but %s cannot traverse directory "%s".', $path, $webUiUser, $currentPath),
+                    sprintf('The selected script "%s" is executable, but Allsky cannot open one of the folders that contains it.', $path),
                     [
-                        $this->buildCommandHelpLine('Show the directory access details. Directories must have an x in the permission string, for example drwxr-xr-x, or the WebUI cannot enter them:', 'ls -ld ' . $this->shellQuote($currentPath)),
-                        $this->buildCommandHelpLine('If the directory is missing execute access, allow the WebUI to enter it:', 'sudo chmod a+rx ' . $this->shellQuote($currentPath)),
+                        'Check the folder permissions for: ' . $currentPath,
+                        'Allsky needs permission to open every folder in the script path.',
                     ]
                 );
             }
@@ -482,26 +538,34 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
             return [
                 'ok' => false,
                 'code' => 127,
-                'output' => 'The command is empty or could not be parsed.',
-                'suggestions' => ['Enter a full command or script path before testing it.'],
+                'output' => 'No script has been selected, or the saved script path could not be read.',
+                'suggestions' => ['Choose the script again from ' . $this->getMyFilesDirDisplay() . ' and save the button.'],
             ];
         }
 
-        if (strpos($token, '/') !== false) {
-            $pathCheck = $this->checkCommandPath($token);
-            if ($pathCheck !== null) {
-                return $pathCheck;
-            }
+        $pathCheck = $this->checkCommandPath($token);
+        if ($pathCheck !== null) {
+            return $pathCheck;
+        }
 
-            $shebangCheck = $this->inspectShebang($token);
-            if ($shebangCheck !== null) {
-                return $shebangCheck;
-            }
+        $resolvedToken = realpath($token);
+        if ($resolvedToken === false) {
+            return [
+                'ok' => false,
+                'code' => 127,
+                'output' => sprintf('Allsky cannot find the selected script: "%s".', $token),
+                'suggestions' => ['Move the script to ' . $this->getMyFilesDirDisplay() . ' and select it from there.'],
+            ];
+        }
+
+        $shebangCheck = $this->inspectShebang($resolvedToken);
+        if ($shebangCheck !== null) {
+            return $shebangCheck;
         }
 
         $output = [];
         $returnCode = 0;
-        @exec($command . ' 2>&1', $output, $returnCode);
+        @exec($this->shellQuote($resolvedToken) . ' 2>&1', $output, $returnCode);
         $message = trim(implode("\n", $output));
 
         return [
@@ -509,6 +573,52 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
             'code' => $returnCode,
             'output' => $message,
             'suggestions' => [],
+        ];
+    }
+
+    private function validateButtonCommandForSave(string $command): array
+    {
+        $formatCheck = $this->validateSingleButtonCommand($command);
+        if ($formatCheck !== null) {
+            return $formatCheck;
+        }
+
+        $token = $this->extractCommandToken($command);
+        if ($token === '') {
+            return [
+                'ok' => false,
+                'code' => 127,
+                'output' => 'No script has been selected, or the saved script path could not be read.',
+                'suggestions' => ['Choose the script again from ' . $this->getMyFilesDirDisplay() . ' and save the button.'],
+            ];
+        }
+
+        $pathCheck = $this->checkCommandPath($token);
+        if ($pathCheck !== null) {
+            return $pathCheck;
+        }
+
+        $resolvedToken = realpath($token);
+        if ($resolvedToken === false) {
+            return [
+                'ok' => false,
+                'code' => 127,
+                'output' => sprintf('Allsky cannot find the selected script: "%s".', $token),
+                'suggestions' => ['Move the script to ' . $this->getMyFilesDirDisplay() . ' and select it from there.'],
+            ];
+        }
+
+        $shebangCheck = $this->inspectShebang($resolvedToken);
+        if ($shebangCheck !== null) {
+            return $shebangCheck;
+        }
+
+        return [
+            'ok' => true,
+            'code' => 0,
+            'output' => '',
+            'suggestions' => [],
+            'command' => $resolvedToken,
         ];
     }
 
@@ -520,29 +630,43 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
         if (strpos($lowerOutput, 'not found') !== false) {
             $token = $this->extractCommandToken($command);
             if ($token !== '') {
-                $suggestions[] = $this->buildCommandHelpLine('Check that the file named in the command really exists:', 'ls -l ' . $this->shellQuote($token));
+                $suggestions[] = 'Make sure the selected script still exists at this location: ' . $token;
             }
-            $suggestions[] = 'If this is a script, confirm the interpreter path in the shebang is valid.';
+            $suggestions[] = 'If the script was moved, select it again from ' . $this->getMyFilesDirDisplay() . '.';
         }
 
         if (strpos($lowerOutput, 'permission denied') !== false) {
             $token = $this->extractCommandToken($command);
             if ($token !== '') {
-                $suggestions[] = $this->buildCommandHelpLine('Show the file access details. Look for an x in the permission string, for example -rwxr-xr-x. If there is no x, the command cannot be run directly:', 'ls -l ' . $this->shellQuote($token));
+                $suggestions[] = 'The selected script exists, but Allsky is not allowed to run it. Check that it is marked as executable and that Allsky can access the folder it is stored in.';
             }
-            $suggestions[] = 'Check that the web server can access every parent directory in the command path.';
         }
 
         if (strpos($lowerOutput, 'sudo') !== false) {
-            $suggestions[] = 'If the command needs sudo, confirm the web server user is allowed to run it non-interactively.';
+            $suggestions[] = 'This action appears to need administrator permission. Allsky cannot ask for a password from this popup, so the script must be written so it can run without an interactive password prompt.';
         }
 
         if (count($suggestions) === 0) {
-            $suggestions[] = $this->buildCommandHelpLine('Try running the exact command manually from a shell:', $command);
-            $suggestions[] = 'Check the command path, permissions, and any files the command needs to write.';
+            $suggestions[] = 'Confirm the script is inside ' . $this->getMyFilesDirDisplay() . ' and has not been renamed or deleted.';
+            $suggestions[] = 'Check that the script is marked as executable and that any files it needs are also available to Allsky.';
         }
 
         return $suggestions;
+    }
+
+    private function buildReadableFailureMessage(string $command, string $output, array $suggestions): string
+    {
+        $messageParts = [
+            'Allsky could not run this action.',
+            'For safety, buttons can only run executable scripts that are stored inside ' . $this->getMyFilesDirDisplay() . '. The selected script was not run.',
+            'Selected script: ' . $command,
+        ];
+
+        if (count($suggestions) > 0) {
+            $messageParts[] = "What to check next:\n- " . implode("\n- ", $suggestions);
+        }
+
+        return implode("\n\n", $messageParts);
     }
 
     private function sanitizeEntry(array $entry): ?string
@@ -593,6 +717,12 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
             if ($this->validateSingleButtonCommand($command) !== null) {
                 return null;
             }
+            $commandToken = $this->extractCommandToken($command);
+            $commandPathCheck = $this->resolveCommandScriptPath($commandToken);
+            if (!($commandPathCheck['ok'] ?? false)) {
+                return null;
+            }
+            $command = (string)$commandPathCheck['path'];
             if (!in_array($color, $allowedColors, true)) {
                 $color = 'blue';
             }
@@ -766,7 +896,7 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
         }
 
         $path = $this->normalizePath($path);
-        $settingsFile = $this->getSettingsFile();
+        $settingsFile = ALLSKY_SETTINGS_FILE;
         if (!file_exists($settingsFile) || !is_readable($settingsFile)) {
             $this->send500('Unable to read settings.json.');
         }
@@ -839,21 +969,11 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
                 $messageParts[] = 'Command completed successfully.';
             }
         } else {
-            if ($output !== '') {
-                $messageParts[] = $output;
+            $suggestions = $result['suggestions'] ?? [];
+            if (count($suggestions) === 0) {
+                $suggestions = $this->buildButtonFailureSuggestions($command, $output);
             }
-            $messageParts[] = 'Command: ' . $command;
-            $messageParts[] = 'Exit code: ' . (string)$result['code'];
-            if ($output === '') {
-                $messageParts[] = 'The command failed and did not produce any output.';
-            }
-        $suggestions = $result['suggestions'] ?? [];
-        if (count($suggestions) === 0) {
-            $suggestions = $this->buildButtonFailureSuggestions($command, $output);
-        }
-        if (count($suggestions) > 0) {
-            $messageParts[] = "Suggested checks:\n- " . implode("\n- ", $suggestions);
-        }
+            $messageParts[] = $this->buildReadableFailureMessage($command, $output, $suggestions);
         }
 
         $this->sendResponse([
@@ -889,21 +1009,11 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
                 $messageParts[] = 'Command completed successfully.';
             }
         } else {
-            if ($output !== '') {
-                $messageParts[] = $output;
-            }
-            $messageParts[] = 'Command: ' . $command;
-            $messageParts[] = 'Exit code: ' . (string)$result['code'];
-            if ($output === '') {
-                $messageParts[] = 'The command failed and did not produce any output.';
-            }
             $suggestions = $result['suggestions'] ?? [];
             if (count($suggestions) === 0) {
                 $suggestions = $this->buildButtonFailureSuggestions($command, $output);
             }
-            if (count($suggestions) > 0) {
-                $messageParts[] = "Suggested checks:\n- " . implode("\n- ", $suggestions);
-            }
+            $messageParts[] = $this->buildReadableFailureMessage($command, $output, $suggestions);
         }
 
         $this->sendResponse([
@@ -911,6 +1021,40 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
             'title' => $label !== '' ? $label : 'Test Command',
             'message' => implode("\n\n", $messageParts),
             'code' => $result['code'],
+        ]);
+    }
+
+    public function postValidateCommand(): void
+    {
+        $raw = file_get_contents('php://input');
+        $data = json_decode($raw ?: '{}', true);
+        if (!is_array($data)) {
+            $this->send400('Invalid request payload.');
+        }
+
+        $command = trim((string)($data['command'] ?? ''));
+        if ($command === '') {
+            $this->send400('Enter a script before saving this button.');
+        }
+
+        $result = $this->validateButtonCommandForSave($command);
+        if ($result['ok']) {
+            $this->sendResponse([
+                'ok' => true,
+                'command' => $result['command'] ?? $command,
+                'message' => 'Script validated.',
+            ]);
+        }
+
+        $output = trim((string)$result['output']);
+        $suggestions = $result['suggestions'] ?? [];
+        if (count($suggestions) === 0) {
+            $suggestions = $this->buildButtonFailureSuggestions($command, $output);
+        }
+
+        $this->sendResponse([
+            'ok' => false,
+            'message' => $this->buildReadableFailureMessage($command, $output, $suggestions),
         ]);
     }
 }

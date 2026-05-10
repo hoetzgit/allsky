@@ -675,8 +675,66 @@ class MODULEUTIL extends UTILBASE {
 		return $configData;
 	}
 
-    public function postTestModule(): void
-    {
+	private function sendModuleTestValidationResult(string $message): void
+	{
+		$payload = [
+			'message'   => $message,
+			'extradata' => (object)[],
+		];
+
+		$this->sendResponse(json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+	}
+
+	private function validateRunScriptModuleTest(array $flowData): ?string
+	{
+		$myFilesDir = realpath((string)ALLSKY_MYFILES_DIR);
+		if ($myFilesDir === false || !is_dir($myFilesDir)) {
+			return "Allsky could not test this module because the configured scripts folder is not available.\n\nExpected scripts folder: " . (string)ALLSKY_MYFILES_DIR . "\n\nCheck the scripts folder setting in variables.json and make sure that folder exists.";
+		}
+
+		foreach ($flowData as $moduleData) {
+			if (!is_array($moduleData) || ($moduleData['module'] ?? '') !== 'allsky_script.py') {
+				continue;
+			}
+
+			$script = trim((string)($moduleData['metadata']['arguments']['scriptlocation'] ?? ''));
+			if ($script === '') {
+				return "Allsky could not test this module because no script has been selected.\n\nChoose a script from " . $myFilesDir . " and try the test again.";
+			}
+
+			if ($script[0] !== '/') {
+				return "Allsky could not test this module because the selected script is not a full file path.\n\nSelected script: " . $script . "\n\nChoose the script again from " . $myFilesDir . " so Allsky can save the full path.";
+			}
+
+			$realScript = realpath($script);
+			if ($realScript === false || !is_file($realScript)) {
+				return "Allsky could not test this module because it cannot find the selected script.\n\nSelected script: " . $script . "\n\nThe script may have been deleted, renamed, or moved. Put the script in " . $myFilesDir . " and select it again.";
+			}
+
+			if (!$this->isPathWithinDirectory($realScript, $myFilesDir)) {
+				return "Allsky could not test this module because the selected script is outside the allowed scripts folder.\n\nSelected script: " . $realScript . "\nAllowed scripts folder: " . $myFilesDir . "\n\nMove the script into the allowed folder, select it again in the module settings, and then run the test again.";
+			}
+
+			if (!is_readable($realScript)) {
+				return "Allsky could not test this module because it cannot read the selected script.\n\nSelected script: " . $realScript . "\n\nCheck the file permissions for the script. Allsky needs permission to read the script before it can run it.";
+			}
+
+			if (!is_executable($realScript)) {
+				return "Allsky could not test this module because the selected script is not marked as executable.\n\nSelected script: " . $realScript . "\n\nMark the script as executable, then run the test again. If you are not sure how to do this, ask whoever supplied the script to check its permissions.";
+			}
+		}
+
+		return null;
+	}
+
+	private function isPathWithinDirectory(string $path, string $directory): bool
+	{
+		$directory = rtrim($directory, '/');
+		return $path === $directory || strpos($path, $directory . '/') === 0;
+	}
+
+	public function postTestModule(): void
+	{
         // Read and sanitize inputs
         $module   = trim((string)filter_input(INPUT_POST, 'module', FILTER_UNSAFE_RAW));
         $dayNight = trim((string)filter_input(INPUT_POST, 'dayNight', FILTER_UNSAFE_RAW));
@@ -684,6 +742,13 @@ class MODULEUTIL extends UTILBASE {
 
         // Inject any required secrets into the flow
         $flow = $this->addSecretsToFlow($flow);
+        $jsonFlow = json_decode($flow, true);
+        if (is_array($jsonFlow)) {
+            $validationMessage = $this->validateRunScriptModuleTest($jsonFlow);
+            if ($validationMessage !== null) {
+                $this->sendModuleTestValidationResult($validationMessage);
+            }
+        }
 
         // Save the flow definition to a temp JSON file
         $fileName = ALLSKY_MODULES . '/test_flow.json';
@@ -704,7 +769,6 @@ class MODULEUTIL extends UTILBASE {
         $result = $this->runProcess($argv);
 
         // Try to load extradata if the flow references a file
-        $jsonFlow  = json_decode($flow, true);
         $extraData = '';
         $moduleKey = is_array($jsonFlow) ? array_key_first($jsonFlow) : null;
 

@@ -670,7 +670,7 @@
                             <div class="modal-body">
                                 <form id="as-system-entry-form">
                                     <input type="hidden" id="as-system-entry-index" value="-1">
-                                    <div class="alert alert-danger" id="as-system-entry-error" style="display:none;"></div>
+                                    <div class="alert alert-danger" id="as-system-entry-error" style="display:none; white-space: pre-wrap;"></div>
                                     <div class="form-group">
                                         <label for="as-system-entry-type">Type</label>
                                         <select id="as-system-entry-type" class="form-control">
@@ -935,6 +935,8 @@
                 startPath: browsePath,
                 selected: currentCommand !== "" && currentCommand.charAt(0) === "/" ? currentCommand : "",
                 requireExecutable: true,
+                myFilesOnly: true,
+                errorTitle: "Script Cannot Be Used",
                 selectErrorText: "Select a file to use as the button command.",
                 onSelect: (path) => {
                     this.$entryModal.find("#as-system-entry-command").val(path);
@@ -1533,14 +1535,14 @@
                 if (/\s/.test(entry.command)) {
                     return {
                         ok: false,
-                        message: "Button commands must be a single command only. Examples: ls, fred.py, fred.sh, fred.php."
+                        message: "Choose one script file only. For safety, button actions cannot include extra words, options, or more than one command."
                     };
                 }
 
                 if (/[;&|<>`$()]/.test(entry.command)) {
                     return {
                         ok: false,
-                        message: "Button commands cannot include shell operators. Enter only a single command or script name."
+                        message: "This button action contains characters Allsky does not allow. Select a single script file instead. If the script needs to do several things, put those steps inside the script."
                     };
                 }
 
@@ -1571,6 +1573,52 @@
                 return;
             }
 
+            if (entry.type === "button") {
+                this.validateButtonEntryBeforeSave(entry, () => {
+                    this.commitEntryFromDialog(file, entry);
+                });
+                return;
+            }
+
+            this.commitEntryFromDialog(file, entry);
+        }
+
+        validateButtonEntryBeforeSave(entry, onValid) {
+            this.hideEntryError();
+
+            this.$entryModal.find("#as-system-entry-save").prop("disabled", true);
+            $.LoadingOverlay("show", { text: "Checking script..." });
+            $.ajax({
+                url: "includes/systembuttonsutil.php?request=ValidateCommand",
+                method: "POST",
+                dataType: "json",
+                contentType: "application/json",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRF-Token": $("#csrf_token").val() || ""
+                },
+                data: JSON.stringify({
+                    command: entry.command
+                })
+            }).done((result) => {
+                if (!result || !result.ok) {
+                    this.showEntryError(result?.message || "Allsky could not validate this script. Check the script and try again.");
+                    return;
+                }
+                if ($.trim(result.command || "") !== "") {
+                    entry.command = $.trim(result.command);
+                    this.$entryModal.find("#as-system-entry-command").val(entry.command);
+                }
+                onValid();
+            }).fail((xhr) => {
+                this.showEntryError(xhr.responseJSON?.message || "Allsky could not validate this script. Check the script and try again.");
+            }).always(() => {
+                this.$entryModal.find("#as-system-entry-save").prop("disabled", false);
+                $.LoadingOverlay("hide");
+            });
+        }
+
+        commitEntryFromDialog(file, entry) {
             this.hideEntryError();
             if (!Array.isArray(file.entries)) {
                 file.entries = [];
@@ -1811,7 +1859,7 @@
         showResult(title, message, ok, successText) {
             this.ensureResultModal();
             this.$resultModal.find("#as-system-entries-result-title").text(title || "Command Test Result");
-            const statusText = ok ? ($.trim(successText || "") || "Command completed.") : "Command failed.";
+            const statusText = ok ? ($.trim(successText || "") || "Action completed.") : "Action could not be run.";
             this.$resultModal.find("#as-system-entries-result-status")
                 .removeClass("alert-success alert-danger")
                 .addClass(ok ? "alert-success" : "alert-danger")

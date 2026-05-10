@@ -61,6 +61,8 @@
          *        Highest directory the user may browse.  The endpoint enforces this;
          *        the client sends it with every request and stores the normalised value
          *        returned by the endpoint.
+         * @param {boolean} [options.myFilesOnly=false]
+         *        Ask the endpoint to confine browsing to ALLSKY_MYFILES_DIR.
          * @param {string} [options.selected=""]
          *        Initially selected file path.  This only pre-populates the display; a
          *        selected file still has to pass any executable checks before use.
@@ -84,6 +86,8 @@
          *        User account that must be able to execute selected scripts.  The
          *        endpoint normally returns this as `executableOwner`, but callers may
          *        provide a value up front if it is already known.
+         * @param {string} [options.errorTitle="Script Cannot Be Used"]
+         *        Title shown on the browser's error dialog.
          * @param {Function|null} [options.onSelect=null]
          *        Callback invoked with the selected path when the user confirms.
          */
@@ -100,11 +104,14 @@
                 selectErrorText: "Select a file to continue.",
                 executableRequiredText: "Select a script that is executable by the configured Allsky owner.",
                 requireExecutable: false,
+                myFilesOnly: false,
                 executableOwner: "",
+                errorTitle: "Script Cannot Be Used",
                 onSelect: null
             }, options || {});
 
             this.$modal = null;
+            this.$errorModal = null;
             this.ensureModal();
         }
 
@@ -215,6 +222,42 @@
         }
 
         /**
+         * Create a Bootstrap error dialog for file browser validation messages.
+         */
+        ensureErrorModal() {
+            if (this.$errorModal) {
+                return;
+            }
+
+            const html = `
+                <div class="modal fade as-file-browser-error-modal" tabindex="-1" role="dialog" aria-labelledby="as-file-browser-error-title">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <h4 class="modal-title as-file-browser-error-title" id="as-file-browser-error-title">Script Cannot Be Used</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-danger as-file-browser-error-text" style="margin-bottom: 0;"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            this.$errorModal = $(html);
+            $("body").append(this.$errorModal);
+
+            this.$errorModal.on("hidden.bs.modal", () => {
+                this.$errorModal.remove();
+                this.$errorModal = null;
+            });
+        }
+
+        /**
          * Open the modal and load the initial directory.
          */
         open() {
@@ -249,7 +292,8 @@
                 cache: false,
                 data: {
                     path: browsePath,
-                    root: this.options.rootPath
+                    root: this.options.rootPath,
+                    myFilesOnly: this.options.myFilesOnly ? "true" : "false"
                 }
             }).done((result) => {
                 const currentPath = result.path || browsePath;
@@ -348,7 +392,7 @@
          * cannot be run by the configured Allsky owner.
          *
          * @param {string} path Script path.
-         * @returns {{html: boolean, message: string}} Bootbox-ready message content.
+         * @returns {{html: boolean, message: string}} Modal-ready message content.
          */
         buildExecutableOwnerMessage(path) {
             const owner = $.trim(this.options.executableOwner || "the Allsky user");
@@ -362,8 +406,9 @@
             return {
                 html: true,
                 message: `
-                    <p>Allsky cannot run this script as the <strong>${this.escapeHtml(owner)}</strong> user.</p>
-                    <p>To fix it, run these commands on the Pi:</p>
+                    <p>Allsky can see this script, but it cannot run it as the <strong>${this.escapeHtml(owner)}</strong> user.</p>
+                    <p>The script is probably owned by another user, or its permissions do not allow Allsky to run it.</p>
+                    <p>To fix this, run these commands on the Pi:</p>
                     <pre class="allow-select" style="white-space: pre-wrap; margin-bottom: 0;"><code>${this.escapeHtml(commands)}</code></pre>
                 `
             };
@@ -393,11 +438,11 @@
             const fallback = "An unexpected error occurred.";
             const body = html ? message.message : this.escapeHtml(message || fallback);
 
-            if (window.bootbox && typeof window.bootbox.alert === "function") {
-                window.bootbox.alert({
-                    title: "Error",
-                    message: body
-                });
+            if ($.fn && typeof $.fn.modal === "function") {
+                this.ensureErrorModal();
+                this.$errorModal.find(".as-file-browser-error-title").text(this.options.errorTitle || "Script Cannot Be Used");
+                this.$errorModal.find(".as-file-browser-error-text").html(body);
+                this.$errorModal.modal("show");
                 return;
             }
 

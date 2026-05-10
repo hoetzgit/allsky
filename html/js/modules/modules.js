@@ -990,6 +990,7 @@ class MODULESEDITOR {
 							commandFileRequireExecutable = this.#convertBool(fieldTypeData.executableOnly);
 						}
 						let commandFileRootPath = fieldTypeData.rootPath || fieldTypeData.root || '';
+						let commandFileMyFilesOnly = this.#convertBool(fieldTypeData.myFilesOnly || fieldTypeData.myfilesonly || fieldTypeData.restrictToMyFiles || fieldTypeData.restricttomyfiles || false);
 						inputHTML = '<input ' + disabled + ' id="' + key + '" name="' + key + '" class="form-control" value="' + fieldValue + '"' + required + fieldDescription + '>';
 						extraClass = 'input-group';
 						fieldValueColumnClass = 'col-xs-9';
@@ -1015,6 +1016,7 @@ class MODULESEDITOR {
 								url: 'includes/uiutil.php?request=BrowseCommandFiles',
 								startPath: browsePath,
 								rootPath: commandFileRootPath,
+								myFilesOnly: commandFileMyFilesOnly,
 								selected: currentValue !== '' && currentValue.charAt(0) === '/' ? currentValue : '',
 								requireExecutable: commandFileRequireExecutable,
 								selectErrorText: 'Select a file to use for this module setting.',

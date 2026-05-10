@@ -97,7 +97,7 @@ class UIUTIL extends UTILBASE {
         return $path === $directory || strpos($path, rtrim($directory, '/') . '/') === 0;
     }
 
-    private function normalizeBrowserRoot(string $path): string
+    private function normalizeBrowserRoot(string $path, bool $myFilesOnly = false): string
     {
         $path = trim($path);
         if ($path === '') {
@@ -115,6 +115,14 @@ class UIUTIL extends UTILBASE {
 
         if (!is_readable($realPath)) {
             $this->send403('The root directory is not readable.');
+        }
+
+        if ($myFilesOnly) {
+            $myFilesRoot = realpath((string)ALLSKY_MYFILES_DIR);
+            if ($myFilesRoot === false || !$this->isWithinDirectory($realPath, $myFilesRoot)) {
+                $displayPath = $myFilesRoot !== false ? $myFilesRoot : (string)ALLSKY_MYFILES_DIR;
+                $this->send403('Scripts can only be selected from ' . $displayPath . '.');
+            }
         }
 
         return rtrim($realPath, '/');
@@ -253,8 +261,16 @@ class UIUTIL extends UTILBASE {
 
     public function getBrowseCommandFiles(): void
     {
-        $rootPath = $this->normalizeBrowserRoot((string)($_GET['root'] ?? ''));
-        $path = $this->normalizeBrowserDirectory((string)($_GET['path'] ?? ''), $rootPath);
+        $myFilesOnly = filter_var($_GET['myFilesOnly'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $rootPath = $this->normalizeBrowserRoot((string)($_GET['root'] ?? ''), $myFilesOnly);
+        $requestedPath = (string)($_GET['path'] ?? '');
+        if ($myFilesOnly && trim($requestedPath) !== '') {
+            $requestedRealPath = realpath($requestedPath);
+            if ($requestedRealPath === false || !$this->isWithinDirectory($requestedRealPath, $rootPath)) {
+                $requestedPath = '';
+            }
+        }
+        $path = $this->normalizeBrowserDirectory($requestedPath, $rootPath);
         $entries = [];
 
         $parent = dirname($path);
