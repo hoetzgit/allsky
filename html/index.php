@@ -745,6 +745,10 @@ if ($page == "login") {
 	die();
 }
 if ($page == "logout") {
+	if (class_exists('RememberMe')) {
+		$rememberUser = trim((string)($_SESSION['user'] ?? ''));
+		RememberMe::revokeAll($rememberUser !== '' ? $rememberUser : null);
+	}
 	$_SESSION['auth'] = false;
 	$_SESSION['user'] = "";
 	redirect("index.php?page=login");

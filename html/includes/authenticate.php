@@ -1,6 +1,7 @@
 <?php
 include_once('functions.php');
 include_once('loginThrottle.php');
+include_once('rememberMe.php');
 
 $csrf_token = useLogin();
 $page = getVariableOrDefault($_REQUEST, 'page', "live_view");
@@ -8,6 +9,17 @@ $page = getVariableOrDefault($_REQUEST, 'page', "live_view");
 $throttle = new LoginThrottle();
 
 if ($useLogin) {
+    if (!is_logged_in()) {
+        $privateVars = get_decoded_json_file(ALLSKY_ENV, true, "");
+        $adminUser = (string)($privateVars["WEBUI_USERNAME"] ?? "");
+
+        if ($adminUser !== "" && RememberMe::loginFromCookie($adminUser)) {
+            session_regenerate_id(true);
+            $_SESSION['auth'] = true;
+            $_SESSION['user'] = $adminUser;
+        }
+    }
+
     if (!is_logged_in()) {
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -22,11 +34,11 @@ if ($useLogin) {
                 redirect("/index.php?page=login", "Invalid username or password.", true);
             }*/
 
-            $privateVars   = get_decoded_json_file(ALLSKY_ENV, true, "");
+            $privateVars   = $privateVars ?? get_decoded_json_file(ALLSKY_ENV, true, "");
             $user          = trim((string)($_POST['username'] ?? ''));
             $pass          = (string)($_POST['password'] ?? '');
-            $adminUser     = (string)$privateVars["WEBUI_USERNAME"];
-            $adminPassword = (string)$privateVars["WEBUI_PASSWORD"];
+            $adminUser     = (string)($privateVars["WEBUI_USERNAME"] ?? "");
+            $adminPassword = (string)($privateVars["WEBUI_PASSWORD"] ?? "");
 
             $okUser = hash_equals($adminUser, $user);
             $okPass = password_verify($pass, $adminPassword);
@@ -38,24 +50,10 @@ if ($useLogin) {
 
             if ($okUser && $okPass) {
                 $rememberLogin = isset($_POST['remember_login']) && $_POST['remember_login'] === '1';
-                $secureCookie = (
-                    isset($_SERVER['HTTPS']) &&
-                    $_SERVER['HTTPS'] !== '' &&
-                    $_SERVER['HTTPS'] !== 'off'
-                );
-                $cookieOptions = [
-                    'path' => '/',
-                    'secure' => $secureCookie,
-                    'httponly' => true,
-                    'samesite' => 'Lax',
-                ];
                 if ($rememberLogin) {
-                    $rememberExpiry = time() + (30 * 24 * 60 * 60); // 30 days
-                    setcookie('allsky_remember_username', $user, $cookieOptions + ['expires' => $rememberExpiry]);
-                    setcookie('allsky_remember_password', $pass, $cookieOptions + ['expires' => $rememberExpiry]);
+                    RememberMe::issueToken($adminUser);
                 } else {
-                    setcookie('allsky_remember_username', '', $cookieOptions + ['expires' => time() - 3600]);
-                    setcookie('allsky_remember_password', '', $cookieOptions + ['expires' => time() - 3600]);
+                    RememberMe::revokeAll($adminUser);
                 }
 
                 $throttle->reset();

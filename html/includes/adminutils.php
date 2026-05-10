@@ -4,6 +4,7 @@ declare(strict_types=1);
 include_once('functions.php');
 initialize_variables();
 include_once('authenticate.php');
+include_once('rememberMe.php');
 include_once('utilbase.php');
 
 /**
@@ -173,6 +174,7 @@ class ADMINUTIL extends UTILBASE
         }
 
         // Clear the session so the user must log in again with the new credentials
+        RememberMe::revokeAll();
         $_SESSION['auth'] = false;
         $_SESSION['user'] = '';
         if (function_exists('session_regenerate_id')) {

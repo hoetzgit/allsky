@@ -8,10 +8,8 @@ function DisplayLoginPage()
 {
     global $csrf_token; // YUK
     $rememberedUsername = (string)($_COOKIE['allsky_remember_username'] ?? '');
-    $rememberedPassword = (string)($_COOKIE['allsky_remember_password'] ?? '');
     $rememberedUsername = substr($rememberedUsername, 0, 128);
-    $rememberedPassword = substr($rememberedPassword, 0, 4096);
-    $rememberLoginChecked = ($rememberedUsername !== "" || $rememberedPassword !== "");
+    $rememberLoginChecked = isset($_COOKIE['allsky_remember']);
 
     $alert = "";
     if (isset($_SESSION["flash"]) && $_SESSION["flash"] !== "") {
@@ -83,11 +81,11 @@ function DisplayLoginPage()
                             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token) ?>">
                             <div class="form-group text-left">
                                 <label for="inputUsername">User Name</label>
-                                <input type="text" class="form-control" name="username" id="username" placeholder="Enter user name" value="<?= htmlspecialchars($rememberedUsername) ?>" required>
+                                <input type="text" class="form-control" name="username" id="username" placeholder="Enter user name" value="<?= htmlspecialchars($rememberedUsername) ?>" autocomplete="username" required>
                             </div>
                             <div class="form-group text-left mt-5">
                                 <label for="inputPassword">Password</label>
-                                <input type="password" class="form-control" name="password" id="password" placeholder="Password" value="<?= htmlspecialchars($rememberedPassword) ?>" required>
+                                <input type="password" class="form-control" name="password" id="password" placeholder="Password" autocomplete="current-password" required>
                             </div>
                             <div class="checkbox text-left mt-3">
                                 <label>
