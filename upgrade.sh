@@ -320,13 +320,13 @@ if [[ ${ACTION} == "upgrade" ]]; then
 			exit 0
 		fi
 
-		X="$( systemctl is-active allsky )"
+		ACTIVE="$( systemctl is-active allsky )"
 		if [[ $? -eq 0 ]]; then
 			RESTART_ALLSKY="true"
-			display_msg --log progress "Allsky is ${X}; stopping it."
+			display_msg --log progress "Allsky is ${ACTIVE}; stopping it."
 			stop_Allsky
 		else
-			display_msg --log progress "Allsky is ${X}; no need to stop it."
+			display_msg --log progress "Allsky is ${ACTIVE}; no need to stop it."
 			RESTART_ALLSKY="false"
 		fi
 
