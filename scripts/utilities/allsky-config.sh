@@ -116,8 +116,13 @@ function show_supported_cameras()
 		OPTS+=("--ZWO"			"ZWO (very long list)")
 		OPTS+=("--RPi --ZWO"	"both")
 
+		#XXX FIX: when using the dialog command the prompt below doesn't include
+		# the choices.
+		local SAVED_USE_DIALOG="${USE_DIALOG}"
+		USE_DIALOG="false"	
 		# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
 		ARGS="$( prompt "${PROMPT}" "${OPTS[@]}" )"
+		USE_DIALOG="${SAVED_USE_DIALOG}"
 	else
 		# shellcheck disable=SC2124
 		ARGS="${@}"
@@ -278,13 +283,17 @@ function website_server_cmd()
 
 	if [[ $# -eq 0 && -z ${FUNCTION_TO_EXECUTE} ]]; then
 		OPTS=()
-		OPTS+=("--website"	\
-			"${MSG1}")
-		OPTS+=("--server"	\
-			"${MSG2}")
+		OPTS+=("--website"	"${MSG1}")
+		OPTS+=("--server"	"${MSG2}")
+
+		#XXX FIX: when using the dialog command the prompt below doesn't include
+		# the choices.
+		local SAVED_USE_DIALOG="${USE_DIALOG}"
+		USE_DIALOG="false"	
 
 		# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
 		ARGS="$( prompt "\n${PROMPT}" "${OPTS[@]}" )"
+		USE_DIALOG="${SAVED_USE_DIALOG}"
 
 # TODO: Remove this check once "remoteserverurl" is implemented.
 		if [[ ${ARGS} == "--server" ]]; then
@@ -351,7 +360,7 @@ function test_upload()
 
 #####
 # Display brightness information from the startrails command.
-get_startrails_info()
+function get_startrails_info()
 {
 	# shellcheck disable=SC2068
 	getStartrailsInfo.sh "${@}"
@@ -360,7 +369,7 @@ get_startrails_info()
 
 #####
 # Create multiple startrails with different thresholds.
-compare_startrails()
+function compare_startrails()
 {
 	# shellcheck disable=SC2068
 	compareStartrails.sh "${@}"
@@ -369,7 +378,7 @@ compare_startrails()
 
 #####
 # Create multiple stretched images with different amounts and midpoints.
-compare_stretches()
+function compare_stretches()
 {
 	# shellcheck disable=SC2068
 	compareStretches.sh "${@}"
@@ -378,7 +387,7 @@ compare_stretches()
 
 #####
 # Help determine some timelapse settings.
-compare_timelapse()
+function compare_timelapse()
 {
 	# shellcheck disable=SC2068
 	compareTimelapse.sh "${@}"
@@ -531,7 +540,25 @@ function run_command()
 	local COMMAND="${1}"
 	shift
 
-	if ! type "${COMMAND}" > /dev/null 2>&1 ; then
+	local HTML
+	if [[ ${COMMAND:0:4} == "HTML" ]]; then
+		HTML="--html"
+		COMMAND="${COMMAND:4}"
+	else
+		HTML=""
+	fi
+
+	if [[ -z ${COMMAND} ]]; then
+		E_ "\n${ME}: No command specified." >&2
+		usage_and_exit --commands-only 2
+	fi
+
+	# Check if command is a function; if so, assume it's one of ours.
+	local T="$( type "${COMMAND}" 2>/dev/null )"
+	local RET=$?
+	echo "${T}" | grep -m 1 --silent "is a function" 2>/dev/null
+	(( RET += $? ))
+	if [[ ${RET} -ne 0 ]]; then
 		E_ "\n${ME}: Unknown command '${COMMAND}'." >&2
 		usage_and_exit --commands-only 2
 	fi
@@ -542,7 +569,8 @@ function run_command()
 	fi
 
 	ME_F="${COMMAND}"		# global
-	"${COMMAND}" "${@}"
+	# shellcheck disable=SC2086
+	"${COMMAND}" ${HTML} "${@}"
 }
 
 
