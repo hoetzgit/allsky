@@ -367,3 +367,56 @@
     - use the **WebUI** to run Allsky
     - use `public.php` to share a simple current-image view
     - use an **Allsky Website** to present the richer viewing side of what Allsky produces
+
+## Hardware { data-toc-label="Hardware" }
+
+??? question "How do I disable the LED's on the Pi"
+
+    !!! warning  "Hardware"
+
+        The instructions here have been noted to work on a lot of hardware but not on some. Give them a try as they will not do any harm.
+
+    To disable the power and ethernet LED's on the pi use the following 
+
+    Debian Bookworm or Trixie, edit:
+
+    ```
+    sudo nano /boot/firmware/config.txt
+    ```
+
+    Debian Bullseye or older and/or RPi 3 or older:
+
+    ```
+    sudo nano /boot/config.txt
+    ```
+
+    Then paste the following on the last line of the file and reboot.
+    For Bookworm or newer OS:
+
+    ```
+    # Disable the Power LED (Red) - Try 'on' if 'off' fails
+    dtparam=pwr_led_trigger=none
+    dtparam=pwr_led_activelow=on
+
+    # Disable the Activity LED (Green)
+    dtparam=act_led_trigger=none
+    dtparam=act_led_activelow=off
+
+    # Disable Ethernet Port LEDs
+    dtparam=eth_led0=4
+    dtparam=eth_led1=4
+    ```
+
+    Exceptions:
+    For RPi 3 or older, change ethernet value to:
+    ```
+    dtparam=eth_led1=14
+    ```
+
+    For RPi 5:
+    Check that your bootloader is up to date:
+    
+    ```
+    sudo rpi-eeprom-update
+    ```
+    and try omitting: `dtparam=pwr_led_activelow=on` or switching to off if you are unsuccessful.
