@@ -258,6 +258,10 @@ function display_msg()
 	if [[ ! -f ${DISPLAY_MSG_LOG} ]]; then
 		mkdir -p "$( dirname "${DISPLAY_MSG_LOG}" )"
 		touch "${DISPLAY_MSG_LOG}"
+	elif [[ ! -w ${DISPLAY_MSG_LOG} ]]; then
+		# A user had a problem where the log file was owned by the web server,
+		# so make sure it's owned by the user.
+		sudo chown "${ALLSKY_OWNER}:${ALLSKY_GROUP}" "${DISPLAY_MSG_LOG}"
 	fi
 
 	# Assume if GREEN isn't defined then no colors are defined.
