@@ -8,9 +8,7 @@ from functools import wraps
 from flask import jsonify, request
 
 def is_local_request():
-    # Honour X-Forwarded-For if present (take first IP)
-    xff = request.headers.get("X-Forwarded-For", "")
-    client_ip = (xff.split(",")[0].strip() if xff else request.remote_addr) or ""
+    client_ip = request.remote_addr or ""
     return client_ip in ("127.0.0.1", "::1")
 
 def web_login_required_or_local(fn):
