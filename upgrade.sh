@@ -125,7 +125,7 @@ function usage_and_exit()
 	exec >&2
 
 	echo
-	local USAGE="Usage: ${ME} [--help] [--debug] [--branch branch] [--doUpgrade] [--in-place] [--skip]"
+	local USAGE="Usage: ${ME} [--help] [--debug] [--branch branch] [--doUpgrade] [--in-place] [--skip] [--restart-allsky true|false]"
 	if [[ ${RET} -eq 0 ]]; then
 		echo "Upgrade the Allsky software to a newer version."
 		echo -e "\n${USAGE}"
@@ -161,6 +161,7 @@ BRANCH="$( get_branch )"
 [[ -z ${BRANCH} ]] && BRANCH="${ALLSKY_GITHUB_MAIN_BRANCH}"
 # Possible ACTION's: "upgrade" (to prepare things), "doUpgrade" (to actually do the upgrade)
 ACTION="upgrade"
+RESTART_ALLSKY="false"
 
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
@@ -184,6 +185,10 @@ while [[ $# -gt 0 ]]; do
 			;;
 		--skip)
 			SKIP="${ARG}"
+			;;
+		--restart-allsky)
+			RESTART_ALLSKY="${2}"
+			shift
 			;;
 		-*)
 			E_ "Unknown argument: '${ARG}'." >&2
@@ -315,8 +320,15 @@ if [[ ${ACTION} == "upgrade" ]]; then
 			exit 0
 		fi
 
-		display_msg --log progress "Stopping Allsky"
-		stop_Allsky
+		ACTIVE="$( systemctl is-active allsky )"
+		if [[ $? -eq 0 ]]; then
+			RESTART_ALLSKY="true"
+			display_msg --log progress "Allsky is ${ACTIVE}; stopping it."
+			stop_Allsky
+		else
+			display_msg --logonly progress "Allsky is ${ACTIVE}; no need to stop it."
+			RESTART_ALLSKY="false"
+		fi
 
 		# Get a list of all files downloaded.  They have a " | " in their line.
 		echo "${X}" | sed --silent -e 's/^ //' -e '/ | /s/ *| *.*//p' > "${FILES_DOWNLOADED_FILE}"
@@ -325,8 +337,9 @@ if [[ ${ACTION} == "upgrade" ]]; then
 		display_msg --log info "Look in '${FILES_DOWNLOADED_FILE}' to see the list."
 
 		# This script may have been updated so re-run it.
+		# The "exec" should not return.
 		# shellcheck disable=SC2093
-		exec "${ALLSKY_HOME}/${ME}" --doUpgrade --in-place		# should not return
+		exec "${ALLSKY_HOME}/${ME}" --doUpgrade --in-place --restart-allsky "${RESTART_ALLSKY}"
 
 		display_msg --log error "Unable to continue the upgrade."
 		exit "${ALLSKY_EXIT_ERROR_STOP}"
@@ -400,7 +413,12 @@ elif [[ ${ACTION} == "doUpgrade" ]]; then
 			display_msg --log error "${MSG}" "Contact the Allsky Team"
 			exit 1
 		fi
-		MSG2="  To start Allsky, go to the WebUI's 'System -> System' page.\n"
+		if [[ ${RESTART_ALLSKY} == "true" ]]; then
+			MSG2="  Allsky restarted.\n"
+			start_Allsky
+		else
+			MSG2="  To start Allsky, go to the WebUI's 'System -> System' page.\n"
+		fi
 		display_msg --log progress "Allsky upgraded."  "${MSG2}"
 		display_msg --logonly info "Recreated files:\n${X}"
 		display_msg --logonly info "ENDING UPGRADE."

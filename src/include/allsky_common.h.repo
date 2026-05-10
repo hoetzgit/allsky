@@ -282,6 +282,7 @@ struct config {			// for configuration variables
 	bool videoOffBetweenImages			= true;
 	ZWOexposure ZWOexposureType			= ZWOsnap;
 	int maxImages						= 0;				// Exit after this many exposure if > 0.
+	bool callSaveImage					= true;				// Call the saveImage.sh script?
 
 	struct myModeMeanSetting myModeMeanSetting;
 	struct HB HB;							// Histogram Box, ZWO only

@@ -1003,7 +1003,7 @@ void displaySettings(config cg)
 		printf("   ZWO Exposure Type: %s\n", getZWOexposureType(cg.ZWOexposureType));
 	}
 	printf("   Preview: %s\n", yesNo(cg.preview));
-	if (cg.maxImages > 0) {
+	if (cg.maxImages != 0) {
 		printf("   Maximum images to take before exiting: %d\n", cg.maxImages);
 	}
 	printf("   Focus mode: %s\n", yesNo(cg.focusMode));
@@ -1345,6 +1345,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[], bool readConfig
 		else if (strcmp(a, "maximages") == 0)
 		{
 			cg->maxImages = atoi(argv[++i]);
+			if (cg->maxImages < 0) {
+				cg->callSaveImage = false;
+				cg->maxImages = -(cg->maxImages);
+			}
 		}
 
 		// daytime settings
