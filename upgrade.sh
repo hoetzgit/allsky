@@ -326,7 +326,7 @@ if [[ ${ACTION} == "upgrade" ]]; then
 			display_msg --log progress "Allsky is ${ACTIVE}; stopping it."
 			stop_Allsky
 		else
-			display_msg --log progress "Allsky is ${ACTIVE}; no need to stop it."
+			display_msg --logonly progress "Allsky is ${ACTIVE}; no need to stop it."
 			RESTART_ALLSKY="false"
 		fi
 
