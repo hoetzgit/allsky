@@ -202,9 +202,9 @@ done
 
 cd || exit "${ALLSKY_EXIT_ERROR_STOP}"
 
-if [[ ! -d ${ALLSKY_CONFIG} ]]; then
+if [[ ! -d ${ALLSKY_BIN} ]]; then
 	MSG="Allsky does not appear to be installed; cannot continue."
-	MSG2="Directory '${ALLSKY_CONFIG}' does not exist."
+	MSG2="Directory '${ALLSKY_BIN}' does not exist."
 	display_msg --log error "${MSG}" "${MSG2}"
 	echo
 	exit 2
@@ -293,14 +293,10 @@ if [[ ${ACTION} == "upgrade" ]]; then
 	fi
 
 	if [[ ${CHOSEN_METHOD} == "${METHOD_IN_PLACE}" ]]; then
-		display_msg --log progress "Stopping Allsky"
-		stop_Allsky
-
 		cd "${ALLSKY_HOME}"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 		display_msg --log progress "Getting new files from GitHub"
-		X="$( git pull 2>&1 )"
-		if [[ $? -ne 0 ]]; then
+		if !  X="$( git pull 2>&1 )" ; then
 			if echo "${X}" | grep -i --silent -n "would be overwritten" ; then
 				FILES="$( echo -e "${X}" | grep "^	" )"	# TAB
 				MSG="You have un-checked out files, cannot continue:\n${FILES}"
@@ -314,11 +310,13 @@ if [[ ${ACTION} == "upgrade" ]]; then
 		# If no files were retrieved, let the user know and exit.
 		if echo "${X}" | grep -i --silent "already up to date" ; then
 			echo
-			MSG="No new files, restarting Allsky and existing upgrade.\n"
+			MSG="No new files; existing upgrade.\n"
 			display_msg --log progress "" "${MSG}"
-			start_Allsky
 			exit 0
 		fi
+
+		display_msg --log progress "Stopping Allsky"
+		stop_Allsky
 
 		# Get a list of all files downloaded.  They have a " | " in their line.
 		echo "${X}" | sed --silent -e 's/^ //' -e '/ | /s/ *| *.*//p' > "${FILES_DOWNLOADED_FILE}"
