@@ -944,25 +944,29 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 					Log(4, "  > Saving %s image '%s'\n",
 						CG.takeDarkFrames ? "dark" : dayOrNight.c_str(), CG.finalFileName);
 
-					char cmd[1100+strlen(CG.allskyHome)];
+					if (CG.callSaveImage) {
+						char cmd[1100+strlen(CG.allskyHome)];
 
-					if (CG.focusMode)
-					{
-						snprintf(cmd, sizeof(cmd), "%s/saveImage.sh %s '%s' --focus-mode %ld %d", CG.allskyScripts,
-							dayOrNight.c_str(), CG.fullFilename, CG.lastFocusMetric, numExposures);
-						// In focusMode, wait for processing to complete since we
-						// don't otherwise delay between images.
-					}
-					else
-					{
-						snprintf(cmd, sizeof(cmd), "%s/saveImage.sh %s '%s'", CG.allskyScripts,
-							dayOrNight.c_str(), CG.fullFilename);
-						add_variables_to_command(CG, cmd, exposureStartDateTime);
-						strcat(cmd, " &");
-					}
+						if (CG.focusMode)
+						{
+							snprintf(cmd, sizeof(cmd), "%s/saveImage.sh %s '%s' --focus-mode %ld %d", CG.allskyScripts,
+								dayOrNight.c_str(), CG.fullFilename, CG.lastFocusMetric, numExposures);
+							// In focusMode, wait for processing to complete since we
+							// don't otherwise delay between images.
+						}
+						else
+						{
+							snprintf(cmd, sizeof(cmd), "%s/saveImage.sh %s '%s'", CG.allskyScripts,
+								dayOrNight.c_str(), CG.fullFilename);
+							add_variables_to_command(CG, cmd, exposureStartDateTime);
+							strcat(cmd, " &");
+						}
 
-					// Not too useful to check return code for commands run in the background.
-					system(cmd);
+						// Not too useful to check return code for commands run in the background.
+						system(cmd);
+					} else {
+						Log(3, "=== Saved %s\n", CG.fullFilename);
+					}
 				} else {
 					// We're not using the image so delete it.
 					unlink(savedImage.c_str());
