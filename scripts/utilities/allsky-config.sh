@@ -554,17 +554,8 @@ function run_command()
 	fi
 
 	# Check if command is a function; if so, assume it's one of ours.
-if false; then
-	# TODO: FIX: Get rid of the "if" portion once we know the "else" portion works.
-	local T="$( type "${COMMAND}" 2>/dev/null )"
-	local RET=$?
-	echo "${T}" | grep -m 1 --silent "is a function" 2>/dev/null
-	(( RET += $? ))
-else
 	echo "CMDS=${CMDS[*]}" | grep -m 1 --silent "(${FUNCTION_TO_EXECUTE})"
-	local RET=$?
-fi
-	if [[ ${RET} -ne 0 ]]; then
+	if [[ $? -ne 0 ]]; then
 		E_ "\n${ME}: Unknown command '${COMMAND}'." >&2
 		usage_and_exit --commands-only 2
 	fi
