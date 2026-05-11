@@ -1,3 +1,4 @@
+from os import path
 import sqlite3
 import os
 import secrets
@@ -265,7 +266,11 @@ def init_auth_db():
     db_path = get_db_path()
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
 
-    conn = sqlite3.connect(db_path)
+    old_umask = os.umask(0o177)
+    try:
+        conn = sqlite3.connect(db_path)
+    finally:
+        os.umask(old_umask)    
     cur = conn.cursor()
 
     cur.execute(
