@@ -21,7 +21,6 @@ if ($useLogin) {
     }
 
     if (!is_logged_in()) {
-
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $retryAfter = 0;
             if (!$throttle->check($retryAfter)) {
@@ -29,10 +28,10 @@ if ($useLogin) {
                 redirect("/index.php?page=login", "Too many failed attempts. Try again in about {$mins} minute(s).");
             }
 
-            /*if (!CSRFValidate()) {
+            if (!CSRFValidate()) {
                 $throttle->fail();
                 redirect("/index.php?page=login", "Invalid username or password.", true);
-            }*/
+            }
 
             $privateVars   = $privateVars ?? get_decoded_json_file(ALLSKY_ENV, true, "");
             $user          = trim((string)($_POST['username'] ?? ''));
