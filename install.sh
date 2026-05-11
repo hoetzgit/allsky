@@ -1016,7 +1016,7 @@ set_permissions()
 
 	########## Website files
 
-	chmod 664 "${ALLSKY_ENV}"
+	chmod 660 "${ALLSKY_ENV}"
 	sudo chgrp "${ALLSKY_WEBSERVER_GROUP}" "${ALLSKY_ENV}"
 
 	# These directories aren't in GitHub so need to be manually created.
