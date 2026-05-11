@@ -64,7 +64,7 @@ function usage_and_exit()
 	echo "      encoders"
 	echo "      pix_fmts"
 
-	echo "      compare_timelapse"
+	echo "      compare_timelapses [see --help for arguments]"
 	echo "      compare_startrails [see --help for arguments]"
 	echo "      compare_stretches [see --help for arguments]"
 
@@ -72,7 +72,7 @@ function usage_and_exit()
 	echo "      change_tmp"
 	echo "      samba"
 
-	echo "      bad_images_info [--show_bad_images]"
+	echo "      bad_images_info [--list_bad_images]"
 	echo "      check_post_data"
 	echo "      compare_paths --website | --server"
 	echo "      test_upload --website | --server"
@@ -387,7 +387,7 @@ function compare_stretches()
 
 #####
 # Help determine some timelapse settings.
-function compare_timelapse()
+function compare_timelapses()
 {
 	# shellcheck disable=SC2068
 	compareTimelapse.sh "${@}"
@@ -768,7 +768,7 @@ fi
 #####
 	CMDS+=("header"	      "Commands to Create Test Images or Videos" )
 
-	((N++));	C="compare_timelapse"
+	((N++));	C="compare_timelapses"
 	CMDS+=("${C}"	"$( L "Create multiple timelapse videos               (${C})" )")
 
 	((N++));	C="compare_startrails"
