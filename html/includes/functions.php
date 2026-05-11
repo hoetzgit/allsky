@@ -1314,6 +1314,7 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 function updateFile($file, $contents, $fileName, $toConsole, $silent=false) {
 	if (@file_put_contents($file, $contents) == false) {
 		$e = error_get_last()['message'];
+		$fileArg = escapeshellarg($file);
 
 		if (! $silent) {
 			// $toConsole tells us whether or not to use console.log() or just echo.
@@ -1331,8 +1332,8 @@ function updateFile($file, $contents, $fileName, $toConsole, $silent=false) {
 		// usually because the file isn't grouped to the web server group.
 		// Set the permissions and try again.
 
-		$cmd = "sudo touch '$file' && sudo chgrp " . ALLSKY_WEBSERVER_GROUP . " '$file' &&";
-		$cmd .= " sudo chmod g+w '$file'";
+		$cmd = "sudo touch $fileArg && sudo chgrp " . escapeshellarg(ALLSKY_WEBSERVER_GROUP) . " $fileArg &&";
+		$cmd .= " sudo chmod g+w $fileArg";
 		$return = null;
 		$ret = exec("( $cmd ) 2>&1", $return, $retval);
 		if (gettype($return) === "array")
@@ -1349,7 +1350,7 @@ function updateFile($file, $contents, $fileName, $toConsole, $silent=false) {
 				$e = error_get_last()['message'];
 				$err = "Failed to save '$file': $e";
 				echo "{$cl1}Unable to update file for 2nd time: {$e}{$cl2}";
-				$x = str_replace("\n", "", shell_exec("ls -l '$file'"));
+				$x = str_replace("\n", "", shell_exec("ls -l $fileArg"));
 				echo "{$cl1}ls -l returned: {$x}{$cl2}";
 			}
 
@@ -1357,15 +1358,23 @@ function updateFile($file, $contents, $fileName, $toConsole, $silent=false) {
 			// then use sudo to "cp" the file to the final place.
 			// Use "cp" instead of "mv" because the destination file may be a hard link
 			// and we need to keep the link.
-			$tempFile = "/tmp/$fileName-temp.txt";
+			$tempFile = tempnam(sys_get_temp_dir(), "allsky-update-");
+			if ($tempFile === false) {
+				return "Failed to create temporary file";
+			}
 
 			if (@file_put_contents($tempFile, $contents) == false) {
 				$err = "Failed to create temporary file: " . error_get_last()['message'];
+				@unlink($tempFile);
 				return $err;
 			}
 
-			$cmd = "x=\$(sudo cp '$tempFile' '$file' 2>&1) || echo 'Unable to copy [$tempFile] to [$file]': \${x}";
+			$tempFileArg = escapeshellarg($tempFile);
+			$cmd = "x=\$(sudo cp $tempFileArg $fileArg 2>&1) || echo "
+				. escapeshellarg("Unable to copy [$tempFile] to [$file]: ")
+				. "\${x}";
 			$err = str_replace("\n", "", shell_exec($cmd));
+			@unlink($tempFile);
 			if ($err !== "") echo "{$cl1}cp returned: [$err]{$cl2}";
 			return $err;
 		}
