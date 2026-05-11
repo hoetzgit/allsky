@@ -172,6 +172,50 @@ class MODULEUTIL extends UTILBASE {
         return $arrFiles;
     }
 
+    private function isSafeExtraDataFilename(string $fileName): bool
+    {
+        return basename($fileName) === $fileName
+            && preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]*\.json$/', $fileName) === 1;
+    }
+
+    private function getKnownExtraDataFilenames(): array
+    {
+        $fileNames = [];
+
+        foreach ([$this->allskyModules, $this->userModules, $this->myFiles] as $moduleDirectory) {
+            foreach ($this->readModuleData($moduleDirectory, 'metadata', null) as $moduleData) {
+                if (!is_array($moduleData) || !isset($moduleData['metadata'])) {
+                    continue;
+                }
+
+                if (!isset($moduleData['metadata']->extradatafilename)) {
+                    continue;
+                }
+
+                $fileName = (string)$moduleData['metadata']->extradatafilename;
+                if ($this->isSafeExtraDataFilename($fileName)) {
+                    $fileNames[$fileName] = true;
+                }
+            }
+        }
+
+        return array_keys($fileNames);
+    }
+
+    private function getAuthorisedExtraDataPath(string $fileName): ?string
+    {
+        $fileName = trim($fileName);
+        if (!$this->isSafeExtraDataFilename($fileName)) {
+            return null;
+        }
+
+        if (!in_array($fileName, $this->getKnownExtraDataFilenames(), true)) {
+            return null;
+        }
+
+        return rtrim($this->extra_data, '/') . '/' . $fileName;
+    }
+
     public function getModulesSettings() {
         $configFileName = ALLSKY_MODULES . '/module-settings.json';
         $rawConfigData = file_get_contents($configFileName);
@@ -773,8 +817,8 @@ class MODULEUTIL extends UTILBASE {
         $moduleKey = is_array($jsonFlow) ? array_key_first($jsonFlow) : null;
 
         if ($moduleKey && isset($jsonFlow[$moduleKey]['metadata']['extradatafilename'])) {
-            $filePath = $this->extra_data . '/' . $jsonFlow[$moduleKey]['metadata']['extradatafilename'];
-            if (is_file($filePath) && is_readable($filePath)) {
+            $filePath = $this->getAuthorisedExtraDataPath((string)$jsonFlow[$moduleKey]['metadata']['extradatafilename']);
+            if ($filePath !== null && is_file($filePath) && is_readable($filePath)) {
                 $extraData = file_get_contents($filePath) ?: '';
             }
         }
@@ -1303,10 +1347,14 @@ class MODULEUTIL extends UTILBASE {
 	}
 
 	public function postGetExtraDataFile() {
-		$extraDataFilename = basename($_POST['extradatafilename']);
-		$filePath = $this->extra_data . '/' . $extraDataFilename;
+		$extraDataFilename = (string)($_POST['extradatafilename'] ?? $_POST['extraDataFilename'] ?? '');
+		$filePath = $this->getAuthorisedExtraDataPath($extraDataFilename);
+		if ($filePath === null) {
+			$this->send403('The requested extra data file is not available.');
+		}
+
 		$result = [];
-		if (file_exists($filePath)) {
+		if (is_file($filePath) && is_readable($filePath)) {
 			$result = file_get_contents($filePath);
 		}
 
