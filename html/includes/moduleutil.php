@@ -67,6 +67,10 @@ class MODULEUTIL extends UTILBASE {
         $this->extra_legacy_data = ALLSKY_EXTRA_LEGACY;
     }
 
+	private function stringContains(string $value, string $needle): bool {
+		return $needle === '' || strpos($value, $needle) !== false;
+	}
+
     private function getMetaDataFromFile($fileName) {
 		$metaData = $this->getMetaDataFromFileByName($fileName, 'meta_data');
 		if ($metaData === "") {
@@ -86,15 +90,15 @@ class MODULEUTIL extends UTILBASE {
             $level = 0;
             foreach ($fileContents as $source_line) {
         
-                if (rtrim($source_line) !== '' && str_ends_with(rtrim($source_line), '{')) {
+                if (rtrim($source_line) !== '' && $this->endsWith(rtrim($source_line), '{')) {
                     $level++;
                 }
             
-                if (ltrim($source_line) !== '' && str_starts_with(ltrim($source_line), '}')) {
+                if (ltrim($source_line) !== '' && $this->startsWith(ltrim($source_line), '}')) {
                     $level--;
                 }
             
-                if (ltrim($source_line) !== '' && str_starts_with(ltrim($source_line), $metaName)) {
+                if (ltrim($source_line) !== '' && $this->startsWith(ltrim($source_line), $metaName)) {
                     $found = true;
                     $source_line = str_replace([$metaName, "=", " "], "", $source_line);
                 }
@@ -931,10 +935,10 @@ class MODULEUTIL extends UTILBASE {
             $exitCode = (int)trim((string)file_get_contents($statusFile));
             if ($output === '') {
                 $output = "\nTool finished with exit code {$exitCode}.\n";
-            } elseif (!str_ends_with($output, "\n")) {
+            } elseif (!$this->endsWith($output, "\n")) {
                 $output .= "\n";
             }
-            if (!str_contains($output, 'Tool finished with exit code')) {
+            if (!$this->stringContains($output, 'Tool finished with exit code')) {
                 $output .= "\nTool finished with exit code {$exitCode}.\n";
             }
         }
@@ -1362,14 +1366,117 @@ class MODULEUTIL extends UTILBASE {
 	}
 
 	public function getUrlCheck() {
-        $url=trim(filter_input(INPUT_GET, 'url', FILTER_SANITIZE_STRING));
-		$headers = @get_headers($url);
-		if(strpos($headers[0], '200') !== false) {
-			$result = true;
-		} else {
-			$result = false;
-		}
+		$url = trim((string) filter_input(INPUT_GET, 'url', FILTER_SANITIZE_URL));
+		$result = $this->isSafeReachableUrl($url);
 		$this->sendResponse(json_encode($result));
+	}
+
+	private function isSafeReachableUrl(string $url): bool {
+		$urlParts = parse_url($url);
+		if ($urlParts === false || !$this->isAllowedOutboundUrl($urlParts)) {
+			return false;
+		}
+
+		$host = $urlParts['host'];
+		$scheme = strtolower($urlParts['scheme']);
+		$port = (int) ($urlParts['port'] ?? ($scheme === 'https' ? 443 : 80));
+		$ipAddresses = $this->getResolvedIpAddresses($host);
+		if (count($ipAddresses) === 0) {
+			return false;
+		}
+
+		$ch = curl_init($url);
+		if ($ch === false) {
+			return false;
+		}
+
+		curl_setopt_array($ch, [
+			CURLOPT_CONNECTTIMEOUT => 2,
+			CURLOPT_FOLLOWLOCATION => false,
+			CURLOPT_HEADER => true,
+			CURLOPT_NOBODY => true,
+			CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+			CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+			CURLOPT_RESOLVE => [$this->getCurlResolveEntry($host, $port, $ipAddresses[0])],
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_TIMEOUT => 5,
+			CURLOPT_USERAGENT => 'Allsky URL checker',
+		]);
+
+		curl_exec($ch);
+		$status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		$result = !curl_errno($ch) && $status >= 200 && $status < 400;
+		curl_close($ch);
+
+		return $result;
+	}
+
+	private function isAllowedOutboundUrl(array $urlParts): bool {
+		if (!isset($urlParts['scheme'], $urlParts['host'])) {
+			return false;
+		}
+
+		$scheme = strtolower($urlParts['scheme']);
+		if ($scheme !== 'http' && $scheme !== 'https') {
+			return false;
+		}
+
+		if (isset($urlParts['port']) && ($urlParts['port'] < 1 || $urlParts['port'] > 65535)) {
+			return false;
+		}
+
+		$ipAddresses = $this->getResolvedIpAddresses($urlParts['host']);
+		if (count($ipAddresses) === 0) {
+			return false;
+		}
+
+		foreach ($ipAddresses as $ipAddress) {
+			if (!$this->isPublicIpAddress($ipAddress)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private function getResolvedIpAddresses(string $host): array {
+		$host = trim($host, '[]');
+		if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
+			return [$host];
+		}
+
+		$ipAddresses = [];
+		$dnsRecords = dns_get_record($host, DNS_A + DNS_AAAA);
+		if ($dnsRecords === false) {
+			return [];
+		}
+
+		foreach ($dnsRecords as $record) {
+			if (isset($record['ip'])) {
+				$ipAddresses[] = $record['ip'];
+			}
+			if (isset($record['ipv6'])) {
+				$ipAddresses[] = $record['ipv6'];
+			}
+		}
+
+		return array_values(array_unique($ipAddresses));
+	}
+
+	private function isPublicIpAddress(string $ipAddress): bool {
+		return filter_var(
+			$ipAddress,
+			FILTER_VALIDATE_IP,
+			FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+		) !== false;
+	}
+
+	private function getCurlResolveEntry(string $host, int $port, string $ipAddress): string {
+		if (filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) !== false) {
+			$ipAddress = "[{$ipAddress}]";
+		}
+
+		return "{$host}:{$port}:{$ipAddress}";
 	}
 
     public function postHassSensors() {
