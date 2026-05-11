@@ -45,7 +45,7 @@ def load_i2c_metadata():
 
 @i2c_bp.route("/devices", defaults={"format": "json"}, methods=["GET"])
 @i2c_bp.route("/devices/<format>", methods=["GET"])
-@api_auth_required("onewire", "update")
+@api_auth_required("i2c", "update")
 def i2c_devices(format) -> Response:
 
     if not SMBUS_AVAILABLE:
