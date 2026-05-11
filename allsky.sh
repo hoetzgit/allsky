@@ -454,7 +454,6 @@ if [[ ${RETCODE} -eq ${ALLSKY_EXIT_STOP} ]]; then
 	set_allsky_status "${ALLSKY_STATUS_STOPPED}"
 	# Give it time to finish uploading and processing last image.
 	sleep 5
-	echo "Stopping Allsky after set number of images."
 	stop_Allsky
 	exit 0
 fi
