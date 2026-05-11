@@ -25,11 +25,13 @@ function ListDays()
 
 	$date = getVariableOrDefault($_POST, 'delete_directory', null);
 	if ($date !== null) {
-		$msg = delete_directory(ALLSKY_IMAGES . "/$date");
-		if ($msg == "") {
-			echo "<div class='alert alert-success'>Deleted directory $date</div>";
-		} else {
-			echo "<div class='alert alert-danger'><b>Unable to delete directory for $date</b>: $msg</div>";
+		if (CSRFValidate()) {
+			$msg = delete_directory(ALLSKY_IMAGES . "/$date");
+			if ($msg == "") {
+				echo "<div class='alert alert-success'>Deleted directory $date</div>";
+			} else {
+				echo "<div class='alert alert-danger'><b>Unable to delete directory for $date</b>: $msg</div>";
+			}
 		}
 	}
 
@@ -197,6 +199,9 @@ foreach ($days as $day) {
 ?>
 	</div>
 	</div>
+<?php
+	CSRFToken();
+?>
 	</form>
 	</div><!-- /.days-summary-card -->
 	</div><!-- /.col-md-12 -->
