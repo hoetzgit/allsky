@@ -561,7 +561,7 @@ if false; then
 	echo "${T}" | grep -m 1 --silent "is a function" 2>/dev/null
 	(( RET += $? ))
 else
-	echo "CMDS=${CMDS[@]}" | grep -m 1 --silent "(${FUNCTION_TO_EXECUTE})"
+	echo "CMDS=${CMDS[*]}" | grep -m 1 --silent "(${FUNCTION_TO_EXECUTE})"
 	local RET=$?
 fi
 	if [[ ${RET} -ne 0 ]]; then
