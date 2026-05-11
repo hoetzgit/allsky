@@ -554,10 +554,16 @@ function run_command()
 	fi
 
 	# Check if command is a function; if so, assume it's one of ours.
+if false; then
+	# TODO: FIX: Get rid of the "if" portion once we know the "else" portion works.
 	local T="$( type "${COMMAND}" 2>/dev/null )"
 	local RET=$?
 	echo "${T}" | grep -m 1 --silent "is a function" 2>/dev/null
 	(( RET += $? ))
+else
+	echo "CMDS=${CMDS[@]}" | grep -m 1 --silent "(${FUNCTION_TO_EXECUTE})"
+	local RET=$?
+fi
 	if [[ ${RET} -ne 0 ]]; then
 		E_ "\n${ME}: Unknown command '${COMMAND}'." >&2
 		usage_and_exit --commands-only 2
@@ -720,10 +726,13 @@ if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 	fi
 
 	PROMPT="\nSelect a command to run:"
+fi
 	CMDS=()
 	N=0
 
 #####
+	# The command names must be in () within CMDS so we can determine if
+	# a command passed to us is valid.
 	CMDS+=("header"	      "Commands to Display Information" )
 
 	((N++));	C="get_startrails_info"
@@ -818,6 +827,8 @@ if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 	((N++));	C="recreate_files"
 	CMDS+=("${C}"	"$( L "Recreate various files after a 'git pull'      (${C})" )")
 
+
+if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 	##### Prompt
 	# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
 	P="${PROMPT}"
