@@ -102,8 +102,8 @@ function show_supported_cameras()
 
 	if [[ $# -eq 0 && -n ${FUNCTION_TO_EXECUTE} ]]; then
 		# Command to run specified on command line but required options not given.
-		E_ "${ME} ${ME_F}: Need to specify all arguments on command line." >&2
-		"${COMMAND_TO_EXECUTE}" --help
+		E_ "\n${ME} ${ME_F}: Need to specify all arguments on command line." >&2
+		E_ "     Need '--RPi' and / or '--ZWO'.\n" >&2
 		exit 2
 	fi
 
@@ -274,8 +274,8 @@ function website_server_cmd()
 
 	if [[ $# -eq 0 && -n ${FUNCTION_TO_EXECUTE} ]]; then
 		# Command to run specified on command line but required options not given.
-		E_ "${ME} ${ME_F}: Need to specify all arguments on command line.\n" >&2
-#		"${COMMAND_TO_EXECUTE}" --help
+		E_ "\n${ME} ${ME_F}: Need to specify all arguments on command line." >&2
+		E_ "   Need either '--website' or '--server'.\n" >&2
 		exit 2
 	fi
 
