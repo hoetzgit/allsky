@@ -1935,6 +1935,30 @@ div.dt-container div.dt-scroll-body {
     white-space: nowrap;
 }
 
+.sidebar-logout-form {
+    margin: 0;
+}
+
+.sidebar .sidebar-logout-button {
+    display: block;
+    width: 100%;
+    padding: 10px 15px;
+    border: 0;
+    background: transparent;
+    color: var(--bs3-body-color) !important;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.sidebar .sidebar-logout-button:hover,
+.sidebar .sidebar-logout-button:focus {
+    background-color: var(--bs3-navbar-hover-bg) !important;
+    color: var(--bs3-navbar-hover-text) !important;
+    outline: 0;
+}
+
 .menu-text {
     display: inline;
 }
@@ -1944,6 +1968,11 @@ div.dt-container div.dt-scroll-body {
 }
 
 .sidebar.collapsed .nav>li>a {
+    text-align: center;
+    padding: 10px;
+}
+
+.sidebar.collapsed .sidebar-logout-button {
     text-align: center;
     padding: 10px;
 }

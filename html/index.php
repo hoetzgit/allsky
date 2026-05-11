@@ -882,10 +882,13 @@ if ($page == "logout") {
 							if ($useLogin) {
 								?>
 								<li>
-									<a id="logout" href="index.php?page=logout">
-										<i class="fa fa-right-from-bracket fa-fw"></i>
-										<span class="menu-text"> Logout</span>
-									</a>
+									<form class="sidebar-logout-form" method="post" action="index.php?page=logout">
+										<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token, ENT_QUOTES) ?>">
+										<button id="logout" class="sidebar-logout-button" type="submit">
+											<i class="fa fa-right-from-bracket fa-fw"></i>
+											<span class="menu-text"> Logout</span>
+										</button>
+									</form>
 								</li>
 								<?php
 							}
