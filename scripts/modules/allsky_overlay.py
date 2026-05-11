@@ -96,7 +96,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 	def __init__(self, params, event, formaterrortext):
 		super().__init__(params, event)
 		config_folder = os.path.join(allsky_shared.ALLSKY_OVERLAY, 'config')
-		self._overlay_config_file = os.path.join(config_folder, self._OVERLAYCONFIGFILE)
+		self._overlay_config_file = None
 		self._load_overlay()
 
 		tmpFolder = os.path.join(config_folder, 'tmp')
@@ -109,8 +109,6 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		self._variables = ALLSKYVARIABLES()
 		self._fields = self._variables.get_variables()
  
-		self.log(4, f"INFO: Config file set to '{self._overlay_config_file}'.")
-
 		self._set_date_and_time()
 		self._debug = True
 		
@@ -141,18 +139,22 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		else:
 			overlayName = allsky_shared.getSetting('nighttimeoverlay')
 
-		userPath = os.path.join(os.environ['ALLSKY_OVERLAY'], 'myTemplates', overlayName)
-		if os.path.isfile(userPath):
-			self._overlay_config_file = userPath
-			self.log(4, f'INFO: Time of day is {dayORNight} using overlay {overlayName}')
-		else:
-			corePath = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', overlayName)
-			if os.path.isfile(corePath):
-				self._overlay_config_file = corePath
+		if overlayName:
+			userPath = os.path.join(os.environ['ALLSKY_OVERLAY'], 'myTemplates', overlayName)
+			if os.path.isfile(userPath):
+				self._overlay_config_file = userPath
 				self.log(4, f'INFO: Time of day is {dayORNight} using overlay {overlayName}')
 			else:
-				self.log(0, f'ERROR: Unable to locate an overlay file: TOD {dayORNight}, overlay "{overlayName}"', sendToAllsky=True)
-				
+				corePath = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', overlayName)
+				if os.path.isfile(corePath):
+					self._overlay_config_file = corePath
+					self.log(4, f'INFO: Time of day is {dayORNight} using overlay {overlayName}')
+				else:
+					self.log(0, f'ERROR: Unable to locate {dayORNight} overlay file, overlay "{overlayName}"', sendToAllsky=True)
+		else:
+			self.log(4, f'INFO: No overlay specified for time of day {dayORNight}, so no overlay will be applied.')
+			self._not_enabled = f"No overlay specified for time of day {dayORNight}"
+   
 	def _dump_debug_data(self):
 		debugFilePath = os.path.join(allsky_shared.ALLSKY_TMP, 'overlaydebug.txt')
 		env = {}
@@ -729,20 +731,21 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 			self._image = np.array(pilImage)
 		
 	def annotate(self):
-		self._start_time = datetime.now()
-		if self._load_config_file():
-			self._timer("Loading Image")
-			if self._load_image_file():
-				self._timer("Loading Extra Data")
-				self._add_overlay_layers()
-				self._timer("Adding Overlay Layers")
-				self._save_image_file()
-				self._timer("Saving Final Image")
-				if self._debug:
-					self._timer("Writing debug data")
-				#self._dump_debug_data()
+		if self._overlay_config_file:
+			self._start_time = datetime.now()
+			if self._load_config_file():
+				self._timer("Loading Image")
+				if self._load_image_file():
+					self._timer("Loading Extra Data")
+					self._add_overlay_layers()
+					self._timer("Adding Overlay Layers")
+					self._save_image_file()
+					self._timer("Saving Final Image")
+					if self._debug:
+						self._timer("Writing debug data")
+					#self._dump_debug_data()
 
-		self._timer("Annotation Complete", showIntermediate=False)
+			self._timer("Annotation Complete", showIntermediate=False)
 
 def overlay(params, event):
 	global formatErrorPlaceholder
