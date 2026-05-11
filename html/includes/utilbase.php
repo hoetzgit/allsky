@@ -304,7 +304,13 @@ class UTILBASE
 
     protected function changeOwner($filename) {
         $user = get_current_user();
-        exec("sudo chown " . $user . " " . $filename);
+        return $this->runProcess([
+            '/usr/bin/sudo',
+            '/usr/bin/chown',
+            '--',
+            $user,
+            $filename,
+        ]);
     }
 
     protected function getVariableList($return=false, $empty=false, $indexed=false)
