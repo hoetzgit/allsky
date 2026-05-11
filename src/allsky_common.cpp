@@ -568,7 +568,7 @@ void closeUp(int e)
 
 	if (e == EXIT_RESTARTING)
 		(void) displayNotificationImage("--expires 15 Restarting &");
-	else if (e == EXIT_OK)
+	else if (e == EXIT_OK || e == EXIT_STOP)
 		(void) displayNotificationImage("--expires 2 NotRunning &");
 	else
 		(void) displayNotificationImage("--expires 0 Error &");
@@ -578,7 +578,11 @@ void closeUp(int e)
 	sleep(3);
 
 	printf("     ***** %s Allsky", a);
-	if (e != EXIT_OK) printf(" (code %d)", e);
+	if (e == EXIT_STOP) {
+		printf(" after %d image%s.", CG.maxImages, CG.maxImages == 1 ? "" : "s");
+	} else if (e != EXIT_OK) {
+		printf(" (code %d)", e);
+	}
    	printf(" *****\n");
 
 	// ZWO seems to hang on ASICloseCamera() if taking a picture when the signal is sent,
