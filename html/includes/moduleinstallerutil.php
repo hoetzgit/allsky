@@ -18,6 +18,7 @@ class MODULEINSTALLERUTIL extends UTILBASE
     private string $defaultBranch;
     private string $repoPath;
     private string $owner;
+    private string $allskyGroup;
     private string $webGroup;
     private string $venvPython;
 
@@ -42,6 +43,7 @@ class MODULEINSTALLERUTIL extends UTILBASE
         $this->defaultBranch = (string)ALLSKY_GITHUB_MAIN_BRANCH;
         $this->repoPath = rtrim(sys_get_temp_dir(), '/') . '/allsky-modules';
         $this->owner = defined('ALLSKY_OWNER') ? (string)ALLSKY_OWNER : get_current_user();
+        $this->allskyGroup = defined('ALLSKY_GROUP') ? (string)ALLSKY_GROUP : $this->owner;
         $this->webGroup = defined('ALLSKY_WEBSERVER_GROUP') ? (string)ALLSKY_WEBSERVER_GROUP : 'www-data';
         $this->venvPython = $this->allskyHome . '/venv/bin/python3';
     }
@@ -569,7 +571,7 @@ class MODULEINSTALLERUTIL extends UTILBASE
 
             $this->installDatabaseConfig($sourceMeta, $modulePath, $log);
             $this->installPackagesFile($modulePath . '/packages.txt', $paths['logfiles'] . '/dependencies.log', $log);
-            $this->installRequirementsFile($modulePath . '/requirements.txt', $paths['logfiles'] . '/dependencies.log', $log);
+            $this->installRequirementsFile($modulePath . '/requirements.txt', $paths['logfiles'] . '/dependencies.log', $log, $force);
             $this->runPostInstall($installerData, $modulePath, $paths['data'], $log);
             $this->cleanupLegacyModule($moduleName, $installedInfo, $paths['module'], $log);
 
@@ -1175,7 +1177,7 @@ class MODULEINSTALLERUTIL extends UTILBASE
         $log[] = 'Installed apt dependencies';
     }
 
-    private function installRequirementsFile(string $filePath, string $logFile, array &$log): void
+    private function installRequirementsFile(string $filePath, string $logFile, array &$log, bool $forceReinstall = false): void
     {
         $packages = $this->readDependencyLines($filePath);
         if ($packages === []) {
@@ -1184,19 +1186,39 @@ class MODULEINSTALLERUTIL extends UTILBASE
 
         $this->ensurePythonEnvironmentWritable();
         $this->ensureDirectory(dirname($logFile));
-        foreach ($packages as $package) {
-            file_put_contents($logFile, "\n--- Installing {$package} ---\n", FILE_APPEND);
-            $result = $this->runProcessWithOptions(
-                [$this->venvPython, '-m', 'pip', 'install', '--no-cache-dir', $package],
-                $this->allskyHome
-            );
-            file_put_contents($logFile, $result['message'] . "\n", FILE_APPEND);
-            if ($result['error']) {
-                throw new RuntimeException("Failed to install Python dependency {$package}: " . trim($result['message']));
+        try {
+            foreach ($packages as $package) {
+                if ($forceReinstall) {
+                    file_put_contents($logFile, "\n--- Ensuring dependencies for {$package} ---\n", FILE_APPEND);
+                    $result = $this->runProcessWithOptions(
+                        [$this->venvPython, '-m', 'pip', 'install', '--no-cache-dir', $package],
+                        $this->allskyHome
+                    );
+                    file_put_contents($logFile, $result['message'] . "\n", FILE_APPEND);
+                    if ($result['error']) {
+                        throw new RuntimeException("Failed to install Python dependency {$package}: " . trim($result['message']));
+                    }
+                }
+
+                $dependencyAction = $forceReinstall ? 'Reinstalling' : 'Installing';
+                file_put_contents($logFile, "\n--- {$dependencyAction} {$package} ---\n", FILE_APPEND);
+                $pipArgs = [$this->venvPython, '-m', 'pip', 'install', '--no-cache-dir'];
+                if ($forceReinstall) {
+                    $pipArgs[] = '--force-reinstall';
+                    $pipArgs[] = '--no-deps';
+                }
+                $pipArgs[] = $package;
+                $result = $this->runProcessWithOptions($pipArgs, $this->allskyHome);
+                file_put_contents($logFile, $result['message'] . "\n", FILE_APPEND);
+                if ($result['error']) {
+                    throw new RuntimeException("Failed to install Python dependency {$package}: " . trim($result['message']));
+                }
             }
+        } finally {
+            $this->applyPythonPackageOwnership();
         }
 
-        $log[] = 'Installed Python dependencies';
+        $log[] = $forceReinstall ? 'Reinstalled Python dependencies' : 'Installed Python dependencies';
     }
 
     private function ensurePythonEnvironmentWritable(): void
@@ -1208,6 +1230,24 @@ class MODULEINSTALLERUTIL extends UTILBASE
 
             $this->runProcessWithOptions(['/usr/bin/sudo', '/bin/chown', '-R', $this->owner . ':' . $this->webGroup, $path]);
             $this->runProcessWithOptions(['/usr/bin/sudo', '/bin/chmod', '-R', 'g+w', $path]);
+        }
+    }
+
+    private function applyPythonPackageOwnership(): void
+    {
+        $venvPath = $this->allskyHome . '/venv';
+        if (!file_exists($venvPath)) {
+            return;
+        }
+
+        $result = $this->runProcessWithOptions(['/usr/bin/sudo', '/bin/chown', '-R', $this->owner . ':' . $this->allskyGroup, $venvPath]);
+        if ($result['error']) {
+            throw new RuntimeException("Failed to set Python package ownership to {$this->owner}:{$this->allskyGroup}: " . trim($result['message']));
+        }
+
+        $result = $this->runProcessWithOptions(['/usr/bin/sudo', '/bin/chmod', '-R', 'g+rwX', $venvPath]);
+        if ($result['error']) {
+            throw new RuntimeException("Failed to set Python package group permissions: " . trim($result['message']));
         }
     }
 

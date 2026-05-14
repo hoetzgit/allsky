@@ -4198,8 +4198,9 @@ class MODULESEDITOR {
 			return;
 		}
 
-		if (action === 'install') {
-			this.#runInstallerQueue([moduleName], 'install', `Install ${moduleName}`);
+		if (action === 'install' || action === 'reinstall') {
+			const title = action === 'reinstall' ? `Reinstall ${moduleName}` : `Install ${moduleName}`;
+			this.#runInstallerQueue([moduleName], action, title);
 			return;
 		}
 
