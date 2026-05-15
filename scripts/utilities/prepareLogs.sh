@@ -27,7 +27,7 @@ usage_and_exit()
 	echo "Configure Allsky to collect the proper information for troubleshooting problems."
 	echo "Allsky is stopped, the Debug Level set to the appropriate value if needed,"
 	echo "the log files are truncated, and Allsky is restarted."
-	echo "After the problem appears, see the 'Getting Help' page in the WebUI for details"
+	echo "After the problem appears, see the 'Getting Support' page in the WebUI for details"
 	echo "on how to report the problem."
 	echo
 	exit "${RET}"
