@@ -754,7 +754,6 @@ def readSettings():
 
     LOGLEVEL = int(getSetting("debuglevel"))
 
-
 def get_setting(settingName):
     """
     Helper for reading a setting from the loaded settings JSON.
@@ -788,13 +787,10 @@ def getSetting(settingName):
     try:
         result = SETTINGS[settingName]
     except Exception:
-        pass
-
-    try:
-        if not result:
+        try:
             result = get_secrets(settingName)
-    except Exception:
-        pass
+        except Exception:
+            pass
             
     return result
 
