@@ -2987,7 +2987,7 @@ install_Python()
 		cp -r -a "${OLD_VENV}" "${ALLSKY_HOME}"
 		activate_python_venv
 	else
-		python3 -m venv "${ALLSKY_PYTHON_VENV}" --system-site-packages
+		python3 -m venv "${ALLSKY_PYTHON_VENV}"
 		activate_python_venv
 
 		# force local setup tools
