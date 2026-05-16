@@ -517,7 +517,9 @@ function check_if_configured($page, $calledFrom) {
 function is_valid_directory($directory_name) {
 	global $re_image_directory;
 
-	return preg_match($re_image_directory, basename($directory_name));
+	return is_string($directory_name) &&
+		$directory_name === basename($directory_name) &&
+		preg_match($re_image_directory, $directory_name) === 1;
 }
 
 /**
