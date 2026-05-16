@@ -685,6 +685,7 @@ function insertEditorCode($p)
 			'lib/codeMirror/matchesonscrollbar.js',
 			'lib/codeMirror/searchcursor.js',
 			'lib/codeMirror/match-highlighter.js',
+			'/js/jedison/dist/umd/jedison.umd.js',
 			'/js/jquery-loading-overlay/dist/loadingoverlay.min.js',
 			'/js/bootbox/bootbox.all.js',
 			'/js/bootbox/bootbox.locales.min.js',
@@ -744,16 +745,56 @@ if ($page == "login") {
 	DisplayLoginPage();
 	die();
 }
-if ($page == "logout") {
-	if (class_exists('RememberMe')) {
+	if ($page == "logout") {
+		if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+			header('Allow: POST');
+			http_response_code(405);
+			exit;
+		}
+
+		if (! CSRFValidate()) {
+			http_response_code(403);
+			exit('Invalid CSRF token.');
+		}
+
 		$rememberUser = trim((string)($_SESSION['user'] ?? ''));
-		RememberMe::revokeAll($rememberUser !== '' ? $rememberUser : null);
+		if (class_exists('RememberMe')) {
+			if ($rememberUser !== '') {
+				RememberMe::revokeAll($rememberUser);
+			} else if ($useLogin) {
+				RememberMe::revokeAll(null);
+			} else {
+				RememberMe::clearCookie();
+			}
+		}
+
+		if (session_status() === PHP_SESSION_ACTIVE) {
+			$_SESSION = [];
+			session_unset();
+
+			if (ini_get('session.use_cookies')) {
+				$params = session_get_cookie_params();
+				setcookie(session_name(), '', [
+					'expires' => time() - 3600,
+					'path' => $params['path'] ?? '/',
+					'domain' => $params['domain'] ?? '',
+					'secure' => (bool)($params['secure'] ?? false),
+					'httponly' => (bool)($params['httponly'] ?? true),
+					'samesite' => $params['samesite'] ?: 'Lax',
+				]);
+			}
+
+			session_destroy();
+		}
+
+		redirect("index.php?page=login");
 	}
-	$_SESSION['auth'] = false;
-	$_SESSION['user'] = "";
-	redirect("index.php?page=login");
-}
-?>
+	if ($page == "editor") {
+		header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+		header('Pragma: no-cache');
+		header('Expires: 0');
+	}
+	?>
 
 				<!DOCTYPE html>
 				<html lang="en">
