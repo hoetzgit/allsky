@@ -103,7 +103,7 @@ int RPicapture(config cg, cv::Mat *image)
 	// When AWB is enable, up to 5 images can be taken before control is returned to us.
 	long m = 1.0;
 	if (cg.currentAutoAWB) m = 5.0;
-	long timeout_s = ((cg.currentExposure_us / US_IN_SEC) * m) + 300;		// guess on how much longer
+	long timeout_s = ((cg.currentExposure_us / US_IN_SEC) * m) + 30;		// 30s buffer (weiherhammer: max exposure 60s → max timeout 90s)
 	ss << timeout_s;
 
 	// Define command line.
