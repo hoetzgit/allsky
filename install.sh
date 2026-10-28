@@ -606,6 +606,15 @@ do_save_camera_capabilities()
 	# the appropriate one can be used by makeChanges.sh.
 	[[ -n ${PRIOR_SETTINGS_FILE} ]] && restore_prior_settings_file
 
+	# weiherhammer: convert_settings_file() renamed a prior "Module 3" camera
+	# (e.g., to "Module 3 Wide", see NEW_MODEL_NAME), but CAMERA_MODEL still holds the
+	# prior name and makeChanges.sh -> capture_RPi then can't find a "Module 3" camera.
+	if [[ ${CAMERA_TYPE} == "RPi" && ${CAMERA_MODEL} == "Module 3" && -n ${NEW_MODEL_NAME} ]]; then
+		display_msg --log info "Using camera model '${NEW_MODEL_NAME}' instead of 'Module 3'."
+		CAMERA_MODEL="${NEW_MODEL_NAME}"
+		STATUS_VARIABLES+=("CAMERA_MODEL='${CAMERA_MODEL}'\n")
+	fi
+
 	display_msg --logonly info "Making new settings file '${ALLSKY_SETTINGS_FILE}'."
 
 	CMD="makeChanges.sh${FORCE}${OPTIONSONLY}"
