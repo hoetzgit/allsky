@@ -1909,6 +1909,15 @@ convert_settings_file()			# prior_file, new_file
 					doV "${FIELD}" "VALUE" "night${FIELD}" "number" "${NEW_FILE}"
 					;;
 
+				"cameramodel")
+					# weiherhammer: A "Module 3" camera renamed above (e.g., to "Module 3 Wide")
+					# must keep its new name. Without this, the old value from the prior
+					# settings file overwrites it and capture_RPi can't find the camera
+					# ("'Module 3' camera not found at position 0"), which aborts the install.
+					[[ -n ${NEW_MODEL_NAME} ]] && VALUE="${NEW_MODEL_NAME}"
+					doV "${FIELD}" "VALUE" "${FIELD}" "text" "${NEW_FILE}"
+					;;
+
 				*)
 					# Since we don't know the setting name, we don't know its type.
 					# Any setting that's not new, old, or changed (most of them), comes here.
